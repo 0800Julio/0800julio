@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   apk:
@@ -31,3 +31,13 @@ jobs:
           name: guita-apk
           path: android/build/guita.apk
           if-no-files-found: error
+
+      - name: Publicar APK en la rama (dist/)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p dist
+          cp android/build/guita.apk dist/guita.apk
+          git add dist/guita.apk
+          git diff --cached --quiet || git commit -m "ci: publicar guita.apk compilado [skip ci]"
+          git push
