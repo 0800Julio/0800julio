@@ -17,6 +17,22 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
   de inicio"* y queda como una app más, con ícono y todo. Funciona offline.
 - 🔒 **Tus datos quedan en tu celular** (localStorage). No hay servidor ni cuenta.
 
+## APK para Android (instalación nativa)
+
+En `android/` hay un wrapper nativo: un WebView que embebe la app y le suma el
+**reconocedor de voz nativo de Android** (el WebView no soporta el dictado web)
+y guardado de CSV con el selector de archivos del sistema.
+
+- El workflow **Compilar APK** (`build-apk.yml`) lo compila en GitHub Actions y
+  lo deja como artifact `guita-apk` de cada corrida (pestaña *Actions* → la
+  corrida → *Artifacts*). Bajás el `guita.apk`, lo abrís en el celu y lo
+  instalás (Android te va a pedir permitir "instalar apps desconocidas").
+- Se puede compartir el `.apk` por WhatsApp/Drive para instalarlo en otro celu.
+  Cada teléfono guarda sus propios datos.
+- ⚠️ Recomendado: hacer el repo **privado** (Settings → General → Change
+  visibility) — así los APK compilados solo se descargan con tu cuenta, y el
+  keystore de firma (`android/guita.keystore`) no queda a la vista de nadie.
+
 ## Cómo publicarla (GitHub Pages)
 
 1. Mergeá esta rama a `main`.

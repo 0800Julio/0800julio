@@ -553,13 +553,35 @@
 
   /* ---------- voz ---------- */
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  let rec = null, recActive = false;
+  let rec = null, recActive = false, androidListening = false;
 
   function stopRec(){
     if(rec && recActive){ try{ rec.abort(); }catch(e){} }
-    recActive = false;
+    if(window.AndroidVoz && androidListening){ try{ window.AndroidVoz.stop(); }catch(e){} }
+    recActive = false; androidListening = false;
     $("micBtn").classList.remove("listening");
   }
+
+  /* puente con el reconocedor nativo (solo existe dentro del APK Android) */
+  window.__vozPartial = t => { const el=$("transcript"); if(el) el.textContent = t || "…"; };
+  window.__vozResult = t => {
+    androidListening = false; $("micBtn").classList.remove("listening");
+    if(t && t.trim()) openReview(parseFrase(t.trim())); else closeSheet();
+  };
+  window.__vozError = code => {
+    androidListening = false; $("micBtn").classList.remove("listening");
+    if(code==="no-speech"){
+      const el=$("transcript");
+      if(el) el.innerHTML='<span class="hint">No te escuché… tocá el micrófono y probá de nuevo</span>';
+    } else if(code==="not-allowed"){
+      fallbackText("Sin permiso de micrófono — activalo en Ajustes › Apps › Guita");
+    } else if(code==="unavailable"){
+      fallbackText("Este celu no tiene reconocimiento de voz de Google — escribilo");
+    } else {
+      fallbackText("Falló el dictado — escribilo");
+    }
+  };
+  window.__csvSaved = ok => toast(ok ? "Planilla guardada ✔" : "No se pudo guardar la planilla");
 
   function fallbackText(msg){
     stopRec();
@@ -570,6 +592,17 @@
 
   $("micBtn").onclick = ()=>{
     lastOrigen = "voz";
+    if(window.AndroidVoz){
+      if(androidListening){ stopRec(); closeSheet(); return; }
+      const tEl = $("transcript");
+      tEl.innerHTML = '<span class="hint">Decí, por ejemplo: “gasté 8 lucas en la farmacia”</span>';
+      openSheet("listen");
+      $("micBtn").classList.add("listening");
+      androidListening = true;
+      try{ window.AndroidVoz.start(); }
+      catch(e){ androidListening = false; fallbackText("No pude arrancar el micrófono — escribilo"); }
+      return;
+    }
     if(!SR){ fallbackText("Este navegador no tiene dictado por voz — escribilo"); return; }
     if(recActive){ stopRec(); closeSheet(); return; }
     rec = new SR();
@@ -628,6 +661,11 @@
   $("exportBtn").onclick = async ()=>{
     if(!movs.length){ toast("No hay nada para exportar todavía"); return; }
     const csv = buildCSV();
+    if(window.AndroidVoz && window.AndroidVoz.saveCsv){
+      try{ window.AndroidVoz.saveCsv(csv, "guita-gastos.csv"); }
+      catch(e){ tryClipboard(csv); }
+      return;
+    }
     if(window.claude && window.claude.downloads){
       try {
         await window.claude.downloads.save({filename:"guita-gastos.txt", data:csv});

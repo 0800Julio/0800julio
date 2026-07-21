@@ -1,0 +1,33 @@
+name: Compilar APK
+
+on:
+  push:
+    branches: [main, claude/personal-finance-app-mobile-g5r8pi]
+    paths:
+      - index.html
+      - icons/**
+      - android/**
+      - .github/workflows/build-apk.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar build-tools y plataforma Android
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;34.0.0" "platforms;android-34" > /dev/null
+
+      - name: Compilar APK
+        run: bash android/build.sh
+
+      - name: Subir APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: guita-apk
+          path: android/build/guita.apk
+          if-no-files-found: error
