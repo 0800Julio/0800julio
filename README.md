@@ -17,6 +17,12 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
   desglosado en sus consumos reales), ingresos vs gastos con tasa de ahorro y
   evolución de los últimos 6 meses. Paleta validada para daltonismo con el
   método de la skill de dataviz.
+- 📄 **Subí tu resumen (PDF o foto)**: botón principal en Tarjetas. Lee el
+  archivo y detecta solo qué tarjeta es, el día de cierre, el vencimiento, el
+  total y cada consumo clasificado — la tarjeta se crea sola. Con IA lee
+  cualquier formato (incluso fotos y escaneados, vía la lectura nativa de PDF
+  de Claude); sin IA, un extractor local de texto PDF (DecompressionStream)
+  cubre los PDFs con texto real.
 - 🔁 **Detección de suscripciones**: al cargar el detalle del resumen, detecta
   Netflix/Spotify/etc. y te propone sumarlas como gastos fijos "vía tarjeta"
   (sin doble conteo: van en el resumen).
