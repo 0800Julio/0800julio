@@ -18,7 +18,8 @@
     --expense:#B5473F; --income:#1E7A4F; --danger:#B5473F; --shadow:0 1px 3px rgba(27,38,32,.08);
     --c-comida:#C05621; --c-transporte:#2B6CB0; --c-hogar:#7157B8; --c-servicios:#0F766E;
     --c-salud:#D53F8C; --c-salidas:#B7791F; --c-ropa:#5A67D8; --c-educacion:#6D8B25;
-    --c-otros:#64748B; --c-ingreso:#1E7A4F;
+    --c-tarjeta:#8C5E3C; --c-otros:#64748B; --c-ingreso:#1E7A4F;
+    --ease:cubic-bezier(.22,.9,.36,1); --spring:cubic-bezier(.34,1.35,.64,1);
   }
   @media (prefers-color-scheme: dark){
     :root{
@@ -27,7 +28,7 @@
       --expense:#E58B82; --income:#5CBE93; --danger:#E58B82; --shadow:0 1px 3px rgba(0,0,0,.35);
       --c-comida:#E08A4C; --c-transporte:#6EA8E0; --c-hogar:#A492DE; --c-servicios:#4FB3AC;
       --c-salud:#EF7FB4; --c-salidas:#D9A754; --c-ropa:#93A0F2; --c-educacion:#A3C05A;
-      --c-otros:#9AA8BB; --c-ingreso:#5CBE93;
+      --c-tarjeta:#C99B77; --c-otros:#9AA8BB; --c-ingreso:#5CBE93;
     }
   }
   :root[data-theme="dark"]{
@@ -36,7 +37,7 @@
     --expense:#E58B82; --income:#5CBE93; --danger:#E58B82; --shadow:0 1px 3px rgba(0,0,0,.35);
     --c-comida:#E08A4C; --c-transporte:#6EA8E0; --c-hogar:#A492DE; --c-servicios:#4FB3AC;
     --c-salud:#EF7FB4; --c-salidas:#D9A754; --c-ropa:#93A0F2; --c-educacion:#A3C05A;
-    --c-otros:#9AA8BB; --c-ingreso:#5CBE93;
+    --c-tarjeta:#C99B77; --c-otros:#9AA8BB; --c-ingreso:#5CBE93;
   }
   :root[data-theme="light"]{
     --paper:#F1F4EF; --card:#FFFFFF; --ink:#1B2620; --muted:#5F6D64;
@@ -44,9 +45,10 @@
     --expense:#B5473F; --income:#1E7A4F; --danger:#B5473F; --shadow:0 1px 3px rgba(27,38,32,.08);
     --c-comida:#C05621; --c-transporte:#2B6CB0; --c-hogar:#7157B8; --c-servicios:#0F766E;
     --c-salud:#D53F8C; --c-salidas:#B7791F; --c-ropa:#5A67D8; --c-educacion:#6D8B25;
-    --c-otros:#64748B; --c-ingreso:#1E7A4F;
+    --c-tarjeta:#8C5E3C; --c-otros:#64748B; --c-ingreso:#1E7A4F;
   }
   *{box-sizing:border-box; margin:0; padding:0}
+  [hidden]{display:none !important}
   html,body{height:100%}
   body{
     background:var(--paper); color:var(--ink);
@@ -54,40 +56,61 @@
     -webkit-font-smoothing:antialiased;
   }
   #guita{max-width:480px; margin:0 auto; min-height:100dvh; display:flex; flex-direction:column;
-    padding:0 16px calc(120px + env(safe-area-inset-bottom));}
+    padding:0 16px calc(108px + env(safe-area-inset-bottom));}
 
-  header.g-top{display:flex; align-items:baseline; justify-content:space-between; padding:18px 2px 6px}
+  header.g-top{display:flex; align-items:center; justify-content:space-between; padding:16px 2px 4px}
   .g-brand{font-size:22px; font-weight:800; letter-spacing:-.02em}
   .g-brand em{font-style:normal; color:var(--brand)}
-  .g-tag{font-size:12px; color:var(--muted)}
+  .g-topbtns{display:flex; gap:8px}
+  .g-icobtn{width:40px; height:40px; border-radius:50%; border:1px solid var(--line); background:var(--card);
+    color:var(--ink); box-shadow:var(--shadow); cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:transform .15s var(--ease)}
+  .g-icobtn:active{transform:scale(.92)}
+  .g-icobtn svg{width:19px; height:19px}
 
-  .g-monthnav{display:flex; align-items:center; justify-content:space-between; padding:10px 0 14px}
-  .g-monthnav button{
-    width:40px; height:40px; border-radius:50%; border:1px solid var(--line); background:var(--card);
-    color:var(--ink); font-size:18px; line-height:1; cursor:pointer;
-  }
+  /* vistas */
+  .view{display:none}
+  .view.active{display:block; animation:viewIn .22s var(--ease)}
+  @keyframes viewIn{from{opacity:0; transform:translateY(10px)}}
+  .g-viewtitle{display:flex; align-items:center; justify-content:space-between; padding:12px 2px 12px}
+  .g-viewtitle h2{font-size:17px; font-weight:700}
+  .g-minibtn{font:inherit; font-size:13px; font-weight:700; color:var(--brand); background:var(--brand-soft);
+    border:none; border-radius:999px; padding:8px 14px; cursor:pointer; transition:transform .15s var(--ease)}
+  .g-minibtn:active{transform:scale(.94)}
+
+  .g-monthnav{display:flex; align-items:center; justify-content:space-between; padding:8px 0 12px}
+  .g-monthnav button{width:38px; height:38px; border-radius:50%; border:1px solid var(--line); background:var(--card);
+    color:var(--ink); font-size:17px; line-height:1; cursor:pointer}
   .g-monthnav h2{font-size:15px; font-weight:600}
 
   .g-card{background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow)}
-  .g-summary{padding:18px 18px 16px; display:flex; flex-direction:column; gap:14px}
+  .g-summary{padding:18px 18px 16px; display:flex; flex-direction:column; gap:13px}
   .g-label{font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
   .g-total{font-size:clamp(34px,10vw,42px); font-weight:800; letter-spacing:-.03em;
     font-variant-numeric:tabular-nums; color:var(--expense)}
-  .g-subrow{display:flex; gap:20px}
+  .g-subrow{display:flex; gap:18px; flex-wrap:wrap}
   .g-subrow .val{font-weight:700; font-variant-numeric:tabular-nums; font-size:15px}
   .g-subrow .val.pos{color:var(--income)}
   .g-bars{display:flex; flex-direction:column; gap:8px}
   .g-bar{display:grid; grid-template-columns:96px 1fr 76px; align-items:center; gap:10px; font-size:13px}
   .g-bar .name{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--muted)}
   .g-bar .track{display:block; height:8px; border-radius:4px; background:var(--brand-soft); overflow:hidden}
-  .g-bar .fill{display:block; height:100%; border-radius:4px}
+  .g-bar .fill{display:block; height:100%; border-radius:4px; transition:width .4s var(--ease)}
   .g-bar .amt{text-align:right; font-variant-numeric:tabular-nums; font-weight:600}
 
-  .g-daygroup{margin-top:18px}
-  .g-dayhead{font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
-    color:var(--muted); padding:0 2px 8px}
+  .g-due{display:flex; flex-direction:column; gap:6px; margin-top:14px}
+  .g-duepill{display:flex; align-items:center; gap:9px; background:var(--card); border:1px solid var(--line);
+    border-radius:12px; padding:9px 12px; font-size:13px; cursor:pointer; animation:itemIn .28s var(--ease) both}
+  .g-duepill .dot{width:8px; height:8px; border-radius:50%; background:var(--brand); flex:none}
+  .g-duepill.late .dot{background:var(--danger)}
+  .g-duepill.late strong{color:var(--danger)}
+  .g-duepill .when{margin-left:auto; color:var(--muted); font-size:12px; white-space:nowrap}
+
+  .g-daygroup{margin-top:16px}
+  .g-dayhead{font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); padding:0 2px 8px}
   .g-items{overflow:hidden}
-  .g-item{display:flex; align-items:center; gap:12px; padding:13px 14px; cursor:pointer}
+  .g-item{display:flex; align-items:center; gap:12px; padding:13px 14px; cursor:pointer; animation:itemIn .3s var(--ease) both; animation-delay:var(--d,0s)}
+  @keyframes itemIn{from{opacity:0; transform:translateY(7px)}}
   .g-item + .g-item{border-top:1px solid var(--line)}
   .g-dot{width:10px; height:10px; border-radius:50%; flex:none}
   .g-info{flex:1; min-width:0}
@@ -97,137 +120,252 @@
   .g-amt.pos{color:var(--income)}
   .g-del{flex:none; display:none; border:none; background:var(--danger); color:#fff; font-size:13px;
     font-weight:600; padding:8px 12px; border-radius:10px; cursor:pointer}
-  .g-item.armed .g-del{display:block}
+  .armed .g-del{display:block}
   .g-item.armed .g-amt{display:none}
 
-  .g-empty{margin-top:26px; padding:28px 22px; text-align:center; display:flex; flex-direction:column; gap:10px}
+  .g-empty{margin-top:22px; padding:26px 22px; text-align:center; display:flex; flex-direction:column; gap:10px}
   .g-empty strong{font-size:17px}
   .g-empty p{font-size:14px; color:var(--muted); line-height:1.5}
   .g-empty .eg{font-size:14px; color:var(--brand); font-weight:600}
 
-  .g-dock{position:fixed; left:0; right:0; bottom:0; display:flex; justify-content:center;
-    padding:10px 0 calc(14px + env(safe-area-inset-bottom)); pointer-events:none;
-    background:linear-gradient(to top, var(--paper) 55%, transparent)}
-  .g-dockin{width:min(480px,100%); display:flex; align-items:center; justify-content:space-evenly; pointer-events:auto}
-  .g-side{width:52px; height:52px; border-radius:50%; border:1px solid var(--line); background:var(--card);
-    color:var(--ink); box-shadow:var(--shadow); cursor:pointer; display:flex; align-items:center; justify-content:center}
-  .g-side svg{width:22px; height:22px}
-  .g-mic{width:78px; height:78px; border-radius:50%; border:none; background:var(--brand); color:var(--brand-ink);
-    box-shadow:0 6px 18px rgba(30,122,79,.35); cursor:pointer; display:flex; align-items:center; justify-content:center;
-    position:relative}
-  .g-mic svg{width:34px; height:34px}
-  .g-mic:active{transform:scale(.96)}
-  .g-mic.listening::after{content:""; position:absolute; inset:-8px; border-radius:50%;
+  /* tarjetas de crédito */
+  .g-ccard{border-radius:18px; padding:16px 18px; color:#fff; position:relative; overflow:hidden;
+    background:linear-gradient(135deg, #24513B 0%, #1E7A4F 55%, #2E9B68 100%);
+    box-shadow:0 8px 20px rgba(30,122,79,.25); margin-top:14px; animation:itemIn .3s var(--ease) both}
+  .g-ccard::after{content:""; position:absolute; right:-40px; top:-40px; width:150px; height:150px;
+    border-radius:50%; background:rgba(255,255,255,.08)}
+  .g-ccard .name{font-size:16px; font-weight:800; letter-spacing:.02em}
+  .g-ccard .dates{font-size:12px; opacity:.85; margin-top:2px}
+  .g-ccard .amount{font-size:26px; font-weight:800; font-variant-numeric:tabular-nums; margin-top:12px}
+  .g-ccard .state{font-size:12.5px; font-weight:600; margin-top:2px; opacity:.95}
+  .g-ccard .row{display:flex; gap:8px; margin-top:12px; position:relative; z-index:1}
+  .g-ccbtn{font:inherit; font-size:13px; font-weight:700; border:none; border-radius:999px; padding:8px 14px;
+    cursor:pointer; background:rgba(255,255,255,.16); color:#fff; transition:transform .15s var(--ease)}
+  .g-ccbtn:active{transform:scale(.94)}
+  .g-ccbtn.solid{background:#fff; color:#1E7A4F}
+  .g-ccdetail{margin-top:10px; font-size:13px; position:relative; z-index:1}
+  .g-ccdetail div{display:flex; justify-content:space-between; gap:10px; padding:3px 0; opacity:.92}
+  .g-ccdetail .m{font-variant-numeric:tabular-nums}
+
+  /* fijos */
+  .g-fijo{display:flex; align-items:center; gap:12px; padding:13px 14px; cursor:pointer;
+    animation:itemIn .3s var(--ease) both; animation-delay:var(--d,0s)}
+  .g-fijo + .g-fijo{border-top:1px solid var(--line)}
+  .g-fijo .st{font-size:12px}
+  .g-fijo .st.ok{color:var(--income); font-weight:600}
+  .g-fijo .st.late{color:var(--danger); font-weight:600}
+  .g-paybtn{flex:none; font:inherit; font-size:13px; font-weight:700; border:none; border-radius:999px;
+    padding:8px 14px; cursor:pointer; background:var(--brand); color:var(--brand-ink); transition:transform .15s var(--ease)}
+  .g-paybtn:active{transform:scale(.94)}
+  .g-paybtn[disabled]{background:var(--brand-soft); color:var(--brand); cursor:default}
+
+  /* billeteras */
+  .g-wtotal{padding:16px 18px; margin-top:2px}
+  .g-wtotal .big{font-size:clamp(28px,8vw,34px); font-weight:800; letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums; color:var(--brand)}
+  .g-wallet{display:flex; align-items:center; gap:12px; padding:14px; cursor:pointer;
+    animation:itemIn .3s var(--ease) both; animation-delay:var(--d,0s)}
+  .g-wallet + .g-wallet{border-top:1px solid var(--line)}
+  .g-wallet .ic{width:38px; height:38px; border-radius:12px; background:var(--brand-soft); color:var(--brand);
+    display:flex; align-items:center; justify-content:center; flex:none}
+  .g-wallet .ic svg{width:19px; height:19px}
+  .g-wallet .saldo{margin-left:auto; font-weight:700; font-variant-numeric:tabular-nums}
+  .g-wallet .saldo.neg{color:var(--danger)}
+  .g-wactions{display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--line)}
+
+  /* nav inferior */
+  .g-nav{position:fixed; left:0; right:0; bottom:0; display:flex; justify-content:center; z-index:10;
+    padding:0 0 env(safe-area-inset-bottom); background:var(--card); border-top:1px solid var(--line)}
+  .g-navin{width:min(480px,100%); display:grid; grid-template-columns:1fr 1fr 84px 1fr 1fr; align-items:end}
+  .g-tab{font:inherit; border:none; background:none; color:var(--muted); cursor:pointer; padding:9px 0 10px;
+    display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10.5px; font-weight:600;
+    transition:color .15s var(--ease)}
+  .g-tab svg{width:22px; height:22px; transition:transform .2s var(--spring)}
+  .g-tab.on{color:var(--brand)}
+  .g-tab.on svg{transform:translateY(-1px) scale(1.08)}
+  .g-micwrap{display:flex; justify-content:center}
+  .g-mic{width:64px; height:64px; border-radius:50%; border:4px solid var(--paper); background:var(--brand);
+    color:var(--brand-ink); box-shadow:0 6px 16px rgba(30,122,79,.35); cursor:pointer; display:flex;
+    align-items:center; justify-content:center; position:relative; margin-top:-24px; margin-bottom:8px;
+    transition:transform .2s var(--spring)}
+  .g-mic svg{width:27px; height:27px}
+  .g-mic:active{transform:scale(.92)}
+  .g-mic.listening::after{content:""; position:absolute; inset:-9px; border-radius:50%;
     border:3px solid var(--brand); animation:gpulse 1.4s ease-out infinite}
   @keyframes gpulse{0%{transform:scale(.85); opacity:.9} 100%{transform:scale(1.35); opacity:0}}
-  @media (prefers-reduced-motion: reduce){ .g-mic.listening::after{animation:none; opacity:.5} }
 
-  .g-scrim{position:fixed; inset:0; background:rgba(10,16,12,.45); display:none; z-index:20}
-  .g-scrim.open{display:block}
-  .g-sheet{position:fixed; left:0; right:0; bottom:0; z-index:21; display:none; justify-content:center}
-  .g-sheet.open{display:flex}
-  .g-sheetin{width:min(480px,100%); background:var(--card); border-radius:20px 20px 0 0;
-    border:1px solid var(--line); border-bottom:none; padding:20px 20px calc(24px + env(safe-area-inset-bottom));
-    display:flex; flex-direction:column; gap:14px}
+  /* sheet */
+  .g-scrim{position:fixed; inset:0; background:rgba(10,16,12,.45); opacity:0; visibility:hidden;
+    transition:opacity .25s var(--ease), visibility .25s; z-index:20}
+  .g-scrim.open{opacity:1; visibility:visible}
+  .g-sheet{position:fixed; left:0; right:0; bottom:0; z-index:21; display:flex; justify-content:center;
+    transform:translateY(105%); transition:transform .26s var(--spring); visibility:hidden}
+  .g-sheet.open{transform:none; visibility:visible}
+  .g-sheetin{width:min(480px,100%); max-height:82dvh; overflow-y:auto; background:var(--card);
+    border-radius:20px 20px 0 0; border:1px solid var(--line); border-bottom:none;
+    padding:18px 20px calc(22px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:13px}
   .g-sheetin h3{font-size:16px; font-weight:700}
-  .g-transcript{min-height:56px; font-size:18px; line-height:1.4; color:var(--ink)}
+  .g-transcript{min-height:56px; font-size:18px; line-height:1.4}
   .g-transcript .hint{color:var(--muted); font-size:14px}
   .g-field{display:flex; flex-direction:column; gap:5px}
-  .g-field input, .g-field select{
+  .g-field input, .g-field select, .g-field textarea{
     font:inherit; font-size:16px; color:var(--ink); background:var(--paper);
     border:1px solid var(--line); border-radius:12px; padding:11px 12px; width:100%}
-  .g-field input:focus, .g-field select:focus{outline:2px solid var(--brand); outline-offset:1px; border-color:var(--brand)}
+  .g-field textarea{min-height:96px; resize:vertical}
+  .g-field input:focus, .g-field select:focus, .g-field textarea:focus{outline:2px solid var(--brand); outline-offset:1px; border-color:var(--brand)}
   .g-row2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
   .g-seg{display:flex; border:1px solid var(--line); border-radius:12px; overflow:hidden}
   .g-seg button{flex:1; font:inherit; font-size:14px; font-weight:600; padding:10px 0; border:none;
-    background:var(--card); color:var(--muted); cursor:pointer}
+    background:var(--card); color:var(--muted); cursor:pointer; transition:background .15s, color .15s}
   .g-seg button.on{background:var(--brand); color:var(--brand-ink)}
   .g-actions{display:flex; gap:10px; margin-top:2px}
   .g-btn{flex:1; font:inherit; font-size:15px; font-weight:700; padding:13px 0; border-radius:14px;
-    border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer}
+    border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer; transition:transform .15s var(--ease)}
+  .g-btn:active{transform:scale(.97)}
   .g-btn.primary{background:var(--brand); border-color:var(--brand); color:var(--brand-ink)}
-  .g-btn:focus-visible, .g-mic:focus-visible, .g-side:focus-visible{outline:2px solid var(--brand); outline-offset:2px}
+  .g-btn.danger{color:var(--danger); border-color:var(--danger)}
+  .g-btn:focus-visible, .g-mic:focus-visible, .g-icobtn:focus-visible, .g-tab:focus-visible{outline:2px solid var(--brand); outline-offset:2px}
+  .g-note{font-size:12.5px; color:var(--muted); line-height:1.45}
 
-  .g-toast{position:fixed; left:50%; bottom:calc(120px + env(safe-area-inset-bottom)); transform:translateX(-50%);
-    background:var(--ink); color:var(--paper); font-size:14px; font-weight:600; padding:10px 18px;
-    border-radius:999px; opacity:0; transition:opacity .25s; pointer-events:none; z-index:30; white-space:nowrap}
-  .g-toast.show{opacity:1}
-  .g-notice{margin-top:10px; font-size:12.5px; color:var(--muted); background:var(--brand-soft);
+  .g-toast{position:fixed; left:50%; bottom:calc(104px + env(safe-area-inset-bottom));
+    transform:translateX(-50%) translateY(8px); background:var(--ink); color:var(--paper); font-size:14px;
+    font-weight:600; padding:10px 18px; border-radius:999px; opacity:0;
+    transition:opacity .25s var(--ease), transform .25s var(--ease); pointer-events:none; z-index:30; white-space:nowrap}
+  .g-toast.show{opacity:1; transform:translateX(-50%)}
+  .g-notice{margin-top:8px; font-size:12.5px; color:var(--muted); background:var(--brand-soft);
     border-radius:10px; padding:9px 12px; display:none}
   .g-notice.show{display:block}
+
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{animation:none !important; transition:none !important}
+  }
 </style>
 
 <div id="guita">
   <header class="g-top">
     <div class="g-brand"><em>$</em> Guita</div>
-    <div class="g-tag">tus gastos, a viva voz</div>
+    <div class="g-topbtns">
+      <button class="g-icobtn" id="addBtn" aria-label="Cargar a mano" title="Cargar a mano">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <button class="g-icobtn" id="exportBtn" aria-label="Exportar planilla" title="Exportar planilla">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+      </button>
+    </div>
   </header>
 
   <div class="g-notice" id="storageNotice">Ojo: en esta vista el navegador no deja guardar datos entre visitas. Exportá antes de cerrar.</div>
 
-  <nav class="g-monthnav" aria-label="Mes">
-    <button id="prevMonth" aria-label="Mes anterior">‹</button>
-    <h2 id="monthTitle"></h2>
-    <button id="nextMonth" aria-label="Mes siguiente">›</button>
+  <main>
+    <!-- INICIO -->
+    <section class="view active" id="view-home">
+      <nav class="g-monthnav" aria-label="Mes">
+        <button id="prevMonth" aria-label="Mes anterior">‹</button>
+        <h2 id="monthTitle"></h2>
+        <button id="nextMonth" aria-label="Mes siguiente">›</button>
+      </nav>
+      <section class="g-card g-summary" aria-label="Resumen del mes">
+        <div>
+          <div class="g-label">Gastado este mes</div>
+          <div class="g-total" id="totalOut">$ 0</div>
+        </div>
+        <div class="g-subrow">
+          <div><div class="g-label">Ingresos</div><div class="val pos" id="totalIn">$ 0</div></div>
+          <div><div class="g-label">Balance</div><div class="val" id="balance">$ 0</div></div>
+          <div id="walletSummary" hidden><div class="g-label">En billeteras</div><div class="val" id="walletTotal">$ 0</div></div>
+        </div>
+        <div class="g-bars" id="catBars"></div>
+      </section>
+      <div class="g-due" id="dueList"></div>
+      <div id="list"></div>
+      <div class="g-empty g-card" id="empty" hidden>
+        <strong>Todavía no hay nada este mes</strong>
+        <p>Tocá el micrófono y contale el gasto como se lo contarías a un amigo:</p>
+        <div class="eg">“gasté 5 lucas en la verdulería”</div>
+        <div class="eg">“pagué 32.000 de luz”</div>
+        <div class="eg">“cobré 150 mil del laburo”</div>
+      </div>
+    </section>
+
+    <!-- TARJETAS -->
+    <section class="view" id="view-tarjetas">
+      <div class="g-viewtitle"><h2>Tarjetas de crédito</h2>
+        <button class="g-minibtn" id="addCardBtn">+ Nueva</button></div>
+      <div id="cardList"></div>
+      <div class="g-empty g-card" id="cardEmpty" hidden>
+        <strong>Sin tarjetas todavía</strong>
+        <p>Agregá tu tarjeta con su día de cierre y vencimiento, cargale el resumen de cada mes (podés pegar el detalle) y marcá cuándo lo pagás.</p>
+      </div>
+    </section>
+
+    <!-- FIJOS -->
+    <section class="view" id="view-fijos">
+      <div class="g-viewtitle"><h2>Gastos fijos del mes</h2>
+        <button class="g-minibtn" id="addFijoBtn">+ Nuevo</button></div>
+      <div class="g-card g-items" id="fijoList" hidden></div>
+      <div class="g-empty g-card" id="fijoEmpty" hidden>
+        <strong>Sin gastos fijos</strong>
+        <p>Cargá alquiler, expensas, suscripciones… con su día de pago. Cada mes te muestro qué falta pagar y lo anotás en un toque.</p>
+      </div>
+    </section>
+
+    <!-- BILLETERAS -->
+    <section class="view" id="view-billeteras">
+      <div class="g-viewtitle"><h2>Billeteras</h2>
+        <button class="g-minibtn" id="addWalletBtn">+ Nueva</button></div>
+      <section class="g-card g-wtotal">
+        <div class="g-label">Total disponible hoy</div>
+        <div class="big" id="walletGrandTotal">$ 0</div>
+      </section>
+      <div class="g-card" id="walletList" hidden style="margin-top:14px"></div>
+      <div class="g-empty g-card" id="walletEmpty" hidden>
+        <strong>Sin billeteras</strong>
+        <p>Creá tus billeteras (efectivo, banco, Mercado Pago…) con su saldo actual. Cada gasto o ingreso puede descontar de una, así sabés cuánta plata tenés al día.</p>
+      </div>
+    </section>
+  </main>
+
+  <nav class="g-nav" aria-label="Secciones">
+    <div class="g-navin">
+      <button class="g-tab on" data-view="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 12 4l9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>
+        Inicio</button>
+      <button class="g-tab" data-view="tarjetas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="13" rx="2.5"/><path d="M2.5 10h19"/><path d="M6 15h4"/></svg>
+        Tarjetas</button>
+      <div class="g-micwrap">
+        <button class="g-mic" id="micBtn" aria-label="Hablar un gasto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/>
+          </svg>
+        </button>
+      </div>
+      <button class="g-tab" data-view="fijos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10h17"/><path d="m9 15 2 2 4-4"/></svg>
+        Fijos</button>
+      <button class="g-tab" data-view="billeteras">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H5a2 2 0 0 1 0-4h13v4"/><path d="M3 5v13a3 3 0 0 0 3 3h14a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1"/><circle cx="16.5" cy="14" r="1.2" fill="currentColor" stroke="none"/></svg>
+        Billeteras</button>
+    </div>
   </nav>
 
-  <section class="g-card g-summary" aria-label="Resumen del mes">
-    <div>
-      <div class="g-label" id="totalLabel">Gastado este mes</div>
-      <div class="g-total" id="totalOut">$ 0</div>
-    </div>
-    <div class="g-subrow">
-      <div><div class="g-label">Ingresos</div><div class="val pos" id="totalIn">$ 0</div></div>
-      <div><div class="g-label">Balance</div><div class="val" id="balance">$ 0</div></div>
-      <div><div class="g-label">Movim.</div><div class="val" id="movCount">0</div></div>
-    </div>
-    <div class="g-bars" id="catBars"></div>
-  </section>
-
-  <div id="list"></div>
-
-  <div class="g-empty g-card" id="empty" hidden>
-    <strong>Todavía no hay nada este mes</strong>
-    <p>Tocá el micrófono y contale el gasto como se lo contarías a un amigo:</p>
-    <div class="eg">“gasté 5 lucas en la verdulería”</div>
-    <div class="eg">“pagué 32.000 de luz”</div>
-    <div class="eg">“cobré 150 mil del laburo”</div>
-  </div>
-
-  <div class="g-dock">
-    <div class="g-dockin">
-      <button class="g-side" id="addBtn" aria-label="Cargar a mano" title="Cargar a mano">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-      </button>
-      <button class="g-mic" id="micBtn" aria-label="Hablar un gasto">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/>
-        </svg>
-      </button>
-      <button class="g-side" id="exportBtn" aria-label="Exportar planilla" title="Exportar planilla">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-      </button>
-    </div>
-  </div>
-
   <div class="g-scrim" id="scrim"></div>
-  <div class="g-sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Cargar movimiento">
+  <div class="g-sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Cargar">
     <div class="g-sheetin">
+
       <div id="phaseListen" hidden>
         <h3>Te escucho…</h3>
         <div class="g-transcript" id="transcript"><span class="hint">Decí, por ejemplo: “gasté 8 lucas en la farmacia”</span></div>
-        <div class="g-actions"><button class="g-btn" id="cancelListen">Cancelar</button></div>
+        <div class="g-actions"><button class="g-btn" data-close>Cancelar</button></div>
       </div>
+
       <div id="phaseText" hidden>
         <h3>Escribilo como lo dirías</h3>
-        <div class="g-field">
-          <input id="textPhrase" type="text" placeholder="gasté 5 lucas en el súper" autocomplete="off">
-        </div>
-        <div class="g-actions">
-          <button class="g-btn" id="cancelText">Cancelar</button>
-          <button class="g-btn primary" id="parseText">Seguir</button>
-        </div>
+        <div class="g-field"><input id="textPhrase" type="text" placeholder="gasté 5 lucas en el súper" autocomplete="off"></div>
+        <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
+          <button class="g-btn primary" id="parseText">Seguir</button></div>
       </div>
+
       <div id="phaseReview" hidden>
         <h3 id="reviewTitle">¿Lo cargo así?</h3>
         <div class="g-seg" id="tipoSeg">
@@ -240,15 +378,104 @@
           <div class="g-field"><label class="g-label" for="fFecha">Fecha</label>
             <input id="fFecha" type="date"></div>
         </div>
-        <div class="g-field"><label class="g-label" for="fCat">Categoría</label>
-          <select id="fCat"></select></div>
+        <div class="g-row2">
+          <div class="g-field"><label class="g-label" for="fCat">Categoría</label><select id="fCat"></select></div>
+          <div class="g-field"><label class="g-label" for="fBill">Billetera</label><select id="fBill"></select></div>
+        </div>
         <div class="g-field"><label class="g-label" for="fDesc">Descripción</label>
           <input id="fDesc" type="text" autocomplete="off"></div>
-        <div class="g-actions">
-          <button class="g-btn" id="cancelReview">Cancelar</button>
-          <button class="g-btn primary" id="saveMov">Guardar</button>
-        </div>
+        <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
+          <button class="g-btn primary" id="saveMov">Guardar</button></div>
       </div>
+
+      <div id="phaseFijo" hidden>
+        <h3 id="fijoTitle">Nuevo gasto fijo</h3>
+        <div class="g-field"><label class="g-label" for="fjNombre">Nombre</label>
+          <input id="fjNombre" type="text" placeholder="Alquiler, Netflix, expensas…" autocomplete="off"></div>
+        <div class="g-row2">
+          <div class="g-field"><label class="g-label" for="fjMonto">Monto</label>
+            <input id="fjMonto" type="number" inputmode="decimal" step="any" min="0"></div>
+          <div class="g-field"><label class="g-label" for="fjDia">Día de pago (1–28)</label>
+            <input id="fjDia" type="number" inputmode="numeric" min="1" max="28" value="10"></div>
+        </div>
+        <div class="g-field"><label class="g-label" for="fjCat">Categoría</label><select id="fjCat"></select></div>
+        <div class="g-actions"><button class="g-btn danger" id="delFijo" hidden>Eliminar</button>
+          <button class="g-btn" data-close>Cancelar</button>
+          <button class="g-btn primary" id="saveFijo">Guardar</button></div>
+      </div>
+
+      <div id="phaseCard" hidden>
+        <h3 id="cardTitle">Nueva tarjeta</h3>
+        <div class="g-field"><label class="g-label" for="tcNombre">Nombre</label>
+          <input id="tcNombre" type="text" placeholder="Visa Galicia, Master BBVA…" autocomplete="off"></div>
+        <div class="g-row2">
+          <div class="g-field"><label class="g-label" for="tcCierre">Día de cierre</label>
+            <input id="tcCierre" type="number" inputmode="numeric" min="1" max="28" value="20"></div>
+          <div class="g-field"><label class="g-label" for="tcVto">Día de vencimiento</label>
+            <input id="tcVto" type="number" inputmode="numeric" min="1" max="28" value="5"></div>
+        </div>
+        <div class="g-actions"><button class="g-btn danger" id="delCard" hidden>Eliminar</button>
+          <button class="g-btn" data-close>Cancelar</button>
+          <button class="g-btn primary" id="saveCard">Guardar</button></div>
+      </div>
+
+      <div id="phaseResumen" hidden>
+        <h3 id="resumenTitle">Cargar resumen</h3>
+        <div class="g-row2">
+          <div class="g-field"><label class="g-label" for="rsMes">Mes</label><select id="rsMes"></select></div>
+          <div class="g-field"><label class="g-label" for="rsMonto">Total a pagar</label>
+            <input id="rsMonto" type="number" inputmode="decimal" step="any" min="0"></div>
+        </div>
+        <div class="g-field"><label class="g-label" for="rsDetalle">Detalle (opcional)</label>
+          <textarea id="rsDetalle" placeholder="Pegá acá las líneas del resumen (del PDF del banco): detecto cada consumo con su monto y sumo el total solo."></textarea></div>
+        <div class="g-note" id="rsPreview"></div>
+        <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
+          <button class="g-btn primary" id="saveResumen">Guardar</button></div>
+      </div>
+
+      <div id="phasePay" hidden>
+        <h3 id="payTitle">Registrar pago</h3>
+        <div class="g-row2">
+          <div class="g-field"><label class="g-label" for="pyBill">Desde la billetera</label><select id="pyBill"></select></div>
+          <div class="g-field"><label class="g-label" for="pyFecha">Fecha</label><input id="pyFecha" type="date"></div>
+        </div>
+        <div class="g-note" id="payNote"></div>
+        <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
+          <button class="g-btn primary" id="confirmPay">Pagar</button></div>
+      </div>
+
+      <div id="phaseWallet" hidden>
+        <h3 id="walletTitle">Nueva billetera</h3>
+        <div class="g-field"><label class="g-label" for="wNombre">Nombre</label>
+          <input id="wNombre" type="text" placeholder="Efectivo, Banco, Mercado Pago…" autocomplete="off"></div>
+        <div class="g-field"><label class="g-label" for="wSaldo">Saldo actual</label>
+          <input id="wSaldo" type="number" inputmode="decimal" step="any"></div>
+        <div class="g-actions"><button class="g-btn danger" id="delWallet" hidden>Eliminar</button>
+          <button class="g-btn" data-close>Cancelar</button>
+          <button class="g-btn primary" id="saveWallet">Guardar</button></div>
+      </div>
+
+      <div id="phaseTransfer" hidden>
+        <h3>Transferir entre billeteras</h3>
+        <div class="g-row2">
+          <div class="g-field"><label class="g-label" for="trDe">Desde</label><select id="trDe"></select></div>
+          <div class="g-field"><label class="g-label" for="trA">Hacia</label><select id="trA"></select></div>
+        </div>
+        <div class="g-field"><label class="g-label" for="trMonto">Monto</label>
+          <input id="trMonto" type="number" inputmode="decimal" step="any" min="0"></div>
+        <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
+          <button class="g-btn primary" id="saveTransfer">Transferir</button></div>
+      </div>
+
+      <div id="phaseAdjust" hidden>
+        <h3 id="adjustTitle">Ajustar saldo</h3>
+        <div class="g-field"><label class="g-label" for="ajSaldo">Saldo real de la billetera hoy</label>
+          <input id="ajSaldo" type="number" inputmode="decimal" step="any"></div>
+        <div class="g-note">Contaste la plata y no coincide con la app: poné el saldo real y registro la diferencia como ajuste.</div>
+        <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
+          <button class="g-btn primary" id="saveAdjust">Ajustar</button></div>
+      </div>
+
     </div>
   </div>
 
@@ -269,32 +496,46 @@
     {id:"Salidas",    v:"--c-salidas",    kw:["bar","birra","birras","cerveza","boliche","cine","teatro","restaurante","restoran","restorán","salida","juntada","asado","vino","fernet","recital","cumpleanos","cumpleaños","cumple"]},
     {id:"Ropa",       v:"--c-ropa",       kw:["ropa","zapatilla","zapatillas","pantalon","pantalón","camisa","remera","campera","shopping","zapato","zapatos","vestido"]},
     {id:"Educación",  v:"--c-educacion",  kw:["curso","libro","libros","facultad","colegio","universidad","fotocopia","fotocopias","clase","clases","ingles","inglés"]},
+    {id:"Tarjeta",    v:"--c-tarjeta",    kw:["tarjeta","resumen","visa","mastercard","master","amex"]},
     {id:"Otros",      v:"--c-otros",      kw:[]},
     {id:"Ingreso",    v:"--c-ingreso",    kw:[]}
   ];
   const catColor = id => {
-    const c = CATS.find(c=>c.id===id) || CATS[8];
+    const c = CATS.find(c=>c.id===id) || CATS.find(c=>c.id==="Otros");
     return getComputedStyle(document.documentElement).getPropertyValue(c.v).trim() || "#64748B";
   };
 
-  /* ---------- almacenamiento ---------- */
-  const KEY = "guita:v1";
-  let memory = [];
+  /* ---------- almacenamiento + migración v1→v2 ---------- */
+  const KEY = "guita:v2", OLDKEY = "guita:v1";
+  let memory = null;
   let persistent = true;
-  try {
-    localStorage.setItem("guita:test","1"); localStorage.removeItem("guita:test");
-  } catch(e){ persistent = false; }
+  try { localStorage.setItem("guita:test","1"); localStorage.removeItem("guita:test"); }
+  catch(e){ persistent = false; }
   if(!persistent) document.getElementById("storageNotice").classList.add("show");
 
-  function load(){
-    if(!persistent) return memory;
-    try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch(e){ return []; }
+  const blankState = () => ({movs:[], billeteras:[], tarjetas:[], fijos:[], pagosFijos:{}, transf:[], ajustes:[], seq:0});
+
+  function loadState(){
+    if(!persistent) return memory || (memory = blankState());
+    try {
+      const v2 = localStorage.getItem(KEY);
+      if(v2) return Object.assign(blankState(), JSON.parse(v2));
+      const v1 = localStorage.getItem(OLDKEY);
+      if(v1){
+        const st = blankState();
+        st.movs = JSON.parse(v1).map(m=>Object.assign({billetera:null}, m));
+        st.seq = st.movs.reduce((s,m)=>Math.max(s, m.id||0), 0);
+        return st;
+      }
+    } catch(e){}
+    return blankState();
   }
-  function saveAll(movs){
-    memory = movs;
-    if(persistent){ try{ localStorage.setItem(KEY, JSON.stringify(movs)); }catch(e){} }
+  function save(){
+    memory = S;
+    if(persistent){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
   }
-  let movs = load();
+  let S = loadState();
+  const nid = () => (S.seq = (S.seq||0)+1);
 
   /* ---------- parser es-AR ---------- */
   const UNITS = {cero:0,un:1,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,
@@ -319,7 +560,6 @@
 
   function parseMonto(raw){
     const t = norm(raw);
-    // dígitos primero: "5.000", "3500,50", "32000"
     const dm = t.match(/(\d[\d.]*(?:,\d+)?)/);
     if(dm){
       let n = parseFloat(dm[1].replace(/\./g,"").replace(",","."));
@@ -330,7 +570,6 @@
       if(/lucas?\s+y\s+media/.test(t) || /mil\s+y\s+medio/.test(t)) n += 500;
       return isFinite(n) && n>0 ? n : null;
     }
-    // jerga sin número: "una luca", "un palo", "dos gambas", "media luca"
     if(/media\s+luca/.test(t)) return 500;
     let m = t.match(/([a-z]+)\s+lucas?\b(\s+y\s+media)?/);
     if(m && m[1] in UNITS) return UNITS[m[1]]*1000 + (m[2]?500:0);
@@ -340,7 +579,6 @@
     if(/\b(un\s+)?palo\b/.test(t)) return 1000000;
     m = t.match(/([a-z]+)\s+gambas?\b/);
     if(m && m[1] in UNITS) return UNITS[m[1]]*100;
-    // números en palabras: "cinco mil quinientos"
     const words = t.replace(/[^a-z\s]/g," ").split(/\s+/).filter(Boolean);
     for(let i=0;i<words.length;i++){
       if(words[i] in UNITS || words[i]==="mil"){
@@ -372,7 +610,6 @@
       .replace(/\s+/g," ").trim();
     const m = t.match(/\b(?:en|de|del|para|por)\s+(.+)$/i);
     if(m && m[1].trim().length>1) t = m[1].trim();
-    t = t.replace(/^(la|el|los|las|un|una)\s+/i, (s)=>s); // dejamos el artículo, suena natural
     if(!t) return "";
     return t.charAt(0).toUpperCase()+t.slice(1);
   }
@@ -385,11 +622,33 @@
     return {tipo, monto, categoria, descripcion: desc, frase: raw};
   }
 
+  /* parser de detalle de resumen: una línea = consumo + monto al final */
+  function parseDetalleResumen(text){
+    const items = [];
+    for(const lineRaw of String(text||"").split(/\n+/)){
+      const line = lineRaw.trim();
+      if(!line) continue;
+      const m = line.match(/(-?\$?\s?\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|-?\$?\s?\d+(?:,\d{1,2})?)\s*$/);
+      if(!m) continue;
+      const monto = parseFloat(m[1].replace(/[$\s]/g,"").replace(/\./g,"").replace(",","."));
+      if(!isFinite(monto) || monto===0) continue;
+      let desc = line.slice(0, m.index).replace(/^\d{1,2}[\/-]\d{1,2}([\/-]\d{2,4})?\s*/,"").replace(/[\s.·-]+$/,"").trim();
+      if(!desc) desc = "Consumo";
+      items.push({desc: desc.slice(0,60), monto});
+    }
+    return items;
+  }
+
   /* ---------- formato ---------- */
-  const fmtMoney = n => new Intl.NumberFormat("es-AR",{style:"currency",currency:"ARS",maximumFractionDigits: n%1?2:0}).format(n);
+  const fmtMoney = n => new Intl.NumberFormat("es-AR",{style:"currency",currency:"ARS",maximumFractionDigits: (n%1)?2:0}).format(n);
   const fmtMonth = d => {
     const s = new Intl.DateTimeFormat("es-AR",{month:"long",year:"numeric"}).format(d);
     return s.charAt(0).toUpperCase()+s.slice(1);
+  };
+  const monthKey = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+  const monthKeyLabel = mk => {
+    const [y,m] = mk.split("-").map(Number);
+    return fmtMonth(new Date(y, m-1, 1));
   };
   const fmtDay = iso => {
     const d = new Date(iso+"T12:00:00");
@@ -404,13 +663,10 @@
     const d = new Date();
     return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
   };
-
-  /* ---------- estado de vista ---------- */
-  let view = new Date(); view.setDate(1);
+  const esc = s => String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
   const $ = id => document.getElementById(id);
-  const listEl=$("list"), emptyEl=$("empty"), toastEl=$("toast");
-
+  const toastEl = $("toast");
   function toast(msg){
     toastEl.textContent = msg;
     toastEl.classList.add("show");
@@ -418,111 +674,272 @@
     toast._t = setTimeout(()=>toastEl.classList.remove("show"), 2600);
   }
 
+  /* ---------- billeteras: saldo ---------- */
+  function saldoBilletera(id){
+    const b = S.billeteras.find(x=>x.id===id);
+    if(!b) return 0;
+    let s = b.saldoInicial || 0;
+    for(const m of S.movs){
+      if(m.billetera===id) s += (m.tipo==="ingreso" ? m.monto : -m.monto);
+    }
+    for(const t of S.transf){
+      if(t.de===id) s -= t.monto;
+      if(t.a===id) s += t.monto;
+    }
+    for(const a of S.ajustes){
+      if(a.billetera===id) s += a.delta;
+    }
+    return s;
+  }
+  const saldoTotal = () => S.billeteras.reduce((s,b)=>s+saldoBilletera(b.id), 0);
+
+  /* ---------- vencimientos ---------- */
+  function vencimientos(){
+    const hoy = new Date(); hoy.setHours(12,0,0,0);
+    const mk = monthKey(hoy);
+    const out = [];
+    for(const f of S.fijos){
+      if(f.activo===false) continue;
+      if((S.pagosFijos[mk]||{})[f.id]) continue;
+      const fecha = new Date(hoy.getFullYear(), hoy.getMonth(), Math.min(f.dia,28), 12);
+      out.push({kind:"fijo", ref:f, nombre:f.nombre, monto:f.monto, fecha, late: fecha < hoy});
+    }
+    for(const t of S.tarjetas){
+      const r = (t.resumenes||{})[mk];
+      if(r && !r.pagado){
+        const fecha = new Date(hoy.getFullYear(), hoy.getMonth(), Math.min(t.vto,28), 12);
+        out.push({kind:"tarjeta", ref:t, nombre:"Resumen "+t.nombre, monto:r.monto, fecha, late: fecha < hoy});
+      }
+    }
+    out.sort((a,b)=>a.fecha-b.fecha);
+    return out;
+  }
+
+  /* ---------- animación de números ---------- */
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const lastNum = {};
+  function animMoney(el, val){
+    const key = el.id;
+    const from = lastNum[key] ?? val;
+    lastNum[key] = val;
+    if(reduced || from===val){ el.textContent = fmtMoney(val); return; }
+    const t0 = performance.now(), dur = 400;
+    const step = now => {
+      const p = Math.min(1,(now-t0)/dur), e = 1-Math.pow(1-p,3);
+      el.textContent = fmtMoney(Math.round(from+(val-from)*e));
+      if(p<1) requestAnimationFrame(step); else el.textContent = fmtMoney(val);
+    };
+    requestAnimationFrame(step);
+  }
+
+  /* ---------- render: inicio ---------- */
+  let view = new Date(); view.setDate(1);
+
   function monthMovs(){
     const y=view.getFullYear(), m=view.getMonth();
-    return movs.filter(x=>{
+    return S.movs.filter(x=>{
       const d = new Date(x.fecha+"T12:00:00");
       return d.getFullYear()===y && d.getMonth()===m;
     }).sort((a,b)=> b.fecha.localeCompare(a.fecha) || (b.id-a.id));
   }
 
-  function render(){
+  function billName(id){
+    const b = S.billeteras.find(x=>x.id===id);
+    return b ? b.nombre : null;
+  }
+
+  function renderHome(){
     $("monthTitle").textContent = fmtMonth(view);
     const mm = monthMovs();
     const out = mm.filter(x=>x.tipo==="gasto").reduce((s,x)=>s+x.monto,0);
     const inn = mm.filter(x=>x.tipo==="ingreso").reduce((s,x)=>s+x.monto,0);
-    $("totalOut").textContent = fmtMoney(out);
+    animMoney($("totalOut"), out);
     $("totalIn").textContent = fmtMoney(inn);
     const bal = inn-out;
     const balEl = $("balance");
     balEl.textContent = fmtMoney(bal);
     balEl.className = "val" + (bal>=0 ? " pos" : "");
-    $("movCount").textContent = mm.length;
+    if(S.billeteras.length){
+      $("walletSummary").hidden = false;
+      $("walletTotal").textContent = fmtMoney(saldoTotal());
+    } else $("walletSummary").hidden = true;
 
-    // barras por categoría
     const byCat = {};
     mm.filter(x=>x.tipo==="gasto").forEach(x=>{ byCat[x.categoria]=(byCat[x.categoria]||0)+x.monto; });
     const top = Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,5);
     const max = top.length ? top[0][1] : 1;
     $("catBars").innerHTML = top.map(([cat,val])=>
-      `<div class="g-bar"><span class="name">${cat}</span>
+      `<div class="g-bar"><span class="name">${esc(cat)}</span>
        <span class="track"><span class="fill" style="width:${Math.max(4,Math.round(val/max*100))}%;background:${catColor(cat)}"></span></span>
        <span class="amt">${fmtMoney(val)}</span></div>`).join("");
 
-    // lista agrupada por día
-    emptyEl.hidden = mm.length>0;
+    const hoyMk = monthKey(new Date());
+    const dueEl = $("dueList");
+    if(monthKey(view)===hoyMk){
+      const vs = vencimientos().slice(0,3);
+      dueEl.innerHTML = vs.map((v,i)=>{
+        const dd = v.fecha.getDate();
+        const when = v.late ? "venció el "+dd : "vence el "+dd;
+        return `<div class="g-duepill${v.late?" late":""}" data-goto="${v.kind==="fijo"?"fijos":"tarjetas"}" style="--d:${i*0.04}s">
+          <span class="dot"></span><strong>${esc(v.nombre)}</strong>
+          <span class="when">${fmtMoney(v.monto)} · ${when}</span></div>`;
+      }).join("");
+    } else dueEl.innerHTML = "";
+
+    $("empty").hidden = mm.length>0;
     const groups = {};
     mm.forEach(x=>{ (groups[x.fecha]=groups[x.fecha]||[]).push(x); });
-    listEl.innerHTML = Object.keys(groups).sort((a,b)=>b.localeCompare(a)).map(day=>
+    let idx = 0;
+    $("list").innerHTML = Object.keys(groups).sort((a,b)=>b.localeCompare(a)).map(day=>
       `<section class="g-daygroup"><div class="g-dayhead">${fmtDay(day)}</div>
        <div class="g-card g-items">` +
-       groups[day].map(x=>
-        `<div class="g-item" data-id="${x.id}" role="button" tabindex="0" aria-label="${x.descripcion}, ${fmtMoney(x.monto)}">
+       groups[day].map(x=>{
+        const bn = billName(x.billetera);
+        const meta = [x.categoria, bn, x.origen==="voz"?"🎙":null].filter(Boolean).join(" · ");
+        return `<div class="g-item" data-id="${x.id}" role="button" tabindex="0" style="--d:${Math.min(idx++,10)*0.025}s" aria-label="${esc(x.descripcion)}, ${fmtMoney(x.monto)}">
            <span class="g-dot" style="background:${catColor(x.categoria)}"></span>
-           <span class="g-info"><span class="g-desc">${esc(x.descripcion)}</span><br><span class="g-cat">${x.categoria}${x.origen==="voz"?" · 🎙":""}</span></span>
+           <span class="g-info"><span class="g-desc">${esc(x.descripcion)}</span><br><span class="g-cat">${esc(meta)}</span></span>
            <span class="g-amt${x.tipo==="ingreso"?" pos":""}">${x.tipo==="ingreso"?"+":"−"} ${fmtMoney(x.monto)}</span>
-           <button class="g-del" data-del="${x.id}">Eliminar</button>
-         </div>`).join("") +
+           <button class="g-del" data-delmov="${x.id}">Eliminar</button>
+         </div>`;}).join("") +
        `</div></section>`).join("");
   }
-  const esc = s => String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-  listEl.addEventListener("click", e=>{
-    const del = e.target.closest("[data-del]");
-    if(del){
-      movs = movs.filter(x=>x.id !== Number(del.dataset.del));
-      saveAll(movs); render(); toast("Eliminado");
-      return;
-    }
-    const item = e.target.closest(".g-item");
-    if(item){
-      const was = item.classList.contains("armed");
-      listEl.querySelectorAll(".g-item.armed").forEach(i=>i.classList.remove("armed"));
-      if(!was) item.classList.add("armed");
-    }
+  /* ---------- render: tarjetas ---------- */
+  function renderTarjetas(){
+    const mk = monthKey(new Date());
+    $("cardEmpty").hidden = S.tarjetas.length>0;
+    $("cardList").innerHTML = S.tarjetas.map(t=>{
+      const r = (t.resumenes||{})[mk];
+      const estado = !r ? "Resumen de "+monthKeyLabel(mk).split(" ")[0].toLowerCase()+" sin cargar"
+        : (r.pagado ? "Pagado ✔" : "A pagar antes del "+t.vto);
+      const detalle = (r && r.detalle && r.detalle.length)
+        ? `<div class="g-ccdetail">`+r.detalle.slice(0,6).map(d=>`<div><span>${esc(d.desc)}</span><span class="m">${fmtMoney(d.monto)}</span></div>`).join("")
+          + (r.detalle.length>6?`<div><span>… y ${r.detalle.length-6} consumos más</span><span></span></div>`:"") + `</div>`
+        : "";
+      return `<article class="g-ccard" data-card="${t.id}">
+        <div class="name">${esc(t.nombre)}</div>
+        <div class="dates">Cierra el ${t.cierre} · vence el ${t.vto}</div>
+        <div class="amount">${r ? fmtMoney(r.monto) : "—"}</div>
+        <div class="state">${estado}</div>
+        ${detalle}
+        <div class="row">
+          <button class="g-ccbtn solid" data-loadres="${t.id}">${r?"Editar resumen":"Cargar resumen"}</button>
+          ${r && !r.pagado ? `<button class="g-ccbtn" data-paycard="${t.id}">Pagar</button>` : ""}
+          <button class="g-ccbtn" data-editcard="${t.id}">Editar</button>
+        </div>
+      </article>`;
+    }).join("");
+  }
+
+  /* ---------- render: fijos ---------- */
+  function renderFijos(){
+    const hoy = new Date(); const mk = monthKey(hoy);
+    const pagos = S.pagosFijos[mk]||{};
+    $("fijoEmpty").hidden = S.fijos.length>0;
+    $("fijoList").hidden = S.fijos.length===0;
+    const orden = [...S.fijos].sort((a,b)=>a.dia-b.dia);
+    $("fijoList").innerHTML = orden.map((f,i)=>{
+      const pagado = !!pagos[f.id];
+      const late = !pagado && hoy.getDate() > f.dia;
+      const st = pagado ? `<span class="st ok">Pagado este mes ✔</span>`
+        : late ? `<span class="st late">Venció el ${f.dia} — ${fmtMoney(f.monto)}</span>`
+        : `<span class="st">Vence el ${f.dia} — ${fmtMoney(f.monto)}</span>`;
+      return `<div class="g-fijo" data-fijo="${f.id}" style="--d:${Math.min(i,10)*0.03}s">
+        <span class="g-dot" style="background:${catColor(f.categoria)}"></span>
+        <span class="g-info"><span class="g-desc">${esc(f.nombre)}</span><br>${st}</span>
+        ${pagado ? `<button class="g-paybtn" disabled>Listo</button>` : `<button class="g-paybtn" data-payfijo="${f.id}">Pagar</button>`}
+      </div>`;
+    }).join("");
+  }
+
+  /* ---------- render: billeteras ---------- */
+  function renderBilleteras(){
+    $("walletEmpty").hidden = S.billeteras.length>0;
+    $("walletList").hidden = S.billeteras.length===0;
+    animMoney($("walletGrandTotal"), saldoTotal());
+    $("walletList").innerHTML = S.billeteras.map((b,i)=>{
+      const s = saldoBilletera(b.id);
+      return `<div class="g-wallet" data-wallet="${b.id}" style="--d:${Math.min(i,10)*0.03}s">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H5a2 2 0 0 1 0-4h13v4"/><path d="M3 5v13a3 3 0 0 0 3 3h14a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1"/></svg></span>
+        <span class="g-info"><span class="g-desc">${esc(b.nombre)}</span><br><span class="g-cat">Tocá para editar o ajustar</span></span>
+        <span class="saldo${s<0?" neg":""}">${fmtMoney(s)}</span>
+      </div>`;
+    }).join("") + (S.billeteras.length ? `<div class="g-wactions">
+      <button class="g-minibtn" id="transferBtn">⇄ Transferir</button>
+    </div>` : "");
+    const tb = $("transferBtn");
+    if(tb) tb.onclick = ()=>{
+      if(S.billeteras.length<2){ toast("Necesitás al menos dos billeteras"); return; }
+      fillWalletSelect($("trDe")); fillWalletSelect($("trA"));
+      if(S.billeteras.length>1) $("trA").selectedIndex = 1;
+      $("trMonto").value = "";
+      openSheet("transfer");
+    };
+  }
+
+  function renderAll(){ renderHome(); renderTarjetas(); renderFijos(); renderBilleteras(); }
+
+  /* ---------- navegación ---------- */
+  const tabs = document.querySelectorAll(".g-tab");
+  function switchView(name){
+    tabs.forEach(t=>t.classList.toggle("on", t.dataset.view===name));
+    document.querySelectorAll(".view").forEach(v=>{
+      const on = v.id === "view-"+name;
+      if(on && !v.classList.contains("active")){ v.classList.remove("active"); void v.offsetWidth; }
+      v.classList.toggle("active", on);
+    });
+  }
+  tabs.forEach(t=>t.onclick = ()=>switchView(t.dataset.view));
+  $("dueList").addEventListener("click", e=>{
+    const p = e.target.closest("[data-goto]");
+    if(p) switchView(p.dataset.goto);
   });
 
-  $("prevMonth").onclick = ()=>{ view.setMonth(view.getMonth()-1); render(); };
-  $("nextMonth").onclick = ()=>{ view.setMonth(view.getMonth()+1); render(); };
-
-  /* ---------- sheet (hoja inferior) ---------- */
+  /* ---------- sheet ---------- */
   const sheet=$("sheet"), scrim=$("scrim");
-  const phases = {listen:$("phaseListen"), text:$("phaseText"), review:$("phaseReview")};
-  function openSheet(phase){
+  const phases = ["Listen","Text","Review","Fijo","Card","Resumen","Pay","Wallet","Transfer","Adjust"];
+  function openSheet(name){
     sheet.classList.add("open"); scrim.classList.add("open");
-    Object.entries(phases).forEach(([k,el])=>el.hidden = k!==phase);
+    phases.forEach(p=>{ $("phase"+p).hidden = p.toLowerCase()!==name.toLowerCase(); });
   }
   function closeSheet(){
     sheet.classList.remove("open"); scrim.classList.remove("open");
     stopRec();
   }
   scrim.onclick = closeSheet;
-  $("cancelListen").onclick = closeSheet;
-  $("cancelText").onclick = closeSheet;
-  $("cancelReview").onclick = closeSheet;
+  document.querySelectorAll("[data-close]").forEach(b=>b.onclick = closeSheet);
 
-  /* ---------- formulario de revisión ---------- */
+  /* ---------- selects ---------- */
   let tipoSel = "gasto";
   const catSel = $("fCat");
-  function fillCats(){
-    catSel.innerHTML = CATS.filter(c=>tipoSel==="ingreso" ? c.id==="Ingreso" : c.id!=="Ingreso")
+  function fillCats(sel, incluirIngreso){
+    sel.innerHTML = CATS.filter(c=> incluirIngreso ? c.id==="Ingreso" : c.id!=="Ingreso")
       .map(c=>`<option>${c.id}</option>`).join("");
+  }
+  function fillWalletSelect(sel, conNinguna){
+    sel.innerHTML = (conNinguna?`<option value="">Sin billetera</option>`:"") +
+      S.billeteras.map(b=>`<option value="${b.id}">${esc(b.nombre)}</option>`).join("");
   }
   document.querySelectorAll("#tipoSeg button").forEach(b=>{
     b.onclick = ()=>{
       tipoSel = b.dataset.tipo;
       document.querySelectorAll("#tipoSeg button").forEach(x=>x.classList.toggle("on", x===b));
-      fillCats();
+      fillCats(catSel, tipoSel==="ingreso");
     };
   });
 
+  /* ---------- alta/edición de movimientos ---------- */
+  let lastOrigen = "manual";
   function openReview(p){
     tipoSel = p.tipo || "gasto";
     document.querySelectorAll("#tipoSeg button").forEach(x=>x.classList.toggle("on", x.dataset.tipo===tipoSel));
-    fillCats();
+    fillCats(catSel, tipoSel==="ingreso");
+    fillWalletSelect($("fBill"), true);
     $("fMonto").value = p.monto ?? "";
     $("fFecha").value = p.fecha || todayISO();
     if(p.categoria) catSel.value = p.categoria;
+    $("fBill").value = p.billetera ?? "";
     $("fDesc").value = p.descripcion || "";
     $("reviewTitle").textContent = p.frase ? `Entendí: “${p.frase}”` : "Cargar a mano";
     openSheet("review");
@@ -532,24 +949,289 @@
   $("saveMov").onclick = ()=>{
     const monto = parseFloat($("fMonto").value);
     if(!monto || monto<=0){ $("fMonto").focus(); toast("Falta el monto"); return; }
-    movs.push({
-      id: (movs.reduce((m,x)=>Math.max(m,x.id),0)||0)+1,
+    S.movs.push({
+      id: nid(),
       fecha: $("fFecha").value || todayISO(),
       tipo: tipoSel,
       monto,
       categoria: catSel.value,
+      billetera: $("fBill").value ? Number($("fBill").value) : null,
       descripcion: $("fDesc").value.trim() || catSel.value,
       origen: lastOrigen
     });
-    saveAll(movs);
+    save();
     const d = new Date(($("fFecha").value||todayISO())+"T12:00:00");
     view = new Date(d.getFullYear(), d.getMonth(), 1);
-    closeSheet(); render();
+    closeSheet(); renderAll();
     toast(tipoSel==="gasto" ? "Gasto anotado ✔" : "Ingreso anotado ✔");
   };
 
-  let lastOrigen = "manual";
   $("addBtn").onclick = ()=>{ lastOrigen="manual"; openReview({}); };
+
+  $("list").addEventListener("click", e=>{
+    const del = e.target.closest("[data-delmov]");
+    if(del){
+      const id = Number(del.dataset.delmov);
+      S.movs = S.movs.filter(x=>x.id !== id);
+      for(const mk in S.pagosFijos){
+        for(const fid in S.pagosFijos[mk]) if(S.pagosFijos[mk][fid]===id) delete S.pagosFijos[mk][fid];
+      }
+      for(const t of S.tarjetas){
+        for(const mk in (t.resumenes||{})){
+          if(t.resumenes[mk].pagadoMovId===id){ t.resumenes[mk].pagado=false; delete t.resumenes[mk].pagadoMovId; }
+        }
+      }
+      save(); renderAll(); toast("Eliminado");
+      return;
+    }
+    const item = e.target.closest(".g-item");
+    if(item){
+      const was = item.classList.contains("armed");
+      document.querySelectorAll(".armed").forEach(i=>i.classList.remove("armed"));
+      if(!was) item.classList.add("armed");
+    }
+  });
+
+  $("prevMonth").onclick = ()=>{ view.setMonth(view.getMonth()-1); renderHome(); };
+  $("nextMonth").onclick = ()=>{ view.setMonth(view.getMonth()+1); renderHome(); };
+
+  /* ---------- fijos ---------- */
+  let fijoEdit = null;
+  $("addFijoBtn").onclick = ()=>{
+    fijoEdit = null;
+    $("fijoTitle").textContent = "Nuevo gasto fijo";
+    $("delFijo").hidden = true;
+    $("fjNombre").value=""; $("fjMonto").value=""; $("fjDia").value="10";
+    fillCats($("fjCat"), false); $("fjCat").value="Hogar";
+    openSheet("fijo");
+  };
+  $("saveFijo").onclick = ()=>{
+    const nombre = $("fjNombre").value.trim();
+    const monto = parseFloat($("fjMonto").value);
+    const dia = Math.min(28, Math.max(1, parseInt($("fjDia").value)||10));
+    if(!nombre){ $("fjNombre").focus(); toast("Falta el nombre"); return; }
+    if(!monto || monto<=0){ $("fjMonto").focus(); toast("Falta el monto"); return; }
+    if(fijoEdit){
+      Object.assign(fijoEdit, {nombre, monto, dia, categoria:$("fjCat").value});
+    } else {
+      S.fijos.push({id:nid(), nombre, monto, dia, categoria:$("fjCat").value, activo:true});
+    }
+    save(); closeSheet(); renderAll(); toast("Gasto fijo guardado ✔");
+  };
+  $("delFijo").onclick = ()=>{
+    if(fijoEdit){ S.fijos = S.fijos.filter(f=>f!==fijoEdit); save(); closeSheet(); renderAll(); toast("Eliminado"); }
+  };
+  $("fijoList").addEventListener("click", e=>{
+    const pay = e.target.closest("[data-payfijo]");
+    if(pay){
+      const f = S.fijos.find(x=>x.id===Number(pay.dataset.payfijo));
+      if(f) openPay({kind:"fijo", ref:f, nombre:f.nombre, monto:f.monto});
+      return;
+    }
+    const row = e.target.closest("[data-fijo]");
+    if(row){
+      const f = S.fijos.find(x=>x.id===Number(row.dataset.fijo));
+      if(!f) return;
+      fijoEdit = f;
+      $("fijoTitle").textContent = "Editar gasto fijo";
+      $("delFijo").hidden = false;
+      $("fjNombre").value=f.nombre; $("fjMonto").value=f.monto; $("fjDia").value=f.dia;
+      fillCats($("fjCat"), false); $("fjCat").value=f.categoria;
+      openSheet("fijo");
+    }
+  });
+
+  /* ---------- tarjetas ---------- */
+  let cardEdit = null, resumenCard = null;
+  $("addCardBtn").onclick = ()=>{
+    cardEdit = null;
+    $("cardTitle").textContent = "Nueva tarjeta";
+    $("delCard").hidden = true;
+    $("tcNombre").value=""; $("tcCierre").value="20"; $("tcVto").value="5";
+    openSheet("card");
+  };
+  $("saveCard").onclick = ()=>{
+    const nombre = $("tcNombre").value.trim();
+    if(!nombre){ $("tcNombre").focus(); toast("Falta el nombre"); return; }
+    const cierre = Math.min(28, Math.max(1, parseInt($("tcCierre").value)||20));
+    const vto = Math.min(28, Math.max(1, parseInt($("tcVto").value)||5));
+    if(cardEdit) Object.assign(cardEdit, {nombre, cierre, vto});
+    else S.tarjetas.push({id:nid(), nombre, cierre, vto, resumenes:{}});
+    save(); closeSheet(); renderAll(); toast("Tarjeta guardada ✔");
+  };
+  $("delCard").onclick = ()=>{
+    if(cardEdit){ S.tarjetas = S.tarjetas.filter(t=>t!==cardEdit); save(); closeSheet(); renderAll(); toast("Eliminada"); }
+  };
+
+  function fillMesSelect(sel){
+    const base = new Date(); base.setDate(1);
+    const opts = [];
+    for(let off=1; off>=-3; off--){
+      const d = new Date(base.getFullYear(), base.getMonth()+off, 1);
+      opts.push(monthKey(d));
+    }
+    sel.innerHTML = opts.map(mk=>`<option value="${mk}">${monthKeyLabel(mk)}</option>`).join("");
+    sel.value = monthKey(base);
+  }
+
+  $("cardList").addEventListener("click", e=>{
+    const load = e.target.closest("[data-loadres]");
+    if(load){
+      resumenCard = S.tarjetas.find(t=>t.id===Number(load.dataset.loadres));
+      if(!resumenCard) return;
+      $("resumenTitle").textContent = "Resumen de "+resumenCard.nombre;
+      fillMesSelect($("rsMes"));
+      const r = (resumenCard.resumenes||{})[$("rsMes").value];
+      $("rsMonto").value = r ? r.monto : "";
+      $("rsDetalle").value = "";
+      $("rsPreview").textContent = "";
+      openSheet("resumen");
+      return;
+    }
+    const pay = e.target.closest("[data-paycard]");
+    if(pay){
+      const t = S.tarjetas.find(x=>x.id===Number(pay.dataset.paycard));
+      const mk = monthKey(new Date());
+      const r = t && (t.resumenes||{})[mk];
+      if(r) openPay({kind:"tarjeta", ref:t, mes:mk, nombre:"Resumen "+t.nombre, monto:r.monto});
+      return;
+    }
+    const edit = e.target.closest("[data-editcard]");
+    if(edit){
+      cardEdit = S.tarjetas.find(t=>t.id===Number(edit.dataset.editcard));
+      if(!cardEdit) return;
+      $("cardTitle").textContent = "Editar tarjeta";
+      $("delCard").hidden = false;
+      $("tcNombre").value=cardEdit.nombre; $("tcCierre").value=cardEdit.cierre; $("tcVto").value=cardEdit.vto;
+      openSheet("card");
+    }
+  });
+
+  $("rsMes").addEventListener("change", ()=>{
+    if(!resumenCard) return;
+    const r = (resumenCard.resumenes||{})[$("rsMes").value];
+    $("rsMonto").value = r ? r.monto : "";
+  });
+  $("rsDetalle").addEventListener("input", ()=>{
+    const items = parseDetalleResumen($("rsDetalle").value);
+    if(items.length){
+      const suma = items.reduce((s,i)=>s+i.monto,0);
+      $("rsPreview").textContent = `Detecté ${items.length} consumos por ${fmtMoney(suma)}.`;
+      if(!$("rsMonto").value) $("rsMonto").value = Math.round(suma*100)/100;
+    } else $("rsPreview").textContent = $("rsDetalle").value.trim() ? "No encontré montos en ese texto — revisá el formato." : "";
+  });
+  $("saveResumen").onclick = ()=>{
+    if(!resumenCard) return;
+    const items = parseDetalleResumen($("rsDetalle").value);
+    let monto = parseFloat($("rsMonto").value);
+    if((!monto || monto<=0) && items.length) monto = items.reduce((s,i)=>s+i.monto,0);
+    if(!monto || monto<=0){ $("rsMonto").focus(); toast("Falta el total del resumen"); return; }
+    const mk = $("rsMes").value;
+    resumenCard.resumenes = resumenCard.resumenes || {};
+    const prev = resumenCard.resumenes[mk] || {};
+    resumenCard.resumenes[mk] = Object.assign({}, prev, {
+      monto: Math.round(monto*100)/100,
+      pagado: prev.pagado || false,
+      detalle: items.length ? items : (prev.detalle||[])
+    });
+    save(); closeSheet(); renderAll(); toast("Resumen cargado ✔");
+  };
+
+  /* ---------- pagar (fijo o tarjeta) ---------- */
+  let payCtx = null;
+  function openPay(ctx){
+    payCtx = ctx;
+    $("payTitle").textContent = "Pagar "+ctx.nombre;
+    $("payNote").textContent = fmtMoney(ctx.monto)+" — se anota como gasto y descuenta de la billetera que elijas.";
+    fillWalletSelect($("pyBill"), true);
+    $("pyFecha").value = todayISO();
+    openSheet("pay");
+  }
+  $("confirmPay").onclick = ()=>{
+    if(!payCtx) return;
+    const bill = $("pyBill").value ? Number($("pyBill").value) : null;
+    const fecha = $("pyFecha").value || todayISO();
+    const mk = monthKey(new Date(fecha+"T12:00:00"));
+    const mov = {
+      id: nid(), fecha, tipo:"gasto", monto:payCtx.monto,
+      categoria: payCtx.kind==="tarjeta" ? "Tarjeta" : payCtx.ref.categoria,
+      billetera: bill,
+      descripcion: payCtx.nombre,
+      origen: payCtx.kind
+    };
+    S.movs.push(mov);
+    if(payCtx.kind==="fijo"){
+      (S.pagosFijos[mk] = S.pagosFijos[mk]||{})[payCtx.ref.id] = mov.id;
+    } else {
+      const r = (payCtx.ref.resumenes||{})[payCtx.mes];
+      if(r){ r.pagado = true; r.pagadoMovId = mov.id; }
+    }
+    save(); closeSheet(); renderAll(); toast("Pago registrado ✔");
+    payCtx = null;
+  };
+
+  /* ---------- billeteras ---------- */
+  let walletEdit = null;
+  $("addWalletBtn").onclick = ()=>{
+    walletEdit = null;
+    $("walletTitle").textContent = "Nueva billetera";
+    $("delWallet").hidden = true;
+    $("wNombre").value=""; $("wSaldo").value="";
+    openSheet("wallet");
+  };
+  $("saveWallet").onclick = ()=>{
+    const nombre = $("wNombre").value.trim();
+    if(!nombre){ $("wNombre").focus(); toast("Falta el nombre"); return; }
+    const saldo = parseFloat($("wSaldo").value)||0;
+    if(walletEdit){
+      walletEdit.nombre = nombre;
+      const actual = saldoBilletera(walletEdit.id);
+      if(Math.abs(saldo-actual)>0.004){
+        S.ajustes.push({id:nid(), billetera:walletEdit.id, delta:saldo-actual, fecha:todayISO(), nota:"Ajuste manual"});
+      }
+    } else {
+      S.billeteras.push({id:nid(), nombre, saldoInicial:saldo});
+    }
+    save(); closeSheet(); renderAll(); toast("Billetera guardada ✔");
+  };
+  $("delWallet").onclick = ()=>{
+    if(!walletEdit) return;
+    S.billeteras = S.billeteras.filter(b=>b!==walletEdit);
+    S.movs.forEach(m=>{ if(m.billetera===walletEdit.id) m.billetera=null; });
+    S.transf = S.transf.filter(t=>t.de!==walletEdit.id && t.a!==walletEdit.id);
+    S.ajustes = S.ajustes.filter(a=>a.billetera!==walletEdit.id);
+    save(); closeSheet(); renderAll(); toast("Eliminada");
+  };
+  $("walletList").addEventListener("click", e=>{
+    const row = e.target.closest("[data-wallet]");
+    if(!row) return;
+    walletEdit = S.billeteras.find(b=>b.id===Number(row.dataset.wallet));
+    if(!walletEdit) return;
+    $("walletTitle").textContent = "Editar "+walletEdit.nombre;
+    $("delWallet").hidden = false;
+    $("wNombre").value = walletEdit.nombre;
+    $("wSaldo").value = saldoBilletera(walletEdit.id);
+    openSheet("wallet");
+  });
+  $("saveTransfer").onclick = ()=>{
+    const de = Number($("trDe").value), a = Number($("trA").value);
+    const monto = parseFloat($("trMonto").value);
+    if(de===a){ toast("Elegí dos billeteras distintas"); return; }
+    if(!monto || monto<=0){ $("trMonto").focus(); toast("Falta el monto"); return; }
+    S.transf.push({id:nid(), de, a, monto, fecha:todayISO()});
+    save(); closeSheet(); renderAll(); toast("Transferencia hecha ✔");
+  };
+  $("saveAdjust").onclick = ()=>{
+    if(!walletEdit) return;
+    const saldo = parseFloat($("ajSaldo").value);
+    if(isNaN(saldo)){ $("ajSaldo").focus(); return; }
+    const actual = saldoBilletera(walletEdit.id);
+    if(Math.abs(saldo-actual)>0.004){
+      S.ajustes.push({id:nid(), billetera:walletEdit.id, delta:saldo-actual, fecha:todayISO(), nota:"Ajuste manual"});
+      save();
+    }
+    closeSheet(); renderAll(); toast("Saldo ajustado ✔");
+  };
 
   /* ---------- voz ---------- */
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -562,7 +1244,6 @@
     $("micBtn").classList.remove("listening");
   }
 
-  /* puente con el reconocedor nativo (solo existe dentro del APK Android) */
   window.__vozPartial = t => { const el=$("transcript"); if(el) el.textContent = t || "…"; };
   window.__vozResult = t => {
     androidListening = false; $("micBtn").classList.remove("listening");
@@ -635,8 +1316,7 @@
     rec.onend = ()=>{
       recActive = false; $("micBtn").classList.remove("listening");
       if(finalText.trim()){
-        const p = parseFrase(finalText.trim());
-        openReview(p);
+        openReview(parseFrase(finalText.trim()));
       }
     };
     try { rec.start(); recActive = true; }
@@ -653,13 +1333,13 @@
 
   /* ---------- exportar ---------- */
   function buildCSV(){
-    const head = "fecha,tipo,categoria,descripcion,monto";
-    const rows = [...movs].sort((a,b)=>a.fecha.localeCompare(b.fecha)).map(x=>
-      [x.fecha, x.tipo, x.categoria, '"'+String(x.descripcion).replace(/"/g,'""')+'"', x.monto].join(","));
+    const head = "fecha,tipo,categoria,billetera,descripcion,monto";
+    const rows = [...S.movs].sort((a,b)=>a.fecha.localeCompare(b.fecha)).map(x=>
+      [x.fecha, x.tipo, x.categoria, billName(x.billetera)||"", '"'+String(x.descripcion).replace(/"/g,'""')+'"', x.monto].join(","));
     return head+"\n"+rows.join("\n")+"\n";
   }
   $("exportBtn").onclick = async ()=>{
-    if(!movs.length){ toast("No hay nada para exportar todavía"); return; }
+    if(!S.movs.length){ toast("No hay nada para exportar todavía"); return; }
     const csv = buildCSV();
     if(window.AndroidVoz && window.AndroidVoz.saveCsv){
       try{ window.AndroidVoz.saveCsv(csv, "guita-gastos.csv"); }
@@ -691,13 +1371,15 @@
     catch(e){ toast("No pude exportar en esta vista"); }
   }
 
-  /* ---------- service worker (solo en la versión instalable) ---------- */
-  if("serviceWorker" in navigator && location.protocol==="https:" ){
+  /* ---------- service worker (solo versión instalable) ---------- */
+  if("serviceWorker" in navigator && location.protocol==="https:"){
     navigator.serviceWorker.register("sw.js").catch(()=>{});
   }
 
   window.__guitaParse = parseFrase;
-  render();
+  window.__guitaDetalle = parseDetalleResumen;
+  window.__guitaState = () => JSON.parse(JSON.stringify(S));
+  renderAll();
 })();
 </script>
 <!-- APP-END -->

@@ -12,6 +12,14 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
   luz → Servicios, etc.). Siempre podés corregir antes de guardar.
 - ➕ **Carga manual** para cuando no querés hablar.
 - 📊 **Resumen mensual**: total gastado, ingresos, balance y barras por categoría.
+- 💳 **Tarjetas de crédito**: cargá el resumen de cada mes (a mano o pegando el
+  detalle del PDF del banco — detecta cada consumo y suma el total solo), con
+  día de cierre y vencimiento, y registrá el pago desde una billetera.
+- 📅 **Gastos fijos** con día de pago: cada mes ves qué falta pagar, qué venció
+  y lo anotás en un toque.
+- 👛 **Billeteras** (efectivo, banco, MP…): saldo de cada una, total disponible
+  al día, transferencias entre billeteras y ajuste de saldo real.
+- 🔔 **Próximos vencimientos** en el inicio: fijos y resúmenes por vencer o vencidos.
 - 📤 **Exportar CSV** para abrir en Google Sheets o Excel.
 - 📱 **Instalable (PWA)**: desde Chrome en Android, menú ⋮ → *"Agregar a pantalla
   de inicio"* y queda como una app más, con ícono y todo. Funciona offline.
