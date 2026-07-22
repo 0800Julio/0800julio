@@ -6,8 +6,20 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
 
 ## Qué hace
 
-- 🎙 **Carga por voz** en español rioplatense: entiende "5 lucas", "un palo",
-  "32.000", "cinco mil quinientos", "media luca"…
+- 🎙 **Carga por voz mantener-apretado** en español rioplatense: entiende "5 lucas",
+  "un palo", "32.000", "media luca"… y podés dictar **varios gastos seguidos**
+  ("30 del súper, 20 de nafta y 5 de birras") que se separan y clasifican solos.
+- 🤖 **IA opcional (híbrida)**: si cargás tu API key de Claude en Ajustes, los
+  dictados largos y la clasificación de resúmenes pasan por Claude
+  (`claude-opus-4-8` con salida estructurada). Sin key, reglas locales gratis.
+  La key queda solo en tu dispositivo.
+- 📈 **Análisis**: torta de gastos por categoría (con el gasto de tarjeta
+  desglosado en sus consumos reales), ingresos vs gastos con tasa de ahorro y
+  evolución de los últimos 6 meses. Paleta validada para daltonismo con el
+  método de la skill de dataviz.
+- 🔁 **Detección de suscripciones**: al cargar el detalle del resumen, detecta
+  Netflix/Spotify/etc. y te propone sumarlas como gastos fijos "vía tarjeta"
+  (sin doble conteo: van en el resumen).
 - 🏷 **Categorías automáticas** por palabras clave (súper → Comida, nafta → Transporte,
   luz → Servicios, etc.). Siempre podés corregir antes de guardar.
 - ➕ **Carga manual** para cuando no querés hablar.

@@ -15,9 +15,15 @@ import android.webkit.WebView;
 
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class MainActivity extends Activity {
     private static final int REQ_MIC = 1;
@@ -148,6 +154,52 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void stop() {
             runOnUiThread(() -> { if (rec != null) rec.cancel(); });
+        }
+
+        @JavascriptInterface
+        public void finish() {
+            // Cierre suave del dictado: entrega lo reconocido hasta ahora (soltar el botón)
+            runOnUiThread(() -> { if (rec != null) rec.stopListening(); });
+        }
+
+        @JavascriptInterface
+        public void postJson(final String url, final String headersJson, final String body, final String reqId) {
+            new Thread(() -> {
+                int status = 0;
+                String respBody = "";
+                try {
+                    HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+                    conn.setRequestMethod("POST");
+                    conn.setConnectTimeout(15000);
+                    conn.setReadTimeout(60000);
+                    conn.setDoOutput(true);
+                    conn.setRequestProperty("Content-Type", "application/json");
+                    JSONObject headers = new JSONObject(headersJson == null ? "{}" : headersJson);
+                    Iterator<String> keys = headers.keys();
+                    while (keys.hasNext()) {
+                        String k = keys.next();
+                        conn.setRequestProperty(k, headers.getString(k));
+                    }
+                    try (OutputStream os = conn.getOutputStream()) {
+                        os.write(body.getBytes(StandardCharsets.UTF_8));
+                    }
+                    status = conn.getResponseCode();
+                    InputStream is = status >= 400 ? conn.getErrorStream() : conn.getInputStream();
+                    if (is != null) {
+                        StringBuilder sb = new StringBuilder();
+                        try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                            String line;
+                            while ((line = br.readLine()) != null) sb.append(line);
+                        }
+                        respBody = sb.toString();
+                    }
+                    conn.disconnect();
+                } catch (Exception e) {
+                    status = 0;
+                    respBody = String.valueOf(e.getMessage());
+                }
+                js("window.__httpResult&&window.__httpResult(" + q(reqId) + "," + status + "," + q(respBody) + ")");
+            }).start();
         }
 
         @JavascriptInterface
