@@ -26,6 +26,13 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
 - 🔁 **Detección de suscripciones**: al cargar el detalle del resumen, detecta
   Netflix/Spotify/etc. y te propone sumarlas como gastos fijos "vía tarjeta"
   (sin doble conteo: van en el resumen).
+- 🧾 **Ver y editar cada consumo**: botón "Ver consumos (N)" en cada tarjeta
+  con la lista completa editable (descripción, monto, categoría) y opción de
+  recalcular el total. La torta del mes incluye el resumen aunque todavía no
+  esté pagado.
+- 🤝 **Asesor financiero con IA** (con API key): un chat en Análisis que conoce
+  tus números — gastos, ingresos, tarjetas, fijos y billeteras — para pedirle
+  consejos de recorte, presupuesto o cómo venís este mes.
 - 🏷 **Categorías automáticas** por palabras clave (súper → Comida, nafta → Transporte,
   luz → Servicios, etc.). Siempre podés corregir antes de guardar.
 - ➕ **Carga manual** para cuando no querés hablar.

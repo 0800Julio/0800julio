@@ -237,6 +237,41 @@
   body.mic-hold, body.mic-hold *{user-select:none !important; -webkit-user-select:none !important;
     -webkit-touch-callout:none !important}
 
+  /* escucha centrada (no tapa el mic) */
+  .g-listenpop{position:fixed; left:0; right:0; top:16dvh; display:flex; justify-content:center;
+    z-index:15; pointer-events:none}
+  .g-listencard{width:min(420px, calc(100% - 48px)); background:var(--card); border:1px solid var(--line);
+    border-radius:18px; box-shadow:0 12px 34px rgba(10,16,12,.28); padding:16px 18px;
+    display:flex; flex-direction:column; gap:10px; pointer-events:auto;
+    animation:popIn .25s var(--spring) both}
+  @keyframes popIn{from{opacity:0; transform:translateY(-10px) scale(.96)}}
+  .g-listencard .dots{display:flex; gap:5px; align-items:center}
+  .g-listencard .dots i{width:8px; height:8px; border-radius:50%; background:var(--brand);
+    animation:bounce 1s ease-in-out infinite}
+  .g-listencard .dots i:nth-child(2){animation-delay:.15s}
+  .g-listencard .dots i:nth-child(3){animation-delay:.3s}
+  @keyframes bounce{0%,100%{transform:translateY(0); opacity:.5} 50%{transform:translateY(-5px); opacity:1}}
+
+  /* asesor financiero */
+  .g-advisor{margin-top:14px; padding:14px 16px 16px; display:flex; flex-direction:column; gap:10px}
+  .g-chat{display:flex; flex-direction:column; gap:8px; max-height:320px; overflow-y:auto}
+  .g-msg{max-width:88%; padding:9px 13px; border-radius:14px; font-size:14px; line-height:1.5; white-space:pre-wrap}
+  .g-msg.user{align-self:flex-end; background:var(--brand); color:var(--brand-ink); border-bottom-right-radius:4px}
+  .g-msg.ai{align-self:flex-start; background:var(--paper); border:1px solid var(--line); border-bottom-left-radius:4px;
+    animation:itemIn .3s var(--ease) both}
+  .g-msg.think{align-self:flex-start; color:var(--muted); font-size:13px}
+  .g-chips{display:flex; gap:6px; flex-wrap:wrap}
+  .g-chips button{font:inherit; font-size:12.5px; font-weight:600; color:var(--brand); background:var(--brand-soft);
+    border:none; border-radius:999px; padding:7px 12px; cursor:pointer; transition:transform .15s var(--ease)}
+  .g-chips button:active{transform:scale(.94)}
+  .g-chatrow{display:flex; gap:8px}
+  .g-chatrow input{flex:1; font:inherit; font-size:15px; color:var(--ink); background:var(--paper);
+    border:1px solid var(--line); border-radius:999px; padding:10px 16px}
+  .g-chatrow input:focus{outline:2px solid var(--brand); border-color:var(--brand)}
+  .g-chatrow button{width:44px; height:44px; flex:none; border-radius:50%; border:none; background:var(--brand);
+    color:var(--brand-ink); font-size:17px; cursor:pointer; transition:transform .15s var(--ease)}
+  .g-chatrow button:active{transform:scale(.92)}
+
   /* sheet */
   .g-scrim{position:fixed; inset:0; background:rgba(10,16,12,.45); opacity:0; visibility:hidden;
     transition:opacity .25s var(--ease), visibility .25s; z-index:20}
@@ -372,6 +407,20 @@
         <div class="g-evobars" id="evoBars"></div>
         <div class="g-note" style="margin-top:8px">Barra verde: ingresos · barra roja: gastos</div>
       </section>
+      <section class="g-card g-advisor" aria-label="Asesor financiero">
+        <div class="g-label">🤖 Tu asesor financiero</div>
+        <div class="g-chat" id="chatLog"><div class="g-msg ai">¡Hola! Conozco tus números: gastos, ingresos, tarjetas, fijos y billeteras. Preguntame lo que quieras — en qué recortar, cómo venís, un presupuesto…</div></div>
+        <div class="g-chips" id="chatChips">
+          <button data-q="¿En qué estoy gastando de más y dónde me conviene recortar?">¿Dónde recorto?</button>
+          <button data-q="¿Cómo vengo este mes comparado con los meses anteriores?">¿Cómo vengo?</button>
+          <button data-q="Armame un presupuesto mensual realista con mis números.">Presupuesto</button>
+        </div>
+        <div class="g-chatrow">
+          <input id="chatInput" placeholder="Preguntale a tu asesor…" autocomplete="off">
+          <button id="chatSend" aria-label="Enviar">➤</button>
+        </div>
+        <div class="g-note" id="advisorNote" hidden>Para usar el asesor, cargá tu API key de Claude en Ajustes ⚙ (arriba a la derecha).</div>
+      </section>
       <div class="g-empty g-card" id="anEmpty" hidden>
         <strong>Nada para analizar todavía</strong>
         <p>Cuando cargues gastos, acá vas a ver la torta por categoría, ingresos vs gastos y la evolución mensual.</p>
@@ -441,15 +490,17 @@
     </div>
   </nav>
 
+  <div class="g-listenpop" id="listenPop" hidden>
+    <div class="g-listencard">
+      <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="g-transcript" id="transcript"><span class="hint">Mantené apretado y hablá. Podés dictar varios gastos seguidos — al soltar te dejo revisar todo antes de guardar.</span></div>
+      <button class="g-btn" id="cancelListen" style="flex:none">Cancelar</button>
+    </div>
+  </div>
+
   <div class="g-scrim" id="scrim"></div>
   <div class="g-sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Cargar">
     <div class="g-sheetin">
-
-      <div id="phaseListen" hidden>
-        <h3>Te escucho…</h3>
-        <div class="g-transcript" id="transcript"><span class="hint">Mantené apretado y hablá. Podés dictar varios gastos seguidos.</span></div>
-        <div class="g-actions"><button class="g-btn" data-close>Cancelar</button></div>
-      </div>
 
       <div id="phaseText" hidden>
         <h3>Escribilo como lo dirías</h3>
@@ -562,6 +613,17 @@
         <div class="g-note" id="imPreview"></div>
         <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
           <button class="g-btn primary" id="confirmImport">Confirmar</button></div>
+      </div>
+
+      <div id="phaseDetalle" hidden>
+        <h3 id="detalleTitle">Consumos del resumen</h3>
+        <div class="g-field"><label class="g-label" for="dtMes">Mes</label><select id="dtMes"></select></div>
+        <div id="detalleList"></div>
+        <div class="g-note" id="dtSum"></div>
+        <label class="g-switch" style="padding:0"><input type="checkbox" id="dtRecalc">
+          Recalcular el total del resumen con esta suma</label>
+        <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
+          <button class="g-btn primary" id="saveDetalle">Guardar cambios</button></div>
       </div>
 
       <div id="phaseSubs" hidden>
@@ -879,7 +941,7 @@
           categoria:{type:"string", enum:["Comida","Transporte","Hogar","Servicios","Salud","Salidas","Ropa","Educación","Tarjeta","Otros"]},
           suscripcion:{type:"boolean"}
         }}}}};
-  const SYS_RESUMEN = "Leés resúmenes de tarjeta de crédito de bancos argentinos (PDF o foto). Extraé: 'tarjeta' = red y banco en formato corto (ej 'Visa Galicia', 'Mastercard BBVA', 'Amex Santander'); 'cierre_dia' y 'vencimiento_dia' = día del mes (1 a 28; si es 29-31 poné 28) del cierre actual y del vencimiento actual; 'mes' = mes al que corresponde el pago, formato YYYY-MM (el mes del vencimiento); 'total' = total a pagar en pesos argentinos; 'consumos' = SOLO los consumos del período en pesos (excluí saldo anterior, su pago, pago mínimo, impuestos de sellos, y consumos en dólares salvo que estén pesificados), cada uno con descripción corta legible, monto, categoría y si es una suscripción mensual recurrente (Netflix, Spotify, gimnasio, apps…). Comercios comunes: Coto/Dia/Carrefour/Jumbo=Comida; YPF/Shell/Axion/SUBE/Uber/Cabify=Transporte; Farmacity=Salud; Edesur/Metrogas/Aysa/Personal/Movistar/Claro=Servicios.";
+  const SYS_RESUMEN = "Leés resúmenes de tarjeta de crédito de bancos argentinos (PDF o foto). Extraé: 'tarjeta' = red y banco en formato corto (ej 'Visa Galicia', 'Mastercard BBVA', 'Amex Santander'); 'cierre_dia' y 'vencimiento_dia' = día del mes (1 a 28; si es 29-31 poné 28) del cierre actual y del vencimiento actual; 'mes' = mes del período del resumen en formato YYYY-MM (usá el mes de la fecha de cierre, no el del vencimiento); 'total' = total a pagar en pesos argentinos; 'consumos' = SOLO los consumos del período en pesos (excluí saldo anterior, su pago, pago mínimo, impuestos de sellos, y consumos en dólares salvo que estén pesificados), cada uno con descripción corta legible, monto, categoría y si es una suscripción mensual recurrente (Netflix, Spotify, gimnasio, apps…). Comercios comunes: Coto/Dia/Carrefour/Jumbo=Comida; YPF/Shell/Axion/SUBE/Uber/Cabify=Transporte; Farmacity=Salud; Edesur/Metrogas/Aysa/Personal/Movistar/Claro=Servicios.";
 
   const SCHEMA_CLASIF = {type:"object", additionalProperties:false, required:["items"], properties:{
     items:{type:"array", items:{type:"object", additionalProperties:false,
@@ -1061,24 +1123,32 @@
   let pieSel = null;
   let pieData = [];
 
+  function cardResumenesMes(mk){
+    // resúmenes de tarjeta del mes (keyed por mes de cierre)
+    const out = [];
+    for(const t of S.tarjetas){
+      const r = (t.resumenes||{})[mk];
+      if(r) out.push(r);
+    }
+    return out;
+  }
+
   function gastosPorCategoria(){
-    const mk = monthKey(view);
     const desglosar = $("desgloseChk").checked;
     const byCat = {};
-    const detalleTarjetas = [];
-    if(desglosar){
-      for(const t of S.tarjetas){
-        const r = (t.resumenes||{})[mk];
-        if(r && r.detalle && r.detalle.length) detalleTarjetas.push(...r.detalle);
-      }
-    }
+    const res = cardResumenesMes(monthKey(view));
     for(const x of monthMovs()){
       if(x.tipo!=="gasto") continue;
-      if(desglosar && detalleTarjetas.length && x.categoria==="Tarjeta") continue;
+      // el pago del resumen ya está representado por el resumen mismo
+      if(res.length && x.categoria==="Tarjeta") continue;
       byCat[x.categoria]=(byCat[x.categoria]||0)+x.monto;
     }
-    for(const d of detalleTarjetas){
-      if(d.monto>0) byCat[d.categoria||"Otros"]=(byCat[d.categoria||"Otros"]||0)+d.monto;
+    for(const r of res){
+      if(desglosar && r.detalle && r.detalle.length){
+        for(const d of r.detalle) if(d.monto>0) byCat[d.categoria||"Otros"]=(byCat[d.categoria||"Otros"]||0)+d.monto;
+      } else {
+        byCat["Tarjeta"]=(byCat["Tarjeta"]||0)+r.monto;
+      }
     }
     const entries = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
     // la torta muestra hasta 5 categorías + "Otros" agrupado (paleta validada para ≤6 porciones)
@@ -1142,16 +1212,18 @@
   function renderAnalisis(){
     $("monthTitleA").textContent = fmtMonth(view);
     const mm = monthMovs();
-    const out = mm.filter(x=>x.tipo==="gasto").reduce((s,x)=>s+x.monto,0);
     const inn = mm.filter(x=>x.tipo==="ingreso").reduce((s,x)=>s+x.monto,0);
-    const hasData = out>0 || inn>0;
+    const cardTotal = cardResumenesMes(monthKey(view)).reduce((s,r)=>s+r.monto,0);
+    const hasData = inn>0 || cardTotal>0 || mm.some(x=>x.tipo==="gasto");
     $("anEmpty").hidden = hasData;
     document.querySelectorAll("#view-analisis > section.g-card").forEach(el=>el.hidden = !hasData);
+    $("advisorNote").hidden = !!(S.config.apiKey||"").trim();
     if(!hasData) return;
 
     pieData = gastosPorCategoria();
     if(pieSel!==null && pieSel>=pieData.length) pieSel = null;
     const total = pieData.reduce((s,[,v])=>s+v,0);
+    const out = total; // gasto del mes incluyendo el resumen de tarjeta
     $("pieTotal").textContent = fmtMoney(total);
     animatePie();
     $("pieLegend").innerHTML = pieData.map(([cat,val], i)=>{
@@ -1181,10 +1253,13 @@
       const d = new Date(view.getFullYear(), view.getMonth()-off, 1);
       const mk = monthKey(d);
       let gi=0, gg=0;
+      const rsum = cardResumenesMes(mk).reduce((s,r)=>s+r.monto,0);
       for(const x of S.movs){
         if(x.fecha.slice(0,7)!==mk) continue;
-        if(x.tipo==="ingreso") gi+=x.monto; else gg+=x.monto;
+        if(x.tipo==="ingreso") gi+=x.monto;
+        else if(!(rsum>0 && x.categoria==="Tarjeta")) gg+=x.monto;
       }
+      gg += rsum;
       months.push({d, gi, gg});
     }
     const emax = Math.max(1, ...months.map(m=>Math.max(m.gi,m.gg)));
@@ -1225,16 +1300,20 @@
 
   /* ---------- render: tarjetas ---------- */
   function renderTarjetas(){
-    const mk = monthKey(new Date());
+    const hoyMk = monthKey(new Date());
     $("cardEmpty").hidden = S.tarjetas.length>0;
     $("cardList").innerHTML = S.tarjetas.map(t=>{
-      const r = (t.resumenes||{})[mk];
-      const estado = !r ? "Resumen de "+monthKeyLabel(mk).split(" ")[0].toLowerCase()+" sin cargar"
-        : (r.pagado ? "Pagado ✔" : "A pagar antes del "+t.vto);
-      const detalle = (r && r.detalle && r.detalle.length)
-        ? `<div class="g-ccdetail">`+r.detalle.slice(0,6).map(d=>
+      // mostrar el resumen del mes actual, o si no hay, el último cargado
+      const keys = Object.keys(t.resumenes||{}).sort();
+      const mk = (t.resumenes||{})[hoyMk] ? hoyMk : keys[keys.length-1];
+      const r = mk ? t.resumenes[mk] : null;
+      const estado = !r ? "Sin resúmenes cargados"
+        : monthKeyLabel(mk)+(r.pagado ? " · pagado ✔" : " · vence el "+t.vto);
+      const nDet = (r && r.detalle) ? r.detalle.length : 0;
+      const detalle = nDet
+        ? `<div class="g-ccdetail">`+r.detalle.slice(0,4).map(d=>
             `<div><span class="cdot" style="background:${catColor(d.categoria||"Otros")}"></span><span class="nm">${esc(d.desc)}${d.sub?" 🔁":""}</span><span class="m">${fmtMoney(d.monto)}</span></div>`).join("")
-          + (r.detalle.length>6?`<div><span class="cdot" style="background:${catColor("Otros")}"></span><span class="nm">… y ${r.detalle.length-6} consumos más</span><span class="m"></span></div>`:"") + `</div>`
+          + (nDet>4?`<div><span class="cdot" style="background:${catColor("Otros")}"></span><span class="nm">… y ${nDet-4} consumos más</span><span class="m"></span></div>`:"") + `</div>`
         : "";
       return `<article class="g-ccard" data-card="${t.id}">
         <div class="name">${esc(t.nombre)}</div>
@@ -1244,7 +1323,8 @@
         ${detalle}
         <div class="row">
           <button class="g-ccbtn solid" data-loadres="${t.id}">${r?"Editar resumen":"Cargar resumen"}</button>
-          ${r && !r.pagado ? `<button class="g-ccbtn" data-paycard="${t.id}">Pagar</button>` : ""}
+          ${nDet ? `<button class="g-ccbtn" data-verdet="${t.id}" data-mes="${mk}">Ver consumos (${nDet})</button>` : ""}
+          ${r && !r.pagado ? `<button class="g-ccbtn" data-paycard="${t.id}" data-mes="${mk}">Pagar</button>` : ""}
           <button class="g-ccbtn" data-editcard="${t.id}">Editar</button>
         </div>
       </article>`;
@@ -1326,8 +1406,9 @@
 
   /* ---------- sheet ---------- */
   const sheet=$("sheet"), scrim=$("scrim");
-  const phases = ["Listen","Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Subs","Pay","Wallet","Transfer","Config"];
+  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","Wallet","Transfer","Config"];
   function openSheet(name){
+    closeListen();
     sheet.classList.add("open"); scrim.classList.add("open");
     phases.forEach(p=>{ $("phase"+p).hidden = p.toLowerCase()!==name.toLowerCase(); });
   }
@@ -1337,6 +1418,11 @@
   }
   scrim.onclick = closeSheet;
   document.querySelectorAll("[data-close]").forEach(b=>b.onclick = closeSheet);
+
+  /* ---------- popup de escucha (flotante, no tapa el micrófono) ---------- */
+  function openListen(){ $("listenPop").hidden = false; }
+  function closeListen(){ $("listenPop").hidden = true; }
+  $("cancelListen").onclick = ()=>stopRec();
 
   /* ---------- selects ---------- */
   let tipoSel = "gasto";
@@ -1576,10 +1662,16 @@
       openSheet("resumen");
       return;
     }
+    const ver = e.target.closest("[data-verdet]");
+    if(ver){
+      const t = S.tarjetas.find(x=>x.id===Number(ver.dataset.verdet));
+      if(t) openDetalle(t, ver.dataset.mes);
+      return;
+    }
     const pay = e.target.closest("[data-paycard]");
     if(pay){
       const t = S.tarjetas.find(x=>x.id===Number(pay.dataset.paycard));
-      const mk = monthKey(new Date());
+      const mk = pay.dataset.mes || monthKey(new Date());
       const r = t && (t.resumenes||{})[mk];
       if(r) openPay({kind:"tarjeta", ref:t, mes:mk, nombre:"Resumen "+t.nombre, monto:r.monto});
       return;
@@ -1609,6 +1701,74 @@
       if(!$("rsMonto").value) $("rsMonto").value = Math.round(suma*100)/100;
     } else $("rsPreview").textContent = $("rsDetalle").value.trim() ? "No encontré montos en ese texto — revisá el formato." : "";
   });
+
+  /* ---------- ver y editar todos los consumos de un resumen ---------- */
+  let detCard = null, detItems = [];
+
+  function loadDetMes(){
+    const r = detCard && (detCard.resumenes||{})[$("dtMes").value];
+    detItems = ((r && r.detalle)||[]).map(d=>({desc:d.desc, monto:d.monto, categoria:d.categoria||"Otros", sub:!!d.sub}));
+    renderDetalleRows();
+  }
+  function renderDetalleRows(){
+    $("detalleList").innerHTML = detItems.length ? detItems.map((d,i)=>`
+      <div class="g-multirow" data-di="${i}" style="--d:${Math.min(i,8)*0.02}s">
+        <div class="col">
+          <input type="text" data-f="desc" value="${esc(d.desc)}" placeholder="Descripción">
+          <select data-f="categoria">${GASTO_CATS.map(c=>`<option${c===d.categoria?" selected":""}>${c}</option>`).join("")}</select>
+        </div>
+        <div class="col">
+          <input type="number" inputmode="decimal" step="any" min="0" data-f="monto" value="${d.monto||""}" placeholder="Monto">
+        </div>
+        <button class="rm" data-rmdet="${i}" aria-label="Quitar">✕</button>
+      </div>`).join("")
+      : `<div class="g-note">Este resumen no tiene consumos individuales cargados.</div>`;
+    updateDtSum();
+  }
+  function updateDtSum(){
+    const r = detCard && (detCard.resumenes||{})[$("dtMes").value];
+    if(!r){ $("dtSum").textContent = ""; return; }
+    const suma = detItems.reduce((s,d)=>s+(d.monto>0?d.monto:0),0);
+    $("dtSum").textContent = `Suma de consumos: ${fmtMoney(suma)} · total del resumen: ${fmtMoney(r.monto)}`;
+  }
+  function openDetalle(card, mes){
+    detCard = card;
+    $("detalleTitle").textContent = "Consumos de "+card.nombre;
+    const keys = Object.keys(card.resumenes||{}).sort().reverse();
+    $("dtMes").innerHTML = keys.map(k=>`<option value="${k}">${monthKeyLabel(k)}</option>`).join("");
+    if(mes && keys.includes(mes)) $("dtMes").value = mes;
+    $("dtRecalc").checked = false;
+    loadDetMes();
+    openSheet("detalle");
+  }
+  $("dtMes").addEventListener("change", loadDetMes);
+  $("detalleList").addEventListener("input", e=>{
+    const row = e.target.closest("[data-di]");
+    if(!row) return;
+    const d = detItems[Number(row.dataset.di)];
+    if(!d) return;
+    const f = e.target.dataset.f;
+    if(f==="monto") d.monto = parseFloat(e.target.value)||0;
+    else if(f==="categoria") d.categoria = e.target.value;
+    else d.desc = e.target.value.slice(0,60);
+    updateDtSum();
+  });
+  $("detalleList").addEventListener("click", e=>{
+    const rm = e.target.closest("[data-rmdet]");
+    if(rm){ detItems.splice(Number(rm.dataset.rmdet),1); renderDetalleRows(); }
+  });
+  $("saveDetalle").onclick = ()=>{
+    if(!detCard) return;
+    const r = (detCard.resumenes||{})[$("dtMes").value];
+    if(!r) return;
+    r.detalle = detItems.filter(d=>d.monto>0 || d.desc.trim());
+    if($("dtRecalc").checked){
+      const suma = r.detalle.reduce((s,d)=>s+(d.monto>0?d.monto:0),0);
+      if(suma>0) r.monto = Math.round(suma*100)/100;
+    }
+    save(); closeSheet(); renderAll();
+    toast("Consumos actualizados ✔");
+  };
 
   async function aiClassifyDetalle(items){
     if(!(S.config.apiKey||"").trim() || !items.length) return false;
@@ -1816,10 +1976,12 @@
     const tm = t.match(/(?:total a pagar|saldo actual|total del resumen|total consumos)[^0-9\-]{0,30}(\d{1,3}(?:\.\d{3})*(?:,\d{1,2})?)/);
     if(tm) total = parseFloat(tm[1].replace(/\./g,"").replace(",","."));
     const detalle = parseDetalleResumen(text);
+    // el resumen se guarda en el mes del CIERRE (los consumos son de ese mes)
     let mes = monthKey(new Date());
-    if(ve && ve.mo>=1 && ve.mo<=12){
-      const y = ve.y ? (ve.y<100 ? 2000+ve.y : ve.y) : new Date().getFullYear();
-      mes = y+"-"+String(ve.mo).padStart(2,"0");
+    const src = ci || ve;
+    if(src && src.mo>=1 && src.mo<=12){
+      const y = src.y ? (src.y<100 ? 2000+src.y : src.y) : new Date().getFullYear();
+      mes = y+"-"+String(src.mo).padStart(2,"0");
     }
     return {nombre,
       cierre: ci ? Math.min(28, Math.max(1, ci.d)) : 20,
@@ -2031,22 +2193,114 @@
   };
   $("saveCfg").onclick = ()=>{
     S.config.apiKey = $("cfgKey").value.trim();
-    save(); closeSheet();
+    save(); closeSheet(); renderAll();
     toast(S.config.apiKey ? "IA activada ✔ (clave guardada en este dispositivo)" : "Modo sin IA: reglas locales");
   };
+
+  /* ---------- asesor financiero (IA) ---------- */
+  const SCHEMA_ADVISOR = {type:"object", additionalProperties:false, required:["respuesta"],
+    properties:{respuesta:{type:"string"}}};
+  const SYS_ADVISOR = "Sos el asesor financiero personal de Guita, una app argentina de finanzas. Respondés en español rioplatense, cercano y directo, en 3 a 6 oraciones (podés usar guiones para listar). Basate SOLO en los datos financieros que te paso; si falta información para responder bien, decilo. Montos en pesos argentinos con separador de miles. Sé concreto: números, porcentajes y acciones posibles esta semana o este mes. No recomiendes instrumentos de inversión puntuales ni des asesoramiento regulado; sí podés hablar de hábitos, presupuesto, recortes y prioridades de pago.";
+
+  function financeSnapshot(){
+    const mk = monthKey(view);
+    const L = ["HOY: "+todayISO()+" · MES EN PANTALLA: "+monthKeyLabel(mk)];
+    const hist = [];
+    for(let off=5; off>=0; off--){
+      const d = new Date(view.getFullYear(), view.getMonth()-off, 1);
+      const k = monthKey(d);
+      let gi=0, gg=0;
+      const rsum = cardResumenesMes(k).reduce((s,r)=>s+r.monto,0);
+      for(const x of S.movs){
+        if(x.fecha.slice(0,7)!==k) continue;
+        if(x.tipo==="ingreso") gi+=x.monto;
+        else if(!(rsum>0 && x.categoria==="Tarjeta")) gg+=x.monto;
+      }
+      gg += rsum;
+      if(gi||gg) hist.push(`${monthKeyLabel(k)}: ingresos $${Math.round(gi)}, gastos $${Math.round(gg)}`);
+    }
+    if(hist.length) L.push("EVOLUCIÓN MENSUAL:\n"+hist.join("\n"));
+    const byCat = {};
+    const res = cardResumenesMes(mk);
+    for(const x of monthMovs()){
+      if(x.tipo!=="gasto") continue;
+      if(res.length && x.categoria==="Tarjeta") continue;
+      byCat[x.categoria]=(byCat[x.categoria]||0)+x.monto;
+    }
+    for(const r of res){
+      if(r.detalle && r.detalle.length){ for(const d of r.detalle) if(d.monto>0) byCat[d.categoria||"Otros"]=(byCat[d.categoria||"Otros"]||0)+d.monto; }
+      else byCat["Tarjeta"]=(byCat["Tarjeta"]||0)+r.monto;
+    }
+    const cats = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+    if(cats.length) L.push("GASTOS DEL MES POR CATEGORÍA (incluye consumos de tarjeta):\n"+cats.map(([c,v])=>`${c}: $${Math.round(v)}`).join("\n"));
+    if(S.billeteras.length) L.push("BILLETERAS (plata disponible):\n"+S.billeteras.map(b=>`${b.nombre}: $${Math.round(saldoBilletera(b.id))}`).join("\n"));
+    if(S.fijos.length) L.push("GASTOS FIJOS MENSUALES:\n"+S.fijos.map(f=>`${f.nombre}: $${Math.round(f.monto)} (día ${f.dia}${f.viaTarjeta?", va dentro del resumen de la tarjeta":""})`).join("\n"));
+    if(S.tarjetas.length) L.push("TARJETAS DE CRÉDITO:\n"+S.tarjetas.map(t=>{
+      const ks = Object.keys(t.resumenes||{}).sort();
+      const lk = ks[ks.length-1];
+      const r = lk && t.resumenes[lk];
+      return `${t.nombre} (cierra el ${t.cierre}, vence el ${t.vto})`+
+        (r ? `: último resumen ${monthKeyLabel(lk)} por $${Math.round(r.monto)}, ${r.pagado?"pagado":"pendiente de pago"}, ${(r.detalle||[]).length} consumos` : ": sin resúmenes cargados");
+    }).join("\n"));
+    const ult = [...S.movs].sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,12);
+    if(ult.length) L.push("ÚLTIMOS MOVIMIENTOS:\n"+ult.map(x=>`${x.fecha} ${x.tipo} $${Math.round(x.monto)} ${x.categoria} (${x.descripcion})`).join("\n"));
+    return L.join("\n\n");
+  }
+
+  let advisorHist = [], advisorBusy = false;
+  function chatAdd(cls, text){
+    const div = document.createElement("div");
+    div.className = "g-msg "+cls;
+    div.textContent = text;
+    $("chatLog").appendChild(div);
+    $("chatLog").scrollTop = $("chatLog").scrollHeight;
+    return div;
+  }
+  async function askAdvisor(q){
+    q = (q||"").trim();
+    if(!q || advisorBusy) return;
+    if(!(S.config.apiKey||"").trim()){
+      $("advisorNote").hidden = false;
+      toast("Falta tu API key de Claude — cargala en Ajustes ⚙");
+      return;
+    }
+    advisorBusy = true;
+    $("chatInput").value = "";
+    chatAdd("user", q);
+    const think = chatAdd("think", "Mirando tus números…");
+    const convo = advisorHist.slice(-6).map(m=>(m.role==="user"?"Usuario: ":"Asesor: ")+m.text).join("\n");
+    const userText = "DATOS FINANCIEROS DEL USUARIO:\n"+financeSnapshot()+
+      (convo ? "\n\nCONVERSACIÓN PREVIA:\n"+convo : "")+
+      "\n\nPREGUNTA DEL USUARIO:\n"+q;
+    const out = await callClaude(SYS_ADVISOR, userText, SCHEMA_ADVISOR, 1500);
+    think.remove();
+    const resp = out && out.respuesta ? out.respuesta.trim()
+      : "No pude responder ahora (¿hay internet? ¿la key es válida?) — probá de nuevo en un rato.";
+    chatAdd("ai", resp);
+    advisorHist.push({role:"user", text:q}, {role:"ai", text:resp});
+    advisorBusy = false;
+  }
+  $("chatSend").onclick = ()=>askAdvisor($("chatInput").value);
+  $("chatInput").addEventListener("keydown", e=>{ if(e.key==="Enter") askAdvisor($("chatInput").value); });
+  $("chatChips").addEventListener("click", e=>{
+    const b = e.target.closest("[data-q]");
+    if(b) askAdvisor(b.dataset.q);
+  });
 
   /* ---------- voz (mantener apretado) ---------- */
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   let rec = null, recActive = false, androidListening = false;
-  let pressT0 = 0, startedByPress = false, holding = false, vozBuffer = "";
+  let pressT0 = 0, startedByPress = false, holding = false, vozBuffer = "", vozGen = 0;
   const isListening = () => recActive || androidListening;
 
   function stopRec(){
+    vozGen++; // invalida cualquier interpretación en curso
     if(rec && recActive){ try{ rec.abort(); }catch(e){} }
     if(window.AndroidVoz && androidListening){ try{ window.AndroidVoz.stop(); }catch(e){} }
     recActive = false; androidListening = false; holding = false; vozBuffer = "";
     $("micBtn").classList.remove("listening");
     document.body.classList.remove("mic-hold");
+    closeListen();
   }
 
   function finishVoice(){
@@ -2064,10 +2318,12 @@
   async function processTranscript(text){
     lastOrigen = "voz";
     if((S.config.apiKey||"").trim()){
+      const gen = ++vozGen;
       const tEl = $("transcript");
-      openSheet("listen");
+      openListen();
       if(tEl) tEl.innerHTML = `“${esc(text)}”<br><span class="hint">Interpretando con IA…</span>`;
       const out = await callClaude(SYS_VOICE, text, SCHEMA_MOVS);
+      if(gen !== vozGen) return; // canceló mientras pensaba
       if(out && Array.isArray(out.movimientos) && out.movimientos.length){
         if(out.movimientos.length===1){
           const m = out.movimientos[0];
@@ -2109,6 +2365,8 @@
       if(vozBuffer){ const b=vozBuffer; vozBuffer=""; processTranscript(b); return; }
       const el=$("transcript");
       if(el) el.innerHTML='<span class="hint">No te escuché… mantené apretado y hablá</span>';
+      const g = vozGen;
+      setTimeout(()=>{ if(g===vozGen && !isListening()) closeListen(); }, 2500);
     } else if(code==="not-allowed"){
       fallbackText("Sin permiso de micrófono — activalo en Ajustes › Apps › Guita");
     } else if(code==="unavailable"){
@@ -2131,7 +2389,7 @@
     if(window.AndroidVoz){
       const tEl = $("transcript");
       tEl.innerHTML = '<span class="hint">Te escucho — hablá y soltá cuando termines</span>';
-      openSheet("listen");
+      openListen();
       $("micBtn").classList.add("listening");
       androidListening = true;
       try{ window.AndroidVoz.start(); }
@@ -2146,7 +2404,7 @@
     rec.maxAlternatives = 1;
     const tEl = $("transcript");
     tEl.innerHTML = '<span class="hint">Te escucho — hablá y soltá cuando termines</span>';
-    openSheet("listen");
+    openListen();
     $("micBtn").classList.add("listening");
     let finalText = "";
     rec.onresult = ev=>{
@@ -2169,7 +2427,9 @@
     };
     rec.onend = ()=>{
       recActive = false; $("micBtn").classList.remove("listening");
-      if(finalText.trim()) processTranscript(finalText.trim());
+      if(finalText.trim()){ processTranscript(finalText.trim()); return; }
+      const g = vozGen;
+      setTimeout(()=>{ if(g===vozGen && !isListening()) closeListen(); }, 2500);
     };
     try { rec.start(); recActive = true; }
     catch(e){ fallbackText("No pude arrancar el micrófono — escribilo"); }
