@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -31,12 +32,14 @@ public class MainActivity extends Activity {
     private static final int REQ_MIC = 1;
     private static final int REQ_SAVE = 2;
     private static final int REQ_FILE = 3;
+    private static final int REQ_NOTIF = 4;
 
     private WebView web;
     private SpeechRecognizer rec;
     private boolean pendingStart = false;
     private String pendingCsv = null;
     private ValueCallback<Uri[]> fileCallback;
+    private int pendingRemH = -1, pendingRemM = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,6 +139,16 @@ public class MainActivity extends Activity {
             }
             pendingStart = false;
         }
+        if (req == REQ_NOTIF) {
+            boolean granted = grants.length > 0 && grants[0] == PackageManager.PERMISSION_GRANTED;
+            // la alarma se programa igual: si después habilita las notificaciones, ya queda andando
+            if (pendingRemH >= 0) {
+                ReminderReceiver.schedule(this, pendingRemH, pendingRemM);
+                pendingRemH = -1;
+                pendingRemM = -1;
+            }
+            js("window.__remPermiso&&window.__remPermiso(" + (granted ? "true" : "false") + ")");
+        }
     }
 
     @Override
@@ -230,6 +243,25 @@ public class MainActivity extends Activity {
                 }
                 js("window.__httpResult&&window.__httpResult(" + q(reqId) + "," + status + "," + q(respBody) + ")");
             }).start();
+        }
+
+        @JavascriptInterface
+        public void setReminder(final int hour, final int minute) {
+            runOnUiThread(() -> {
+                if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS")
+                        != PackageManager.PERMISSION_GRANTED) {
+                    pendingRemH = hour;
+                    pendingRemM = minute;
+                    requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, REQ_NOTIF);
+                    return;
+                }
+                ReminderReceiver.schedule(MainActivity.this, hour, minute);
+            });
+        }
+
+        @JavascriptInterface
+        public void clearReminder() {
+            runOnUiThread(() -> ReminderReceiver.cancel(MainActivity.this));
         }
 
         @JavascriptInterface

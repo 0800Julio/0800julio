@@ -31,8 +31,23 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
   recalcular el total. La torta del mes incluye el resumen aunque todavía no
   esté pagado.
 - 🤝 **Asesor financiero con IA** (con API key): un chat en Análisis que conoce
-  tus números — gastos, ingresos, tarjetas, fijos y billeteras — para pedirle
-  consejos de recorte, presupuesto o cómo venís este mes.
+  tus números — gastos, ingresos, tarjetas, fijos, billeteras, deudas,
+  inversiones y presupuestos — con prioridades sanas: primero cortar la deuda
+  de tarjeta, después fondo de emergencia, recién después invertir.
+- ⚡ **Carga rápida**: un toque crea tus billeteras (Lemon, Mercado Pago,
+  Cuenta DNI, Santander, Astropay, Balanz) y tarjetas (Visa, Mastercard,
+  Tarjeta Mercado Pago) — editable y sin duplicar lo que ya está.
+- 🎯 **Presupuestos por categoría**: tope mensual por categoría con barras de
+  avance en Análisis y alertas al pasar el 80% y al pasarte (cuenta también
+  los consumos de tarjeta).
+- 🚨 **Alerta de gasto grande**: definí un umbral y te aviso al anotar
+  cualquier gasto que lo supere.
+- 🔔 **Recordatorio diario** (APK): notificación a la hora que elijas para
+  anotar los gastos del día; tocarla abre la app. Sobrevive reinicios.
+- 📈 **Cuentas de inversión** (Balanz, plazo fijo…): se muestran aparte del
+  disponible, con su propio total.
+- 💣 **Deuda de tarjetas**: cargá el saldo financiado que venís arrastrando y
+  velo junto a los resúmenes sin pagar — el asesor lo trata como prioridad nº1.
 - 🏷 **Categorías automáticas** por palabras clave (súper → Comida, nafta → Transporte,
   luz → Servicios, etc.). Siempre podés corregir antes de guardar.
 - ➕ **Carga manual** para cuando no querés hablar.

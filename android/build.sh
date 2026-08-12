@@ -25,14 +25,14 @@ cp -r ../icons "$OUT/assets/icons"
   --java "$OUT/gen" \
   --min-sdk-version 24 \
   --target-sdk-version 34 \
-  --version-code 5 \
-  --version-name 1.4 \
+  --version-code 6 \
+  --version-name 1.5 \
   "$OUT/res.zip"
 
 javac --release 11 -Xlint:-options \
   -cp "$PLATFORM" \
   -d "$OUT/classes" \
-  "$OUT"/gen/app/guita/R.java src/app/guita/MainActivity.java
+  "$OUT"/gen/app/guita/R.java src/app/guita/*.java
 
 find "$OUT/classes" -name '*.class' -print0 | xargs -0 \
   "$BT/d8" --release --lib "$PLATFORM" --min-api 24 --output "$OUT/dex"
