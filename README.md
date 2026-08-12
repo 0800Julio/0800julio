@@ -48,6 +48,15 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
   disponible, con su propio total.
 - 💣 **Deuda de tarjetas**: cargá el saldo financiado que venís arrastrando y
   velo junto a los resúmenes sin pagar — el asesor lo trata como prioridad nº1.
+- 💵 **Pagos parciales**: al cargar cada resumen te pregunta cuánto pagaste;
+  si pagás menos que el total, el resto queda como deuda financiada visible.
+- 📊 **Historial mes a mes por tarjeta**: total, variación contra el mes
+  anterior, consumos vs total (la diferencia = arrastre + intereses e
+  impuestos), pagado y financiado. Con promedio de cargos y **proyección del
+  próximo resumen** (consumos nuevos + financiado + cargos promedio).
+- 💳 **Gastos "con tarjeta"**: al anotar un gasto podés elegir una tarjeta en
+  vez de billetera — no descuenta plata y suma a la proyección del próximo
+  resumen (sin doble conteo cuando cargás el resumen real).
 - 🏷 **Categorías automáticas** por palabras clave (súper → Comida, nafta → Transporte,
   luz → Servicios, etc.). Siempre podés corregir antes de guardar.
 - ➕ **Carga manual** para cuando no querés hablar.
