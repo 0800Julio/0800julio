@@ -66,7 +66,18 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
   automáticamente (900.000 se lee como novecientos mil, no como 900).
 - 🧾 **Panel de resumen extendido**: desglose completo (saldo anterior −
   pagos + consumos + impuestos = total), iconos por marca (Netflix 🎬,
-  Rappi 🛵, YPF ⛽…), chips de cuota 📅 y descuentos en verde.
+  Rappi 🛵, YPF ⛽…), chips de cuota 📅 y descuentos en verde. Todos los
+  totales leídos se pueden corregir a mano.
+- 💸 **Modo económico de IA** (v1.8): selector Haiku/Opus en Ajustes.
+  Con Haiku, leer un resumen sale ~US$0,02–0,05 y una consulta al asesor
+  menos de US$0,01 (~5× más barato que Opus).
+- 💡 **Recomendaciones locales gratis** en Análisis: costo real de financiar,
+  cuotas que se liberan, suscripciones, presupuestos pasados, balance del
+  mes y fondo de emergencia — sin gastar API.
+- 🔮 **Próximo resumen detallado**: tocá la proyección en el historial y ves
+  cuota por cuota qué sigue (y cuál es la última 🎉), qué cuotas terminan,
+  suscripciones, consumos nuevos, financiado, impuestos estimados, total y
+  pago mínimo estimado según tu proporción histórica.
 - 🏷 **Categorías automáticas** por palabras clave (súper → Comida, nafta → Transporte,
   luz → Servicios, etc.). Siempre podés corregir antes de guardar.
 - ➕ **Carga manual** para cuando no querés hablar.

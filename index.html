@@ -313,6 +313,24 @@
     color:var(--muted); font-size:12px; cursor:pointer; display:grid; place-items:center}
   .g-ccdetail .cemoji{width:20px; font-size:13px; text-align:center; flex:none}
 
+  /* proyección y recomendaciones */
+  .g-prow{display:flex; align-items:center; gap:9px; padding:6px 0; font-size:13.5px;
+    border-bottom:1px solid var(--line)}
+  .g-prow:last-child{border-bottom:none}
+  .g-prow .ic{width:22px; text-align:center; flex:none}
+  .g-prow .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .g-prow .m{font-variant-numeric:tabular-nums; font-weight:600; flex:none}
+  .g-tips{margin-top:14px}
+  .g-tip{display:flex; gap:10px; padding:8px 0; font-size:13.5px; line-height:1.45;
+    border-bottom:1px solid var(--line); animation:itemIn .3s var(--ease) both; animation-delay:var(--d,0s)}
+  .g-tip:last-child{border-bottom:none}
+  .g-tip .ic{flex:none; font-size:16px; width:24px; text-align:center}
+  .g-tip strong{font-variant-numeric:tabular-nums}
+  .g-editres{border:1px solid var(--line); border-radius:14px; padding:10px 14px}
+  .g-editres summary{font-size:13.5px; font-weight:600; color:var(--brand); cursor:pointer}
+  .g-editres[open] summary{margin-bottom:10px}
+  .g-editres .g-row2{margin-bottom:8px}
+
   /* historial de resúmenes */
   .g-histcard{padding:10px 0 6px; border-bottom:1px solid var(--line)}
   .g-histcard:last-child{border-bottom:none}
@@ -457,6 +475,10 @@
         <div class="g-ivgbar"><span>Ingresos</span><span class="track"><span class="fill" id="ivgIn" style="background:var(--income)"></span></span><span class="amt" id="ivgInAmt"></span></div>
         <div class="g-ivgbar"><span>Gastos</span><span class="track"><span class="fill" id="ivgOut" style="background:var(--expense)"></span></span><span class="amt" id="ivgOutAmt"></span></div>
         <div class="g-note" id="ahorroNote"></div>
+      </section>
+      <section class="g-card g-tips" aria-label="Recomendaciones">
+        <div class="g-label">💡 Recomendaciones</div>
+        <div id="tipsList"></div>
       </section>
       <section class="g-card g-budget" aria-label="Presupuestos del mes">
         <div class="g-viewtitle" style="margin:0 0 6px"><div class="g-label" style="margin:0">🎯 Presupuestos del mes</div>
@@ -695,6 +717,29 @@
         <h3 id="detalleTitle">Consumos del resumen</h3>
         <div class="g-field"><label class="g-label" for="dtMes">Mes</label><select id="dtMes"></select></div>
         <div class="g-stsum" id="dtResumen"></div>
+        <details class="g-editres" id="dtEditar">
+          <summary>✏️ Corregir los totales leídos</summary>
+          <div class="g-row2">
+            <div class="g-field"><label class="g-label" for="edTotal">Total a pagar</label>
+              <input id="edTotal" type="text" inputmode="decimal" data-money></div>
+            <div class="g-field"><label class="g-label" for="edMinimo">Pago mínimo</label>
+              <input id="edMinimo" type="text" inputmode="decimal" data-money></div>
+          </div>
+          <div class="g-row2">
+            <div class="g-field"><label class="g-label" for="edSaldoAnt">Saldo anterior</label>
+              <input id="edSaldoAnt" type="text" inputmode="decimal" data-money></div>
+            <div class="g-field"><label class="g-label" for="edPagos">Pagos del período</label>
+              <input id="edPagos" type="text" inputmode="decimal" data-money></div>
+          </div>
+          <div class="g-row2">
+            <div class="g-field"><label class="g-label" for="edImp">Impuestos e intereses</label>
+              <input id="edImp" type="text" inputmode="decimal" data-money></div>
+            <div class="g-field"><label class="g-label" for="edUsd">Consumos U$D</label>
+              <input id="edUsd" type="text" inputmode="decimal" data-money></div>
+          </div>
+          <div class="g-field"><label class="g-label" for="edPagado">Lo que pagaste de este resumen</label>
+            <input id="edPagado" type="text" inputmode="decimal" data-money></div>
+        </details>
         <div id="detalleList"></div>
         <div class="g-note" id="dtSum" hidden></div>
         <label class="g-switch" style="padding:0"><input type="checkbox" id="dtRecalc">
@@ -722,6 +767,14 @@
         <div class="g-note" id="payNote"></div>
         <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
           <button class="g-btn primary" id="confirmPay">Pagar</button></div>
+      </div>
+
+      <div id="phaseProy" hidden>
+        <h3 id="proyTitle">Próximo resumen (estimado)</h3>
+        <div class="g-stsum" id="proyResumen"></div>
+        <div id="proyList"></div>
+        <div class="g-note">Es una estimación con lo que ya se sabe: cuotas comprometidas, suscripciones, consumos que anotaste "con tarjeta", lo financiado y el promedio de impuestos. Los consumos nuevos que hagas la van a subir.</div>
+        <div class="g-actions"><button class="g-btn primary" data-close>Listo</button></div>
       </div>
 
       <div id="phasePagoRes" hidden>
@@ -765,6 +818,12 @@
         <div class="g-field"><label class="g-label" for="cfgKey">API key de Claude (opcional)</label>
           <input id="cfgKey" type="password" placeholder="sk-ant-…" autocomplete="off"></div>
         <div class="g-note">Con tu API key, uso Claude para entender dictados largos con varios gastos, clasificar mejor los resúmenes de tarjeta y responder en el asesor. La key queda guardada <strong>solo en este dispositivo</strong> y se usa únicamente para hablar con api.anthropic.com. Sin key, todo funciona igual con las reglas locales. Conseguila en platform.claude.com.</div>
+        <div class="g-field"><label class="g-label" for="cfgModelo">Modelo de IA</label>
+          <select id="cfgModelo">
+            <option value="eco">💸 Económico — Claude Haiku (recomendado)</option>
+            <option value="max">✨ Máxima calidad — Claude Opus (~5× más caro)</option>
+          </select></div>
+        <div class="g-note">En modo económico, leer un resumen sale unos <strong>US$&nbsp;0,02–0,05</strong> y una consulta al asesor menos de <strong>US$&nbsp;0,01</strong>. Si alguna lectura sale mal, probá esa carga en máxima calidad y volvé a económico.</div>
         <div class="g-field"><label class="g-label" for="cfgAlerta">Avisarme si un gasto supera</label>
           <input id="cfgAlerta" type="text" inputmode="decimal" data-money placeholder="Ej: 50000 — vacío para no avisar"></div>
         <label class="g-switch" style="padding:0"><input type="checkbox" id="cfgRemOn">
@@ -857,7 +916,7 @@
   catch(e){ persistent = false; }
   if(!persistent) document.getElementById("storageNotice").classList.add("show");
 
-  const blankConfig = () => ({apiKey:"", presupuestos:{}, alertaGrande:0, recordatorio:{on:false, hora:"21:30"}});
+  const blankConfig = () => ({apiKey:"", modeloIA:"eco", presupuestos:{}, alertaGrande:0, recordatorio:{on:false, hora:"21:30"}});
   const blankState = () => ({movs:[], billeteras:[], tarjetas:[], fijos:[], pagosFijos:{}, transf:[], ajustes:[], config:blankConfig(), seq:0});
 
   function loadState(){
@@ -1048,7 +1107,8 @@
     const key = (S.config.apiKey||"").trim();
     if(!key) return null;
     const payload = JSON.stringify({
-      model: "claude-opus-4-8",
+      // modo económico: Haiku sale ~5× más barato que Opus y alcanza para leer resúmenes
+      model: S.config.modeloIA==="max" ? "claude-opus-4-8" : "claude-haiku-4-5",
       max_tokens: maxTokens || 2000,
       system,
       output_config: {format: {type:"json_schema", schema}},
@@ -1209,6 +1269,40 @@
     if(prev) return Math.max(0, r.monto - suma - Math.max(0, prev.monto - resPagado(prev)));
     return null;
   }
+  // proyección detallada del próximo resumen de una tarjeta
+  function proyeccionTarjeta(t){
+    const keys = Object.keys(t.resumenes||{}).sort();
+    if(!keys.length) return null;
+    const lastK = keys[keys.length-1];
+    const r = t.resumenes[lastK];
+    const cuotasSiguen = [], cuotasTerminan = [];
+    for(const d of (r.detalle||[])){
+      if(!(d.monto>0)) continue;
+      const m = (d.desc||"").match(/cuota\s*(\d{1,2})\s*\/\s*(\d{1,2})/i);
+      if(!m) continue;
+      const a = +m[1], b = +m[2];
+      const desc = d.desc.replace(m[0],"").replace(/[\s.·-]+$/,"").trim() || "Consumo";
+      if(a<b) cuotasSiguen.push({desc, monto:d.monto, prox:(a+1)+"/"+b, ultima:a+1===b, categoria:d.categoria});
+      else cuotasTerminan.push({desc, monto:d.monto, categoria:d.categoria});
+    }
+    const fijosVia = S.fijos.filter(f=>f.viaTarjeta && f.tarjetaId===t.id && f.activo!==false);
+    const nuevos = S.movs.filter(m=>m.tarjetaId===t.id && m.tipo==="gasto" && !(t.resumenes||{})[m.fecha.slice(0,7)]);
+    const cargosArr = keys.map(k=>cargosMes(t, k)).filter(c=>c!=null && c>0);
+    const cargoProm = cargosArr.length ? cargosArr.reduce((a,b)=>a+b,0)/cargosArr.length : 0;
+    const fin = resFinanciado(r);
+    const sumaCuotas = cuotasSiguen.reduce((s,c)=>s+c.monto,0);
+    const sumaFijos = fijosVia.reduce((s,f)=>s+f.monto,0);
+    const sumaNuevos = nuevos.reduce((s,m)=>s+m.monto,0);
+    const total = fin + cargoProm + sumaCuotas + sumaFijos + sumaNuevos;
+    // pago mínimo estimado: proporción histórica mínimo/total de tus resúmenes
+    const ratios = keys.map(k=>t.resumenes[k]).filter(x=>x.pagoMinimo>0 && x.monto>0).map(x=>x.pagoMinimo/x.monto);
+    const ratio = ratios.length ? ratios.reduce((a,b)=>a+b,0)/ratios.length : 0.17;
+    return {t, lastK, r, cuotasSiguen, cuotasTerminan, fijosVia, nuevos,
+      fin, cargoProm, sumaCuotas, sumaFijos, sumaNuevos, total,
+      pagoMin: total*ratio,
+      liberado: cuotasTerminan.reduce((s,c)=>s+c.monto,0)};
+  }
+
   // lo que venías arrastrando al entrar a ese resumen
   function arrastreMes(t, k){
     const r = (t.resumenes||{})[k];
@@ -1485,6 +1579,7 @@
       gg += rsum;
       months.push({d, gi, gg});
     }
+    renderTips();
     renderPresupuestos();
 
     const emax = Math.max(1, ...months.map(m=>Math.max(m.gi,m.gg)));
@@ -1495,6 +1590,68 @@
         <span style="height:${Math.round(m.gg/emax*100)}%;background:var(--expense)"></span>
       </div><span class="lbl">${lbl}</span></div>`;
     }).join("");
+  }
+
+  /* ---------- recomendaciones locales (gratis, sin IA) ---------- */
+  function renderTips(){
+    const tips = [];
+    const mk = monthKey(view);
+
+    // deuda financiada: el costo real de arrastrar
+    let finTotal = 0, cargosUlt = 0, arrUlt = 0;
+    for(const t of S.tarjetas){
+      const ks = Object.keys(t.resumenes||{}).sort();
+      if(!ks.length) continue;
+      const lastK = ks[ks.length-1];
+      finTotal += resFinanciado(t.resumenes[lastK]) + (t.deuda||0);
+      const cg = cargosMes(t, lastK), ar = arrastreMes(t, lastK);
+      if(cg!=null) cargosUlt += cg;
+      if(ar!=null) arrUlt += ar;
+    }
+    if(finTotal>0.5){
+      const tasa = arrUlt>0 && cargosUlt>0 ? Math.round(cargosUlt/arrUlt*100) : null;
+      tips.push({ic:"🔥", html:`Estás financiando <strong>${fmtMoney(finTotal)}</strong> de tarjeta`+
+        (cargosUlt>0.5?` y el mes pasado eso te costó <strong>${fmtMoney(cargosUlt)}</strong> en impuestos e intereses${tasa?` (~${tasa}% mensual)`:""}`:"")+
+        `. Cada peso de más que pagues del resumen es plata que dejás de regalar.`});
+    }
+
+    // cuotas que terminan
+    let liberado = 0, cuotasFin = 0;
+    for(const t of S.tarjetas){
+      const p = proyeccionTarjeta(t);
+      if(p){ liberado += p.liberado; cuotasFin += p.cuotasTerminan.length; }
+    }
+    if(liberado>0.5) tips.push({ic:"🎉", html:`El próximo resumen se te liberan <strong>${fmtMoney(liberado)}</strong> de ${cuotasFin} cuota${cuotasFin>1?"s":""} que termina${cuotasFin>1?"n":""}. Buen momento para pagar más del mínimo, no para gastarlo.`});
+
+    // suscripciones
+    const subs = S.fijos.filter(f=>f.activo!==false && (f.viaTarjeta || /netflix|spotify|hbo|max|disney|prime|youtube|icloud|gym|gimnasio/i.test(f.nombre)));
+    const subsTotal = subs.reduce((s,f)=>s+f.monto,0);
+    if(subs.length>=2 && subsTotal>0) tips.push({ic:"🔁", html:`Pagás <strong>${fmtMoney(subsTotal)}</strong> por mes en ${subs.length} suscripciones. Repasá cuáles usaste este mes — dar de baja una es el ahorro más fácil que existe.`});
+
+    // presupuestos pasados
+    const pres = S.config.presupuestos||{};
+    const byCatT = gastosByCat(true);
+    const overs = Object.keys(pres).filter(c=>pres[c]>0 && (byCatT[c]||0)>pres[c]);
+    if(overs.length) tips.push({ic:"🎯", html:`Te pasaste del presupuesto en <strong>${overs.map(esc).join(", ")}</strong>. Mirá esos consumos en la lista y fijate qué recortar el mes que viene.`});
+
+    // balance del mes
+    const mm = monthMovs();
+    const inn = mm.filter(x=>x.tipo==="ingreso").reduce((s,x)=>s+x.monto,0);
+    const gasto = pieData.reduce((s,[,v])=>s+v,0);
+    if(inn>0 && gasto>inn) tips.push({ic:"🚨", html:`Este mes llevás gastado <strong>${fmtMoney(gasto-inn)}</strong> más de lo que ingresó. Si sigue así, sale de ahorros o de financiar la tarjeta (carísimo).`});
+    else if(inn>0 && gasto<inn*0.8) tips.push({ic:"👏", html:`Vas gastando el ${Math.round(gasto/inn*100)}% de tus ingresos — ese ${Math.round((inn-gasto)/inn*100)}% que sobra rinde más cancelando deuda de tarjeta que quieto en una cuenta que no remunera.`});
+
+    // fondo de emergencia
+    const fijosMes = S.fijos.filter(f=>f.activo!==false).reduce((s,f)=>s+f.monto,0);
+    const disp = saldoTotal();
+    if(fijosMes>0 && disp>0 && finTotal<=0.5){
+      const meses = disp/fijosMes;
+      if(meses<3) tips.push({ic:"🛟", html:`Tu plata disponible cubre <strong>${meses<1?"menos de un mes":Math.floor(meses)+" mes"+(Math.floor(meses)>1?"es":"")}</strong> de gastos fijos. La meta sana son 3 meses en una cuenta remunerada (Mercado Pago o Lemon te pagan interés diario).`});
+    }
+
+    $("tipsList").innerHTML = tips.length
+      ? tips.slice(0,5).map((t,i)=>`<div class="g-tip" style="--d:${i*0.05}s"><span class="ic">${t.ic}</span><div>${t.html}</div></div>`).join("")
+      : `<div class="g-note">Todo en orden por ahora 👌 — a medida que cargues resúmenes, ingresos y fijos van a aparecer consejos acá.</div>`;
   }
 
   /* ---------- presupuestos ---------- */
@@ -1659,28 +1816,62 @@
           <span class="tot">${fmtMoney(r.monto)}${delta}</span>
           <span class="est">${est}</span></div>`;
       }).join("");
-      // impuestos e intereses reales (o estimados) por mes → promedio
-      const cargosArr = keys.map(k=>cargosMes(t, k)).filter(c=>c!=null && c>0);
-      const cargoProm = cargosArr.length ? cargosArr.reduce((a,b)=>a+b,0)/cargosArr.length : 0;
-      // proyección: consumos nuevos con esta tarjeta (meses sin resumen) + financiado + cargos promedio
-      const lastR = t.resumenes[keys[keys.length-1]];
-      const fin = resFinanciado(lastR);
-      const nuevos = S.movs.filter(m=>m.tarjetaId===t.id && m.tipo==="gasto" && !(t.resumenes||{})[m.fecha.slice(0,7)])
-        .reduce((s,m)=>s+m.monto,0);
-      const proy = nuevos + fin + cargoProm;
-      const desglose = [
-        nuevos>0 ? fmtMoney(nuevos)+" de consumos nuevos" : null,
-        fin>0.5 ? fmtMoney(fin)+" financiado" : null,
-        cargoProm>0.5 ? "≈"+fmtMoney(cargoProm)+" de cargos" : null
-      ].filter(Boolean).join(" + ") || "sin datos nuevos todavía";
+      // proyección completa: cuotas + subs + nuevos + financiado + cargos promedio
+      const p = proyeccionTarjeta(t);
+      const desglose = p ? [
+        p.sumaCuotas>0.5 ? fmtMoney(p.sumaCuotas)+" en cuotas" : null,
+        p.sumaFijos>0.5 ? fmtMoney(p.sumaFijos)+" de suscripciones" : null,
+        p.sumaNuevos>0.5 ? fmtMoney(p.sumaNuevos)+" de consumos nuevos" : null,
+        p.fin>0.5 ? fmtMoney(p.fin)+" financiado" : null,
+        p.cargoProm>0.5 ? "≈"+fmtMoney(p.cargoProm)+" de cargos" : null
+      ].filter(Boolean).join(" + ") : "";
       return `<div class="g-histcard">
         <div style="font-weight:700; font-size:14px; margin-bottom:2px">${esc(t.nombre)}</div>
         ${rows}
-        ${cargoProm>0.5?`<div class="g-note" style="margin-top:2px">Intereses e impuestos promedio: ${fmtMoney(cargoProm)} por mes</div>`:""}
-        ${proy>0.5?`<div class="g-histrow proy"><span class="mes">Próximo resumen (estimado)</span>
-          <span class="tot">≈ ${fmtMoney(proy)}</span><span class="est">${desglose}</span></div>`:""}
+        ${p && p.cargoProm>0.5?`<div class="g-note" style="margin-top:2px">Intereses e impuestos promedio: ${fmtMoney(p.cargoProm)} por mes</div>`:""}
+        ${p && p.liberado>0.5?`<div class="g-note">🎉 En el próximo se te liberan ${fmtMoney(p.liberado)} de cuotas que terminan.</div>`:""}
+        ${p && p.total>0.5?`<div class="g-histrow proy" data-proy="${t.id}" role="button" tabindex="0">
+          <span class="mes">Próximo resumen (estimado) — tocá para el detalle</span>
+          <span class="tot">≈ ${fmtMoney(p.total)}</span><span class="est">${desglose}</span></div>`:""}
       </div>`;
     }).join("");
+  }
+
+  $("histList").addEventListener("click", e=>{
+    const row = e.target.closest("[data-proy]");
+    if(!row) return;
+    const t = S.tarjetas.find(x=>x.id===Number(row.dataset.proy));
+    if(t) openProy(t);
+  });
+
+  function openProy(t){
+    const p = proyeccionTarjeta(t);
+    if(!p){ toast("Cargá al menos un resumen primero"); return; }
+    $("proyTitle").textContent = "Próximo resumen de "+t.nombre;
+    const row = (lbl, val, cls="") => val==null ? "" :
+      `<div class="r ${cls}"><span>${lbl}</span><span>${val}</span></div>`;
+    $("proyResumen").innerHTML =
+      row("Financiado que arrastrás", p.fin>0.5 ? fmtMoney(p.fin) : null, "neg") +
+      row("Cuotas que siguen ("+p.cuotasSiguen.length+")", p.sumaCuotas>0.5 ? fmtMoney(p.sumaCuotas) : null) +
+      row("Suscripciones fijas ("+p.fijosVia.length+")", p.sumaFijos>0.5 ? fmtMoney(p.sumaFijos) : null) +
+      row("Consumos nuevos anotados ("+p.nuevos.length+")", p.sumaNuevos>0.5 ? fmtMoney(p.sumaNuevos) : null) +
+      row("Impuestos e intereses (promedio)", p.cargoProm>0.5 ? "≈ "+fmtMoney(p.cargoProm) : null) +
+      row("Total estimado", "≈ "+fmtMoney(p.total), "tot") +
+      row("Pago mínimo estimado", p.pagoMin>0.5 ? "≈ "+fmtMoney(p.pagoMin) : null);
+    const seccion = (titulo, items) => items.length ?
+      `<div class="g-label" style="margin-top:10px">${titulo}</div>` +
+      items.map(i=>`<div class="g-prow"><span class="ic">${i.ic}</span><span class="nm">${esc(i.nm)}${i.chip?` <span class="g-cuota">${i.chip}</span>`:""}</span><span class="m">${i.m}</span></div>`).join("") : "";
+    $("proyList").innerHTML =
+      seccion("📅 Cuotas que siguen", p.cuotasSiguen.map(c=>({
+        ic: iconFor(c.desc, c.categoria), nm: c.desc,
+        chip: "Cuota "+c.prox+(c.ultima?" · última 🎉":""), m: fmtMoney(c.monto)}))) +
+      seccion("🎉 Cuotas que terminan (no vienen más)", p.cuotasTerminan.map(c=>({
+        ic: iconFor(c.desc, c.categoria), nm: c.desc, chip: "se liberan", m: fmtMoney(c.monto)}))) +
+      seccion("🔁 Suscripciones", p.fijosVia.map(f=>({
+        ic: iconFor(f.nombre, f.categoria), nm: f.nombre, chip: "", m: fmtMoney(f.monto)}))) +
+      seccion("🛒 Consumos nuevos que anotaste", p.nuevos.map(m=>({
+        ic: iconFor(m.descripcion, m.categoria), nm: m.descripcion, chip: m.fecha.slice(5), m: fmtMoney(m.monto)})));
+    openSheet("proy");
   }
 
   /* ---------- render: fijos ---------- */
@@ -1762,7 +1953,7 @@
 
   /* ---------- sheet ---------- */
   const sheet=$("sheet"), scrim=$("scrim");
-  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget"];
+  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy"];
   function openSheet(name){
     closeListen();
     sheet.classList.add("open"); scrim.classList.add("open");
@@ -2087,6 +2278,15 @@
   function loadDetMes(){
     const r = detCard && (detCard.resumenes||{})[$("dtMes").value];
     detItems = ((r && r.detalle)||[]).map(d=>({desc:d.desc, monto:d.monto, categoria:d.categoria||"Otros", sub:!!d.sub}));
+    // campos editables con lo que leyó la app — corregí lo que haga falta
+    $("dtEditar").open = false;
+    $("edTotal").value = r ? fmtNum(r.monto) : "";
+    $("edMinimo").value = r && r.pagoMinimo ? fmtNum(r.pagoMinimo) : "";
+    $("edSaldoAnt").value = r && r.saldoAnterior!=null ? fmtNum(r.saldoAnterior) : "";
+    $("edPagos").value = r && r.pagos ? fmtNum(r.pagos) : "";
+    $("edImp").value = r && r.impuestos!=null ? fmtNum(r.impuestos) : "";
+    $("edUsd").value = r && r.usd ? fmtNum(r.usd) : "";
+    $("edPagado").value = r && resPagado(r) ? fmtNum(resPagado(r)) : "";
     renderDetalleRows();
   }
   function renderDetalleRows(){
@@ -2171,13 +2371,23 @@
     const r = (detCard.resumenes||{})[$("dtMes").value];
     if(!r) return;
     r.detalle = detItems.filter(d=>d.monto>0 || d.desc.trim());
+    // totales corregidos a mano
+    const num = id => { const v = numVal($(id).value); return isFinite(v) ? v : null; };
+    const nt = num("edTotal");        if(nt!=null && nt>0) r.monto = Math.round(nt*100)/100;
+    const nm = num("edMinimo");       r.pagoMinimo = nm!=null && nm>0 ? nm : (r.pagoMinimo||0);
+    const ns = num("edSaldoAnt");     if(ns!=null) r.saldoAnterior = ns;
+    const np = num("edPagos");        if(np!=null) r.pagos = np;
+    const ni = num("edImp");          if(ni!=null) r.impuestos = ni;
+    const nu = num("edUsd");          if(nu!=null) r.usd = nu;
+    const ng = num("edPagado");
+    if(ng!=null){ r.pagadoMonto = ng; r.pagado = ng >= r.monto - 0.01; }
     if($("dtRecalc").checked){
       // suma neta: consumos menos descuentos/bonificaciones
       const suma = r.detalle.reduce((s,d)=>s+(d.monto||0),0);
       if(suma>0) r.monto = Math.round(suma*100)/100;
     }
     save(); closeSheet(); renderAll();
-    toast("Consumos actualizados ✔");
+    toast("Resumen actualizado ✔");
   };
 
   async function aiClassifyDetalle(items){
@@ -2736,6 +2946,7 @@
   /* ---------- ajustes ---------- */
   $("cfgBtn").onclick = ()=>{
     $("cfgKey").value = S.config.apiKey||"";
+    $("cfgModelo").value = S.config.modeloIA||"eco";
     $("cfgAlerta").value = S.config.alertaGrande ? fmtNum(S.config.alertaGrande) : "";
     $("cfgRemOn").checked = !!(S.config.recordatorio&&S.config.recordatorio.on);
     $("cfgRemHora").value = (S.config.recordatorio&&S.config.recordatorio.hora)||"21:30";
@@ -2752,6 +2963,7 @@
   window.__remPermiso = ok => { if(!ok) toast("Activá las notificaciones de Guita en los ajustes del celu"); };
   $("saveCfg").onclick = ()=>{
     S.config.apiKey = $("cfgKey").value.trim();
+    S.config.modeloIA = $("cfgModelo").value==="max" ? "max" : "eco";
     S.config.alertaGrande = Math.max(0, numVal($("cfgAlerta").value)||0);
     S.config.recordatorio = {on: $("cfgRemOn").checked, hora: $("cfgRemHora").value||"21:30"};
     save(); closeSheet(); renderAll();
@@ -2867,15 +3079,11 @@
           (arr!=null?`, arrastre previo $${Math.round(arr)}`:"")+
           `, pagado $${Math.round(resPagado(r))}, financiado $${Math.round(resFinanciado(r))}`;
       }).join("\n");
-      const cargosArr = ks.map(k=>cargosMes(t, k)).filter(c=>c!=null && c>0);
-      const cargoProm = cargosArr.length ? Math.round(cargosArr.reduce((a,b)=>a+b,0)/cargosArr.length) : 0;
-      const fin = resFinanciado(t.resumenes[ks[ks.length-1]]);
-      const nuevos = S.movs.filter(m=>m.tarjetaId===t.id && m.tipo==="gasto" && !(t.resumenes||{})[m.fecha.slice(0,7)])
-        .reduce((s,m)=>s+m.monto,0);
-      const proy = Math.round(nuevos+fin+cargoProm);
+      const p = proyeccionTarjeta(t);
       return `${t.nombre} (cierra el ${t.cierre}, vence el ${t.vto}):\n${hist}`+
-        (cargoProm>0?`\n  Intereses e impuestos promedio: $${cargoProm}/mes`:"")+
-        (proy>0?`\n  Próximo resumen estimado: $${proy} (consumos nuevos $${Math.round(nuevos)} + financiado $${Math.round(fin)} + cargos)`:"");
+        (p && p.cargoProm>0.5?`\n  Intereses e impuestos promedio: $${Math.round(p.cargoProm)}/mes`:"")+
+        (p && p.liberado>0.5?`\n  Cuotas que terminan en el próximo resumen: se liberan $${Math.round(p.liberado)}`:"")+
+        (p && p.total>0.5?`\n  Próximo resumen estimado: $${Math.round(p.total)} (cuotas $${Math.round(p.sumaCuotas)} + suscripciones $${Math.round(p.sumaFijos)} + consumos nuevos $${Math.round(p.sumaNuevos)} + financiado $${Math.round(p.fin)} + cargos ≈$${Math.round(p.cargoProm)}); pago mínimo estimado ≈$${Math.round(p.pagoMin)}`:"");
     }).join("\n"));
     const ult = [...S.movs].sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,12);
     if(ult.length) L.push("ÚLTIMOS MOVIMIENTOS:\n"+ult.map(x=>`${x.fecha} ${x.tipo} $${Math.round(x.monto)} ${x.categoria} (${x.descripcion})`).join("\n"));
