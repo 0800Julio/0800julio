@@ -57,6 +57,16 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
 - 💳 **Gastos "con tarjeta"**: al anotar un gasto podés elegir una tarjeta en
   vez de billetera — no descuenta plata y suma a la proyección del próximo
   resumen (sin doble conteo cuando cargás el resumen real).
+- 🧠 **Lectura completa del resumen** (v1.7): saldo anterior, pagos del
+  período, todos los impuestos e intereses (sellos, IVA, IIBB, percepciones,
+  financiación), consumos en dólares, pago mínimo, descuentos en negativo y
+  cuotas — validado contra resúmenes reales de Visa Provincia al centavo.
+  El pago del mes anterior se detecta solo desde "SU PAGO".
+- 🔢 **Montos con puntos**: todos los campos de plata formatean miles
+  automáticamente (900.000 se lee como novecientos mil, no como 900).
+- 🧾 **Panel de resumen extendido**: desglose completo (saldo anterior −
+  pagos + consumos + impuestos = total), iconos por marca (Netflix 🎬,
+  Rappi 🛵, YPF ⛽…), chips de cuota 📅 y descuentos en verde.
 - 🏷 **Categorías automáticas** por palabras clave (súper → Comida, nafta → Transporte,
   luz → Servicios, etc.). Siempre podés corregir antes de guardar.
 - ➕ **Carga manual** para cuando no querés hablar.

@@ -284,6 +284,35 @@
   .g-setuprow .tag{margin-left:auto; font-size:11.5px; font-weight:600; color:var(--muted);
     background:var(--paper); border:1px solid var(--line); border-radius:999px; padding:3px 9px}
 
+  /* panel de resumen extendido */
+  .g-stsum{background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:11px 14px; display:flex; flex-direction:column; gap:4px}
+  .g-stsum .r{display:flex; justify-content:space-between; gap:12px; font-size:13.5px}
+  .g-stsum .r span:first-child{color:var(--muted)}
+  .g-stsum .r span:last-child{font-variant-numeric:tabular-nums; font-weight:600}
+  .g-stsum .r.pos span:last-child{color:var(--income)}
+  .g-stsum .r.neg span:last-child{color:var(--expense)}
+  .g-stsum .r.tot{border-top:1px solid var(--line); margin-top:3px; padding-top:7px}
+  .g-stsum .r.tot span{font-weight:800; color:var(--ink); font-size:14.5px}
+  .g-strow{display:grid; grid-template-columns:38px 1fr 104px 24px; gap:8px; align-items:center;
+    padding:7px 0; border-bottom:1px solid var(--line); animation:itemIn .3s var(--ease) both;
+    animation-delay:var(--d,0s)}
+  .g-strow:last-child{border-bottom:none}
+  .g-avatar{width:38px; height:38px; border-radius:13px; display:grid; place-items:center;
+    font-size:18px; flex:none}
+  .g-strow input, .g-strow select{font:inherit; font-size:13.5px; color:var(--ink);
+    background:transparent; border:none; border-bottom:1px dashed transparent; padding:2px 0; width:100%}
+  .g-strow input:focus, .g-strow select:focus{outline:none; border-bottom:1px dashed var(--brand)}
+  .g-strow .sub{display:flex; gap:6px; align-items:center; margin-top:1px}
+  .g-strow .sub select{color:var(--muted); font-size:12px; width:auto; max-width:110px}
+  .g-strow input[data-f="monto"]{text-align:right; font-weight:700; font-variant-numeric:tabular-nums}
+  .g-strow input[data-f="monto"].neg{color:var(--income)}
+  .g-cuota{font-size:10.5px; font-weight:700; color:var(--brand); background:var(--brand-soft);
+    border-radius:999px; padding:2px 8px; white-space:nowrap; flex:none}
+  .g-strow .rm{width:24px; height:24px; border:none; border-radius:50%; background:var(--paper);
+    color:var(--muted); font-size:12px; cursor:pointer; display:grid; place-items:center}
+  .g-ccdetail .cemoji{width:20px; font-size:13px; text-align:center; flex:none}
+
   /* historial de resúmenes */
   .g-histcard{padding:10px 0 6px; border-bottom:1px solid var(--line)}
   .g-histcard:last-child{border-bottom:none}
@@ -562,7 +591,7 @@
         </div>
         <div class="g-row2">
           <div class="g-field"><label class="g-label" for="fMonto">Monto</label>
-            <input id="fMonto" type="number" inputmode="decimal" step="any" min="0"></div>
+            <input id="fMonto" type="text" inputmode="decimal" data-money></div>
           <div class="g-field"><label class="g-label" for="fFecha">Fecha</label>
             <input id="fFecha" type="date"></div>
         </div>
@@ -615,7 +644,7 @@
             <input id="tcVto" type="number" inputmode="numeric" min="1" max="28" value="5"></div>
         </div>
         <div class="g-field"><label class="g-label" for="tcDeuda">Deuda financiada (opcional)</label>
-          <input id="tcDeuda" type="number" inputmode="decimal" step="any" min="0" placeholder="Saldo que venís arrastrando de resúmenes anteriores"></div>
+          <input id="tcDeuda" type="text" inputmode="decimal" data-money placeholder="Saldo que venís arrastrando de resúmenes anteriores"></div>
         <div class="g-actions"><button class="g-btn danger" id="delCard" hidden>Eliminar</button>
           <button class="g-btn" data-close>Cancelar</button>
           <button class="g-btn primary" id="saveCard">Guardar</button></div>
@@ -628,7 +657,7 @@
         <div class="g-row2">
           <div class="g-field"><label class="g-label" for="rsMes">Mes</label><select id="rsMes"></select></div>
           <div class="g-field"><label class="g-label" for="rsMonto">Total a pagar</label>
-            <input id="rsMonto" type="number" inputmode="decimal" step="any" min="0"></div>
+            <input id="rsMonto" type="text" inputmode="decimal" data-money></div>
         </div>
         <div class="g-field"><label class="g-label" for="rsDetalle">Detalle (opcional)</label>
           <textarea id="rsDetalle" placeholder="Pegá acá las líneas del resumen (del PDF del banco): detecto cada consumo, lo clasifico y busco suscripciones."></textarea></div>
@@ -655,7 +684,7 @@
         <div class="g-row2">
           <div class="g-field"><label class="g-label" for="imMes">Mes del resumen</label><select id="imMes"></select></div>
           <div class="g-field"><label class="g-label" for="imTotal">Total a pagar</label>
-            <input id="imTotal" type="number" inputmode="decimal" step="any" min="0"></div>
+            <input id="imTotal" type="text" inputmode="decimal" data-money></div>
         </div>
         <div class="g-note" id="imPreview"></div>
         <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
@@ -665,8 +694,9 @@
       <div id="phaseDetalle" hidden>
         <h3 id="detalleTitle">Consumos del resumen</h3>
         <div class="g-field"><label class="g-label" for="dtMes">Mes</label><select id="dtMes"></select></div>
+        <div class="g-stsum" id="dtResumen"></div>
         <div id="detalleList"></div>
-        <div class="g-note" id="dtSum"></div>
+        <div class="g-note" id="dtSum" hidden></div>
         <label class="g-switch" style="padding:0"><input type="checkbox" id="dtRecalc">
           Recalcular el total del resumen con esta suma</label>
         <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
@@ -684,7 +714,7 @@
       <div id="phasePay" hidden>
         <h3 id="payTitle">Registrar pago</h3>
         <div class="g-field"><label class="g-label" for="pyMonto">Monto a pagar</label>
-          <input id="pyMonto" type="number" inputmode="decimal" step="any" min="0"></div>
+          <input id="pyMonto" type="text" inputmode="decimal" data-money></div>
         <div class="g-row2">
           <div class="g-field"><label class="g-label" for="pyBill">Desde la billetera</label><select id="pyBill"></select></div>
           <div class="g-field"><label class="g-label" for="pyFecha">Fecha</label><input id="pyFecha" type="date"></div>
@@ -698,7 +728,7 @@
         <h3 id="pagoResTitle">¿Cuánto pagaste de este resumen?</h3>
         <div class="g-note" id="pagoResNote"></div>
         <div class="g-field"><label class="g-label" for="prMonto">Pagado</label>
-          <input id="prMonto" type="number" inputmode="decimal" step="any" min="0"></div>
+          <input id="prMonto" type="text" inputmode="decimal" data-money></div>
         <div class="g-field"><label class="g-label" for="prBill">Billetera</label><select id="prBill"></select></div>
         <div class="g-actions"><button class="g-btn" id="skipPagoRes">Todavía no pagué</button>
           <button class="g-btn primary" id="savePagoRes">Guardar pago</button></div>
@@ -709,7 +739,7 @@
         <div class="g-field"><label class="g-label" for="wNombre">Nombre</label>
           <input id="wNombre" type="text" placeholder="Efectivo, Banco, Mercado Pago…" autocomplete="off"></div>
         <div class="g-field"><label class="g-label" for="wSaldo">Saldo actual</label>
-          <input id="wSaldo" type="number" inputmode="decimal" step="any"></div>
+          <input id="wSaldo" type="text" inputmode="decimal" data-money></div>
         <label class="g-switch" style="padding:0"><input type="checkbox" id="wInv">
           Cuenta de inversión (Balanz, plazo fijo…) — se muestra aparte, no como plata disponible</label>
         <div class="g-actions"><button class="g-btn danger" id="delWallet" hidden>Eliminar</button>
@@ -724,7 +754,7 @@
           <div class="g-field"><label class="g-label" for="trA">Hacia</label><select id="trA"></select></div>
         </div>
         <div class="g-field"><label class="g-label" for="trMonto">Monto</label>
-          <input id="trMonto" type="number" inputmode="decimal" step="any" min="0"></div>
+          <input id="trMonto" type="text" inputmode="decimal" data-money></div>
         <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
           <button class="g-btn primary" id="saveTransfer">Transferir</button></div>
       </div>
@@ -736,7 +766,7 @@
           <input id="cfgKey" type="password" placeholder="sk-ant-…" autocomplete="off"></div>
         <div class="g-note">Con tu API key, uso Claude para entender dictados largos con varios gastos, clasificar mejor los resúmenes de tarjeta y responder en el asesor. La key queda guardada <strong>solo en este dispositivo</strong> y se usa únicamente para hablar con api.anthropic.com. Sin key, todo funciona igual con las reglas locales. Conseguila en platform.claude.com.</div>
         <div class="g-field"><label class="g-label" for="cfgAlerta">Avisarme si un gasto supera</label>
-          <input id="cfgAlerta" type="number" inputmode="decimal" min="0" placeholder="Ej: 50000 — vacío para no avisar"></div>
+          <input id="cfgAlerta" type="text" inputmode="decimal" data-money placeholder="Ej: 50000 — vacío para no avisar"></div>
         <label class="g-switch" style="padding:0"><input type="checkbox" id="cfgRemOn">
           Recordatorio diario para anotar los gastos</label>
         <div class="g-field"><label class="g-label" for="cfgRemHora">Hora del recordatorio</label>
@@ -794,6 +824,30 @@
     const c = CATS.find(c=>c.id===id) || CATS.find(c=>c.id==="Otros");
     return getComputedStyle(document.documentElement).getPropertyValue(c.v).trim() || "#64748B";
   };
+
+  /* iconos por marca conocida o categoría */
+  const CAT_EMOJI = {Comida:"🛒", Transporte:"🚗", Hogar:"🏠", Servicios:"💡", Salud:"💊",
+    Salidas:"🍻", Ropa:"👟", "Educación":"📚", Tarjeta:"💳", Otros:"🏷️", Ingreso:"💰"};
+  const BRAND_EMOJI = [
+    [/netflix|disney|hbo|max\b|prime|star\+|paramount/,"🎬"], [/spotify|deezer|tidal/,"🎧"],
+    [/youtube/,"▶️"], [/google|github|icloud|apple|microsoft|openai|claude/,"💻"],
+    [/rappi|pedidosya|pedidos ya|delivery/,"🛵"], [/merpago|mercado|meli/,"🛍️"],
+    [/uber|cabify|didi|taxi|remis/,"🚕"], [/ypf|shell|axion|gnc|nafta/,"⛽"],
+    [/hertz|rentacar|rent a car/,"🚙"], [/farmacity|farmacia/,"💊"],
+    [/edea|edesur|edenor|electric/,"💡"], [/camuzzi|metrogas|\bgas\b/,"🔥"], [/aysa|agua/,"💧"],
+    [/cinema|cine|hoyts|showcase/,"🍿"], [/puma|nike|adidas|zapat/,"👟"],
+    [/canva/,"🎨"], [/motorola|samsung|celular|notebook/,"📱"],
+    [/tuenti|personal|movistar|claro|recarga/,"📶"], [/propina/,"🤝"],
+    [/bonif|descuento|dto\.|credito/,"🎁"], [/vida|seguro/,"🛡️"], [/neumatic|cubierta|goma/,"🛞"],
+    [/coto|carrefour|\bdia\b|jumbo|super|almacen|verduleria|carniceria|panaderia|kiosco/,"🛒"],
+    [/resto|trattoria|parrilla|pizz|burger|bar\b|birra|cerve/,"🍽️"],
+    [/hotel|booking|airbnb|pasaje|aerol/,"🏨"], [/papeler|libreria/,"📎"]
+  ];
+  function iconFor(desc, cat){
+    const d = norm(desc||"");
+    for(const [re,e] of BRAND_EMOJI) if(re.test(d)) return e;
+    return CAT_EMOJI[cat] || "🏷️";
+  }
 
   /* ---------- almacenamiento + migración ---------- */
   const KEY = "guita:v2", OLDKEY = "guita:v1";
@@ -945,15 +999,26 @@
   /* parser de detalle de resumen: una línea = consumo + monto al final */
   function parseDetalleResumen(text){
     const items = [];
+    // resumen bancario completo: solo cuentan las líneas que arrancan con fecha
+    const strict = /detalle de transaccion|saldo anterior|resumen nro/.test(norm(String(text||"")));
     for(const lineRaw of String(text||"").split(/\n+/)){
       const line = lineRaw.trim();
       if(!line) continue;
-      if(/total|saldo|pago m[ií]nimo|l[ií]mite|vencimiento|cierre|su pago/i.test(norm(line))) continue;
-      const m = line.match(/(-?\$?\s?\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|-?\$?\s?\d+(?:,\d{1,2})?)\s*$/);
+      if(strict && !/^\d{1,2}[.\/-]\d{1,2}([.\/-]\d{2,4})?\s/.test(line)) continue;
+      const nl = norm(line);
+      // no son consumos: saldos, pagos, impuestos, intereses, transferencias, leyendas
+      if(/total|saldo|pago m[ií]nimo|l[ií]mite|vencimiento|cierre|su pago|impuesto|interes|\biva\b|iibb|percep|sellos|db\.?rg|transferencia deuda|debitaremos|plan v|tna|tem\b|cftea|cuotas de \$|pagina|cuit/.test(nl)) continue;
+      // consumos en dólares: se cuentan aparte (total U$D), no como pesos
+      if(/usd|u\$s/.test(nl)) continue;
+      const m = line.match(/(-?\$?\s?\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|-?\$?\s?\d+(?:,\d{1,2})?)\s*(-?)\s*_?\s*$/);
       if(!m) continue;
-      const monto = parseFloat(m[1].replace(/[$\s]/g,"").replace(/\./g,"").replace(",","."));
+      let monto = parseFloat(m[1].replace(/[$\s]/g,"").replace(/\./g,"").replace(",","."));
+      if(m[2]==="-") monto = -Math.abs(monto); // "1.234,56-" = crédito/descuento
       if(!isFinite(monto) || monto===0) continue;
-      let desc = line.slice(0, m.index).replace(/^\d{1,2}[\/-]\d{1,2}([\/-]\d{2,4})?\s*/,"").replace(/[\s.·-]+$/,"").trim();
+      let desc = line.slice(0, m.index)
+        .replace(/^\d{1,2}[.\/-]\d{1,2}([.\/-]\d{2,4})?\s*/,"")   // fecha dd/mm/aa o dd.mm.aa
+        .replace(/^\d{5,7}[*a-z]?\s+/i,"")                        // nro de comprobante ("000520*")
+        .replace(/[\s.·-]+$/,"").trim();
       if(!desc) desc = "Consumo";
       desc = desc.slice(0,60);
       items.push({desc, monto, categoria: parseCategoria(desc,"gasto"), sub: esSuscripcion(desc)});
@@ -1016,22 +1081,29 @@
   const SYS_VOICE = "Sos el intérprete de voz de Guita, una app argentina de finanzas personales. El usuario dicta uno o varios movimientos en español rioplatense. Jerga: una luca = $1.000, un palo = $1.000.000, una gamba = $100, 'y media' suma 500 a las lucas. Devolvé cada movimiento por separado con su monto en pesos argentinos (número), tipo gasto o ingreso (cobré/me pagaron/sueldo = ingreso, con categoria Ingreso), la categoría que mejor corresponda y una descripción corta y natural (ej: 'El súper', 'Nafta'). Si un monto es ambiguo interpretalo como se diría hablando de plata en Argentina.";
 
   const SCHEMA_RESUMEN = {type:"object", additionalProperties:false,
-    required:["tarjeta","cierre_dia","vencimiento_dia","mes","total","consumos"],
+    required:["tarjeta","cierre_dia","vencimiento_dia","mes","total","total_usd","saldo_anterior","pagos","impuestos","pago_minimo","consumos_usd_total","consumos"],
     properties:{
       tarjeta:{type:"string"},
       cierre_dia:{type:"integer"},
       vencimiento_dia:{type:"integer"},
       mes:{type:"string"},
       total:{type:"number"},
+      total_usd:{type:"number"},
+      saldo_anterior:{type:"number"},
+      pagos:{type:"number"},
+      impuestos:{type:"number"},
+      pago_minimo:{type:"number"},
+      consumos_usd_total:{type:"number"},
       consumos:{type:"array", items:{type:"object", additionalProperties:false,
-        required:["descripcion","monto","categoria","suscripcion"],
+        required:["descripcion","cuota","monto","categoria","suscripcion"],
         properties:{
           descripcion:{type:"string"},
+          cuota:{type:"string"},
           monto:{type:"number"},
           categoria:{type:"string", enum:["Comida","Transporte","Hogar","Servicios","Salud","Salidas","Ropa","Educación","Tarjeta","Otros"]},
           suscripcion:{type:"boolean"}
         }}}}};
-  const SYS_RESUMEN = "Leés resúmenes de tarjeta de crédito de bancos argentinos (PDF o foto). Extraé: 'tarjeta' = red y banco en formato corto (ej 'Visa Galicia', 'Mastercard BBVA', 'Amex Santander'); 'cierre_dia' y 'vencimiento_dia' = día del mes (1 a 28; si es 29-31 poné 28) del cierre actual y del vencimiento actual; 'mes' = mes del período del resumen en formato YYYY-MM (usá el mes de la fecha de cierre, no el del vencimiento); 'total' = total a pagar en pesos argentinos; 'consumos' = SOLO los consumos del período en pesos (excluí saldo anterior, su pago, pago mínimo, impuestos de sellos, y consumos en dólares salvo que estén pesificados), cada uno con descripción corta legible, monto, categoría y si es una suscripción mensual recurrente (Netflix, Spotify, gimnasio, apps…). Comercios comunes: Coto/Dia/Carrefour/Jumbo=Comida; YPF/Shell/Axion/SUBE/Uber/Cabify=Transporte; Farmacity=Salud; Edesur/Metrogas/Aysa/Personal/Movistar/Claro=Servicios.";
+  const SYS_RESUMEN = "Leés resúmenes de tarjeta de crédito de bancos argentinos (PDF o foto) COMPLETOS, todas las páginas. Extraé: 'tarjeta' = red y banco en formato corto (ej 'Visa Provincia', 'Mastercard BBVA'); 'cierre_dia' y 'vencimiento_dia' = día del mes (1 a 28; si es 29-31 poné 28) del CIERRE ACTUAL y del VENCIMIENTO actual; 'mes' = mes de la fecha de cierre en formato YYYY-MM (no el del vencimiento); 'saldo_anterior' = SALDO ANTERIOR en pesos; 'pagos' = suma de los pagos y créditos del período en pesos ('SU PAGO EN PESOS' y similares), como número POSITIVO; 'impuestos' = suma en pesos de TODO lo que no es consumo ni saldo ni pago: impuesto de sellos, intereses de financiación, IVA, IIBB, percepciones, DB.RG, comisiones (positivo); 'pago_minimo' = PAGO MÍNIMO en pesos; 'total' = total a pagar en pesos (SALDO ACTUAL); 'total_usd' = total a pagar en dólares (0 si no hay); 'consumos_usd_total' = total de consumos del período en DÓLARES (0 si no hay); 'consumos' = cada consumo del período EN PESOS con: descripción corta legible, 'cuota' tipo '03/06' si aparece (sino ''), monto (los descuentos y bonificaciones van en NEGATIVO), categoría, y si es suscripción mensual recurrente. NO pongas en consumos: saldo anterior, pagos, impuestos, intereses, percepciones, transferencias de deuda, ni consumos en dólares. Comercios comunes: Coto/Dia/Carrefour/Jumbo/Rappi/PedidosYa=Comida; YPF/Shell/Axion/SUBE/Uber/Cabify/Hertz=Transporte; Farmacity=Salud; Edesur/Edea/Metrogas/Camuzzi/Aysa/Personal/Movistar/Claro/Tuenti=Servicios; Netflix/Spotify/YouTube/Canva/Github=Servicios y suscripción.";
 
   const SCHEMA_CLASIF = {type:"object", additionalProperties:false, required:["items"], properties:{
     items:{type:"array", items:{type:"object", additionalProperties:false,
@@ -1045,6 +1117,26 @@
 
   /* ---------- formato ---------- */
   const fmtMoney = n => new Intl.NumberFormat("es-AR",{style:"currency",currency:"ARS",maximumFractionDigits: (n%1)?2:0}).format(n);
+  const fmtNum = n => new Intl.NumberFormat("es-AR",{maximumFractionDigits:2}).format(n);
+  // los campos de plata usan formato es-AR: puntos de miles, coma decimal
+  const numVal = v => {
+    v = String(v??"").trim();
+    if(!v) return NaN;
+    return parseFloat(v.replace(/\./g,"").replace(",","."));
+  };
+  // autoformato con puntos mientras se escribe, en todo input[data-money]
+  document.addEventListener("input", e=>{
+    const el = e.target;
+    if(!(el instanceof HTMLInputElement) || el.dataset.money===undefined) return;
+    const neg = el.value.trim().startsWith("-");
+    const raw = el.value.replace(/[^\d,]/g,"");
+    if(!raw){ const want = neg?"-":""; if(el.value!==want) el.value = want; return; }
+    const ci = raw.indexOf(",");
+    const int = (ci<0 ? raw : raw.slice(0,ci)).replace(/^0+(?=\d)/,"");
+    const dec = ci<0 ? null : raw.slice(ci+1).replace(/,/g,"").slice(0,2);
+    const fmt = (neg?"-":"") + (int ? int.replace(/\B(?=(\d{3})+(?!\d))/g,".") : "0") + (dec!==null ? ","+dec : "");
+    if(el.value!==fmt) el.value = fmt;
+  }, true);
   const fmtMonth = d => {
     const s = new Intl.DateTimeFormat("es-AR",{month:"long",year:"numeric"}).format(d);
     return s.charAt(0).toUpperCase()+s.slice(1);
@@ -1102,6 +1194,31 @@
   const resPagado = r => r.pagadoMonto != null ? r.pagadoMonto : (r.pagado ? r.monto : 0);
   const resFinanciado = r => Math.max(0, r.monto - resPagado(r));
   const sumaDetalle = r => (r.detalle||[]).reduce((s,d)=>s+(d.monto>0?d.monto:0),0);
+  const mesAnterior = k => { const [y,m]=k.split("-").map(Number); return monthKey(new Date(y, m-2, 1)); };
+
+  // impuestos e intereses reales del mes: leídos del resumen, o estimados
+  // restando del total los consumos y el arrastre (saldo anterior − pagos)
+  function cargosMes(t, k){
+    const r = (t.resumenes||{})[k];
+    if(!r) return null;
+    if(r.impuestos != null) return r.impuestos;
+    const suma = sumaDetalle(r);
+    if(suma<=0) return null;
+    if(r.saldoAnterior != null) return Math.max(0, r.monto - suma - Math.max(0, r.saldoAnterior - (r.pagos||0)));
+    const prev = (t.resumenes||{})[mesAnterior(k)];
+    if(prev) return Math.max(0, r.monto - suma - Math.max(0, prev.monto - resPagado(prev)));
+    return null;
+  }
+  // lo que venías arrastrando al entrar a ese resumen
+  function arrastreMes(t, k){
+    const r = (t.resumenes||{})[k];
+    if(!r) return null;
+    if(r.saldoAnterior != null) return Math.max(0, r.saldoAnterior - (r.pagos||0));
+    const suma = sumaDetalle(r);
+    const cg = cargosMes(t, k);
+    if(suma>0 && cg!=null) return Math.max(0, r.monto - suma - cg);
+    return null;
+  }
 
   /* ---------- vencimientos ---------- */
   function vencimientos(){
@@ -1405,14 +1522,14 @@
     const pres = S.config.presupuestos||{};
     $("budgetList").innerHTML = GASTO_CATS.filter(c=>c!=="Tarjeta").map(c=>`
       <div class="g-budgetrow"><span><span class="g-dot" style="background:${catColor(c)}"></span>${esc(c)}</span>
-        <input type="number" inputmode="decimal" min="0" data-bcat="${esc(c)}" value="${pres[c]||""}" placeholder="Sin tope"></div>`).join("");
+        <input type="text" inputmode="decimal" data-money data-bcat="${esc(c)}" value="${pres[c]?fmtNum(pres[c]):""}" placeholder="Sin tope"></div>`).join("");
     openSheet("budget");
   }
   $("budgetBtn").onclick = openBudget;
   $("saveBudget").onclick = ()=>{
     const pres = {};
     document.querySelectorAll("#budgetList [data-bcat]").forEach(inp=>{
-      const v = parseFloat(inp.value);
+      const v = numVal(inp.value);
       if(v>0) pres[inp.dataset.bcat]=v;
     });
     S.config.presupuestos = pres;
@@ -1493,8 +1610,8 @@
       const nDet = (r && r.detalle) ? r.detalle.length : 0;
       const detalle = nDet
         ? `<div class="g-ccdetail">`+r.detalle.slice(0,4).map(d=>
-            `<div><span class="cdot" style="background:${catColor(d.categoria||"Otros")}"></span><span class="nm">${esc(d.desc)}${d.sub?" 🔁":""}</span><span class="m">${fmtMoney(d.monto)}</span></div>`).join("")
-          + (nDet>4?`<div><span class="cdot" style="background:${catColor("Otros")}"></span><span class="nm">… y ${nDet-4} consumos más</span><span class="m"></span></div>`:"") + `</div>`
+            `<div><span class="cemoji">${iconFor(d.desc, d.categoria)}</span><span class="nm">${esc(d.desc)}${d.sub?" 🔁":""}</span><span class="m">${fmtMoney(d.monto)}</span></div>`).join("")
+          + (nDet>4?`<div><span class="cemoji">📋</span><span class="nm">… y ${nDet-4} consumos más</span><span class="m"></span></div>`:"") + `</div>`
         : "";
       return `<article class="g-ccard" data-card="${t.id}">
         <div class="name">${esc(t.nombre)}</div>
@@ -1522,6 +1639,7 @@
       const rows = keys.map((k,i)=>{
         const r = t.resumenes[k];
         const pag = resPagado(r), fin = resFinanciado(r), suma = sumaDetalle(r);
+        const cg = cargosMes(t, k), arr = arrastreMes(t, k);
         // variación contra el mes anterior cargado
         let delta = "";
         if(i>0){
@@ -1532,18 +1650,17 @@
           }
         }
         const est = [
-          suma>0 ? `${(r.detalle||[]).length} consumos por ${fmtMoney(suma)}` : null,
-          r.monto-suma>0.5 && suma>0 ? `arrastre+cargos ${fmtMoney(r.monto-suma)}` : null,
+          suma>0 ? `${(r.detalle||[]).filter(d=>d.monto>0).length} consumos por ${fmtMoney(suma)}`+(r.usd>0?` + U$D ${fmtNum(r.usd)}`:"") : null,
+          cg!=null && cg>0.5 ? `impuestos ${fmtMoney(cg)}` : null,
+          arr!=null && arr>0.5 ? `arrastre ${fmtMoney(arr)}` : null,
           fin<=0.005 ? `<span class="ok">pagado ✔</span>` : pag>0 ? `pagaste ${fmtMoney(pag)} · financiás ${fmtMoney(fin)}` : "sin pagar"
         ].filter(Boolean).join(" · ");
         return `<div class="g-histrow"><span class="mes">${monthKeyLabel(k)}</span>
           <span class="tot">${fmtMoney(r.monto)}${delta}</span>
           <span class="est">${est}</span></div>`;
       }).join("");
-      // intereses e impuestos: promedio de (total − consumos) en meses con detalle
-      const cargosArr = keys.map(k=>t.resumenes[k])
-        .filter(r=>r.detalle && r.detalle.length)
-        .map(r=>r.monto - sumaDetalle(r)).filter(c=>c>0);
+      // impuestos e intereses reales (o estimados) por mes → promedio
+      const cargosArr = keys.map(k=>cargosMes(t, k)).filter(c=>c!=null && c>0);
       const cargoProm = cargosArr.length ? cargosArr.reduce((a,b)=>a+b,0)/cargosArr.length : 0;
       // proyección: consumos nuevos con esta tarjeta (meses sin resumen) + financiado + cargos promedio
       const lastR = t.resumenes[keys[keys.length-1]];
@@ -1697,7 +1814,7 @@
     document.querySelectorAll("#tipoSeg button").forEach(x=>x.classList.toggle("on", x.dataset.tipo===tipoSel));
     fillCats(catSel, tipoSel==="ingreso");
     fillWalletSelect($("fBill"), true, true);
-    $("fMonto").value = p.monto ?? "";
+    $("fMonto").value = p.monto!=null ? fmtNum(p.monto) : "";
     $("fFecha").value = p.fecha || todayISO();
     if(p.categoria) catSel.value = p.categoria;
     $("fBill").value = p.billetera ?? "";
@@ -1708,7 +1825,7 @@
   }
 
   $("saveMov").onclick = ()=>{
-    const monto = parseFloat($("fMonto").value);
+    const monto = numVal($("fMonto").value);
     if(!monto || monto<=0){ $("fMonto").focus(); toast("Falta el monto"); return; }
     const bsel = parseBillSel($("fBill").value);
     const mov = {
@@ -1751,7 +1868,7 @@
           <select data-f="categoria">${CATS.map(c=>`<option${c.id===m.categoria?" selected":""}>${c.id}</option>`).join("")}</select>
         </div>
         <div class="col">
-          <input type="number" inputmode="decimal" step="any" min="0" data-f="monto" value="${m.monto||""}" placeholder="Monto">
+          <input type="text" inputmode="decimal" data-money data-f="monto" value="${m.monto?fmtNum(m.monto):""}" placeholder="Monto">
         </div>
         <button class="rm" data-rm="${i}" aria-label="Quitar">✕</button>
       </div>`).join("");
@@ -1760,7 +1877,7 @@
     const row = e.target.closest("[data-mi]");
     if(!row) return;
     const i = Number(row.dataset.mi), f = e.target.dataset.f;
-    if(f==="monto") multiItems[i][f] = parseFloat(e.target.value)||0;
+    if(f==="monto") multiItems[i][f] = numVal(e.target.value)||0;
     else multiItems[i][f] = e.target.value;
     if(f==="categoria") multiItems[i].tipo = e.target.value==="Ingreso" ? "ingreso" : "gasto";
   });
@@ -1889,7 +2006,7 @@
     if(!nombre){ $("tcNombre").focus(); toast("Falta el nombre"); return; }
     const cierre = Math.min(28, Math.max(1, parseInt($("tcCierre").value)||20));
     const vto = Math.min(28, Math.max(1, parseInt($("tcVto").value)||5));
-    const deuda = Math.max(0, parseFloat($("tcDeuda").value)||0);
+    const deuda = Math.max(0, numVal($("tcDeuda").value)||0);
     if(cardEdit) Object.assign(cardEdit, {nombre, cierre, vto, deuda});
     else S.tarjetas.push({id:nid(), nombre, cierre, vto, deuda, resumenes:{}});
     save(); closeSheet(); renderAll(); toast("Tarjeta guardada ✔");
@@ -1917,7 +2034,7 @@
       $("resumenTitle").textContent = "Resumen de "+resumenCard.nombre;
       fillMesSelect($("rsMes"));
       const r = (resumenCard.resumenes||{})[$("rsMes").value];
-      $("rsMonto").value = r ? r.monto : "";
+      $("rsMonto").value = r ? fmtNum(r.monto) : "";
       $("rsDetalle").value = "";
       $("rsPreview").textContent = "";
       openSheet("resumen");
@@ -1944,7 +2061,7 @@
       $("cardTitle").textContent = "Editar tarjeta";
       $("delCard").hidden = false;
       $("tcNombre").value=cardEdit.nombre; $("tcCierre").value=cardEdit.cierre; $("tcVto").value=cardEdit.vto;
-      $("tcDeuda").value = cardEdit.deuda || "";
+      $("tcDeuda").value = cardEdit.deuda ? fmtNum(cardEdit.deuda) : "";
       openSheet("card");
     }
   });
@@ -1952,7 +2069,7 @@
   $("rsMes").addEventListener("change", ()=>{
     if(!resumenCard) return;
     const r = (resumenCard.resumenes||{})[$("rsMes").value];
-    $("rsMonto").value = r ? r.monto : "";
+    $("rsMonto").value = r ? fmtNum(r.monto) : "";
   });
   $("rsDetalle").addEventListener("input", ()=>{
     const items = parseDetalleResumen($("rsDetalle").value);
@@ -1960,7 +2077,7 @@
       const suma = items.reduce((s,i)=>s+i.monto,0);
       const subs = items.filter(i=>i.sub).length;
       $("rsPreview").textContent = `Detecté ${items.length} consumos por ${fmtMoney(suma)}`+(subs?` (${subs} parecen suscripciones)`:"")+".";
-      if(!$("rsMonto").value) $("rsMonto").value = Math.round(suma*100)/100;
+      if(!$("rsMonto").value) $("rsMonto").value = fmtNum(Math.round(suma*100)/100);
     } else $("rsPreview").textContent = $("rsDetalle").value.trim() ? "No encontré montos en ese texto — revisá el formato." : "";
   });
 
@@ -1973,30 +2090,51 @@
     renderDetalleRows();
   }
   function renderDetalleRows(){
-    $("detalleList").innerHTML = detItems.length ? detItems.map((d,i)=>`
-      <div class="g-multirow" data-di="${i}" style="--d:${Math.min(i,8)*0.02}s">
-        <div class="col">
-          <input type="text" data-f="desc" value="${esc(d.desc)}" placeholder="Descripción">
-          <select data-f="categoria">${GASTO_CATS.map(c=>`<option${c===d.categoria?" selected":""}>${c}</option>`).join("")}</select>
+    $("detalleList").innerHTML = detItems.length ? detItems.map((d,i)=>{
+      const cm = (d.desc||"").match(/cuota\s*(\d{1,2})\s*\/\s*(\d{1,2})/i);
+      const descLimpia = cm ? d.desc.replace(cm[0],"").replace(/[\s.·-]+$/,"").trim() : d.desc;
+      return `<div class="g-strow" data-di="${i}" style="--d:${Math.min(i,10)*0.02}s">
+        <span class="g-avatar" style="background:${catColor(d.categoria||"Otros")}22">${iconFor(d.desc, d.categoria)}</span>
+        <div>
+          <input type="text" data-f="desc" value="${esc(descLimpia)}" placeholder="Descripción">
+          <div class="sub">
+            <select data-f="categoria">${GASTO_CATS.map(c=>`<option${c===d.categoria?" selected":""}>${c}</option>`).join("")}</select>
+            ${cm?`<span class="g-cuota">📅 Cuota ${cm[1]}/${cm[2]}</span>`:""}
+            ${d.sub?`<span class="g-cuota">🔁 sub</span>`:""}
+            ${d.monto<0?`<span class="g-cuota">🎁 descuento</span>`:""}
+          </div>
         </div>
-        <div class="col">
-          <input type="number" inputmode="decimal" step="any" min="0" data-f="monto" value="${d.monto||""}" placeholder="Monto">
-        </div>
+        <input type="text" inputmode="decimal" data-money data-f="monto" class="${d.monto<0?"neg":""}"
+          value="${d.monto?fmtNum(d.monto):""}" placeholder="Monto">
         <button class="rm" data-rmdet="${i}" aria-label="Quitar">✕</button>
-      </div>`).join("")
+      </div>`;
+    }).join("")
       : `<div class="g-note">Este resumen no tiene consumos individuales cargados.</div>`;
     updateDtSum();
   }
   function updateDtSum(){
-    const r = detCard && (detCard.resumenes||{})[$("dtMes").value];
-    if(!r){ $("dtSum").textContent = ""; return; }
+    const el = $("dtResumen");
+    const mk = $("dtMes").value;
+    const r = detCard && (detCard.resumenes||{})[mk];
+    if(!r){ el.innerHTML = ""; return; }
     const suma = detItems.reduce((s,d)=>s+(d.monto>0?d.monto:0),0);
-    const dif = r.monto - suma;
+    const descuentos = detItems.reduce((s,d)=>s+(d.monto<0?-d.monto:0),0);
+    const cg = cargosMes(detCard, mk), arr = arrastreMes(detCard, mk);
     const pag = resPagado(r), fin = resFinanciado(r);
-    $("dtSum").innerHTML =
-      `Consumos: <strong>${fmtMoney(suma)}</strong> · Total a pagar: <strong>${fmtMoney(r.monto)}</strong>` +
-      (suma>0 && dif>0.5 ? `<br>La diferencia de ${fmtMoney(dif)} es arrastre del mes anterior + intereses e impuestos.` : "") +
-      (pag>0 ? `<br>Pagaste ${fmtMoney(pag)}${fin>0.5?` — financiás ${fmtMoney(fin)}`:" — quedó saldado ✔"}` : "");
+    const row = (lbl, val, cls="") => val==null ? "" :
+      `<div class="r ${cls}"><span>${lbl}</span><span>${val}</span></div>`;
+    el.innerHTML =
+      row("Saldo anterior", r.saldoAnterior!=null ? fmtMoney(r.saldoAnterior) : null) +
+      row("Tus pagos", r.pagos>0 ? "− "+fmtMoney(r.pagos) : null, "pos") +
+      (r.saldoAnterior==null && arr!=null && arr>0.5 ? row("Arrastre del mes anterior", fmtMoney(arr)) : "") +
+      row("Consumos del período", fmtMoney(suma)+` (${detItems.filter(d=>d.monto>0).length})`) +
+      row("Descuentos y bonificaciones", descuentos>0 ? "− "+fmtMoney(descuentos) : null, "pos") +
+      row("Consumos en dólares", r.usd>0 ? "U$D "+fmtNum(r.usd) : null) +
+      row("Impuestos e intereses", cg!=null && cg>0.5 ? fmtMoney(cg) : null) +
+      row("Total a pagar", fmtMoney(r.monto)+(r.totalUsd>0 ? " + U$D "+fmtNum(r.totalUsd) : ""), "tot") +
+      row("Pago mínimo", r.pagoMinimo>0 ? fmtMoney(r.pagoMinimo) : null) +
+      row("Pagaste", pag>0 ? fmtMoney(pag) : null, "pos") +
+      row("Financiás para el próximo", fin>0.5 ? fmtMoney(fin) : null, "neg");
   }
   function openDetalle(card, mes){
     detCard = card;
@@ -2015,9 +2153,13 @@
     const d = detItems[Number(row.dataset.di)];
     if(!d) return;
     const f = e.target.dataset.f;
-    if(f==="monto") d.monto = parseFloat(e.target.value)||0;
+    if(f==="monto") d.monto = numVal(e.target.value)||0;
     else if(f==="categoria") d.categoria = e.target.value;
-    else d.desc = e.target.value.slice(0,60);
+    else {
+      // la cuota vive en la descripción: conservarla aunque se edite el texto
+      const cm = (d.desc||"").match(/cuota\s*\d{1,2}\s*\/\s*\d{1,2}/i);
+      d.desc = (e.target.value.slice(0,52) + (cm ? " "+cm[0] : "")).slice(0,64).trim();
+    }
     updateDtSum();
   });
   $("detalleList").addEventListener("click", e=>{
@@ -2030,7 +2172,8 @@
     if(!r) return;
     r.detalle = detItems.filter(d=>d.monto>0 || d.desc.trim());
     if($("dtRecalc").checked){
-      const suma = r.detalle.reduce((s,d)=>s+(d.monto>0?d.monto:0),0);
+      // suma neta: consumos menos descuentos/bonificaciones
+      const suma = r.detalle.reduce((s,d)=>s+(d.monto||0),0);
       if(suma>0) r.monto = Math.round(suma*100)/100;
     }
     save(); closeSheet(); renderAll();
@@ -2078,7 +2221,7 @@
     if(!resumenCard) return;
     const card = resumenCard;
     const items = parseDetalleResumen($("rsDetalle").value);
-    let monto = parseFloat($("rsMonto").value);
+    let monto = numVal($("rsMonto").value);
     if((!monto || monto<=0) && items.length) monto = items.reduce((s,i)=>s+i.monto,0);
     if(!monto || monto<=0){ $("rsMonto").focus(); toast("Falta el total del resumen"); return; }
     const mk = $("rsMes").value;
@@ -2232,17 +2375,51 @@
       ["macro","Macro"],["nacion","Nación"],["provincia","Provincia"],["icbc","ICBC"],["hsbc","HSBC"],
       ["supervielle","Supervielle"],["patagonia","Patagonia"],["brubank","Brubank"],["uala","Ualá"],
       ["mercado pago","Mercado Pago"],["credicoop","Credicoop"],["comafi","Comafi"],["ciudad","Ciudad"]];
-    let banco = ""; for(const [k,n] of bancos){ if(t.includes(k)){ banco = n; break; } }
+    let banco = "";
+    for(const [k,n] of [["prov bs|provincia","Provincia"]].concat(bancos.filter(b=>b[0]!=="provincia"))){
+      if(new RegExp("\\b(?:"+k+")\\b").test(t)){ banco = n; break; }
+    }
     const nombre = [red,banco].filter(Boolean).join(" ") || "Mi tarjeta";
+    const MESES = {ene:1,feb:2,mar:3,abr:4,may:5,jun:6,jul:7,ago:8,set:9,sep:9,oct:10,nov:11,dic:12};
+    const num = s => parseFloat(String(s).replace(/\./g,"").replace(",","."));
+    // número es-AR: con puntos de miles, o entero largo con coma decimal
+    const NUM = "(\\d{1,3}(?:\\.\\d{3})+(?:,\\d{1,2})?|\\d+(?:,\\d{1,2})?)";
     const buscar = kw => {
-      const m = t.match(new RegExp("(?:"+kw+")[^0-9]{0,40}(\\d{1,2})[\\/\\-.](\\d{1,2})(?:[\\/\\-.](\\d{2,4}))?"));
-      return m ? {d:+m[1], mo:+m[2], y:m[3]?+m[3]:null} : null;
+      // "18 Jun 26" (formato Visa/Provincia) — más específico, va primero
+      let m = t.match(new RegExp("(?:"+kw+")[\\s\\S]{0,200}?(\\d{1,2})\\s+(ene|feb|mar|abr|may|jun|jul|ago|set|sep|oct|nov|dic)\\w*\\.?\\s+(\\d{2,4})"));
+      if(m) return {d:+m[1], mo:MESES[m[2]], y:+m[3]};
+      // dd/mm/aa o dd-mm-aa
+      m = t.match(new RegExp("(?:"+kw+")[^0-9]{0,60}(\\d{1,2})[\\/\\-.](\\d{1,2})(?:[\\/\\-.](\\d{2,4}))?"));
+      if(m && +m[2]>=1 && +m[2]<=12) return {d:+m[1], mo:+m[2], y:m[3]?+m[3]:null};
+      return null;
     };
-    const ci = buscar("cierre");
-    const ve = buscar("vencimiento|vto\\.?");
-    let total = null;
-    const tm = t.match(/(?:total a pagar|saldo actual|total del resumen|total consumos)[^0-9\-]{0,30}(\d{1,3}(?:\.\d{3})*(?:,\d{1,2})?)/);
-    if(tm) total = parseFloat(tm[1].replace(/\./g,"").replace(",","."));
+    const ci = buscar("cierre actual") || buscar("cierre(?! anterior)");
+    const ve = buscar("vencimiento(?! anterior)") || buscar("vto\\.?(?! ?anterior)");
+    const monto1 = kw => {
+      const m = t.match(new RegExp("(?:"+kw+")[^0-9\\-]{0,60}\\$?\\s*"+NUM));
+      return m ? num(m[1]) : null;
+    };
+    const total = monto1("saldo actual\\s*\\$|total a pagar|total del resumen") ?? monto1("total consumos");
+    const saldoAnterior = monto1("saldo anterior\\s*\\$?");
+    // exigir el "$" así no pesca el "pago mínimo" de la letra chica
+    const pagoMinimo = monto1("pago minimo\\s*\\$") || 0;
+    // pagos del período ("SU PAGO EN PESOS      165.100,00-")
+    let pagos = 0;
+    const rePago = new RegExp("su pago[^0-9\\n]{0,80}"+NUM, "g");
+    let pm2; while((pm2 = rePago.exec(t))) pagos += num(pm2[1]);
+    // impuestos e intereses: sumar todas las líneas de cargos
+    let impuestos = 0, hayImp = false;
+    const reImpNum = new RegExp(NUM+"\\s*-?\\s*_?\\s*$");
+    for(const line of t.split(/\n/)){
+      if(!/impuesto|interes|iva\b|iibb|percep|sellos|db\.?rg|comision/.test(line)) continue;
+      if(/usd|u\$s/.test(line) && !/\$/.test(line)) continue; // cargos en dólares, no sumar en pesos
+      const mm = line.match(reImpNum);
+      if(mm){ impuestos += num(mm[1]); hayImp = true; }
+    }
+    // total de consumos en dólares ("Total Consumos ... 404.669,38   20,28")
+    let usd = 0;
+    const tc = t.match(new RegExp("total consumos[^\\n]*?"+NUM+"\\s+"+NUM+"\\s*_?\\s*$","m"));
+    if(tc) usd = num(tc[2]);
     const detalle = parseDetalleResumen(text);
     // el resumen se guarda en el mes del CIERRE (los consumos son de ese mes)
     let mes = monthKey(new Date());
@@ -2254,7 +2431,10 @@
     return {nombre,
       cierre: ci ? Math.min(28, Math.max(1, ci.d)) : 20,
       vto: ve ? Math.min(28, Math.max(1, ve.d)) : 5,
-      mes, total: total || (detalle.reduce((s,d)=>s+d.monto,0) || null), detalle};
+      mes,
+      total: total || (detalle.reduce((s,d)=>s+d.monto,0) || null),
+      saldoAnterior, pagos, impuestos: hayImp ? impuestos : null, pagoMinimo, usd, totalUsd: 0,
+      detalle};
   }
 
   async function aiReadStatement(b64, mediaType){
@@ -2262,8 +2442,8 @@
       ? {type:"document", source:{type:"base64", media_type:"application/pdf", data:b64}}
       : {type:"image", source:{type:"base64", media_type:mediaType, data:b64}};
     const out = await callClaude(SYS_RESUMEN,
-      [block, {type:"text", text:"Extraé los datos de este resumen de tarjeta."}],
-      SCHEMA_RESUMEN, 8000);
+      [block, {type:"text", text:"Extraé TODOS los datos de este resumen de tarjeta, completo."}],
+      SCHEMA_RESUMEN, 12000);
     if(!out || !out.tarjeta) return null;
     return {
       nombre: out.tarjeta,
@@ -2271,8 +2451,15 @@
       vto: Math.min(28, Math.max(1, out.vencimiento_dia||5)),
       mes: /^\d{4}-\d{2}$/.test(out.mes||"") ? out.mes : monthKey(new Date()),
       total: out.total || null,
-      detalle: (out.consumos||[]).filter(c=>c.monto>0).map(c=>({
-        desc: String(c.descripcion||"Consumo").slice(0,60), monto: c.monto,
+      totalUsd: out.total_usd || 0,
+      saldoAnterior: out.saldo_anterior ?? null,
+      pagos: out.pagos || 0,
+      impuestos: out.impuestos ?? null,
+      pagoMinimo: out.pago_minimo || 0,
+      usd: out.consumos_usd_total || 0,
+      detalle: (out.consumos||[]).filter(c=>c.monto).map(c=>({
+        desc: (String(c.descripcion||"Consumo").slice(0,52)+(c.cuota?" Cuota "+c.cuota:"")).trim(),
+        monto: c.monto,
         categoria: c.categoria||"Otros", sub: !!c.suscripcion
       }))
     };
@@ -2323,13 +2510,22 @@
       $("imMes").appendChild(o);
     }
     if(d.mes) $("imMes").value = d.mes;
-    $("imTotal").value = d.total||"";
+    $("imTotal").value = d.total ? fmtNum(d.total) : "";
     const n = d.detalle.length, subs = d.detalle.filter(x=>x.sub).length;
-    $("imPreview").innerHTML = n
-      ? `Detecté <strong>${n} consumos</strong>${subs?` (${subs} parecen suscripciones)`:""}:<br>` +
-        d.detalle.slice(0,5).map(x=>`· ${esc(x.desc)} — ${fmtMoney(x.monto)}`).join("<br>") +
-        (n>5 ? `<br>· … y ${n-5} más` : "")
-      : "No detecté consumos individuales — igual podés guardar el total y cargar el detalle después.";
+    const desglose = [
+      d.saldoAnterior!=null ? `Saldo anterior ${fmtMoney(d.saldoAnterior)}` : null,
+      d.pagos>0 ? `Pagos del período ${fmtMoney(d.pagos)}` : null,
+      n ? `${n} consumos por ${fmtMoney(d.detalle.reduce((s,x)=>s+(x.monto>0?x.monto:0),0))}` : null,
+      d.usd>0 ? `Consumos en U$D ${fmtNum(d.usd)}` : null,
+      d.impuestos!=null ? `Impuestos e intereses ${fmtMoney(d.impuestos)}` : null,
+      d.pagoMinimo>0 ? `Pago mínimo ${fmtMoney(d.pagoMinimo)}` : null
+    ].filter(Boolean);
+    $("imPreview").innerHTML =
+      (desglose.length ? `Leí todo el resumen:<br>· ${desglose.join("<br>· ")}<br>` : "") +
+      (n ? `<br>Primeros consumos:${subs?` (${subs} parecen suscripciones)`:""}<br>` +
+        d.detalle.slice(0,4).map(x=>`· ${esc(x.desc)} — ${fmtMoney(x.monto)}`).join("<br>") +
+        (n>4 ? `<br>· … y ${n-4} más` : "")
+      : "No detecté consumos individuales — igual podés guardar el total y cargar el detalle después.");
     openSheet("import");
   }
 
@@ -2339,7 +2535,7 @@
     const cierre = Math.min(28, Math.max(1, parseInt($("imCierre").value)||20));
     const vto = Math.min(28, Math.max(1, parseInt($("imVto").value)||5));
     const mes = $("imMes").value || monthKey(new Date());
-    const total = parseFloat($("imTotal").value) || importData.detalle.reduce((s,d)=>s+d.monto,0);
+    const total = numVal($("imTotal").value) || importData.detalle.reduce((s,d)=>s+(d.monto>0?d.monto:0),0);
     if(!total || total<=0){ $("imTotal").focus(); toast("Falta el total"); return; }
     let card = importCtx && importCtx.tarjetaId ? S.tarjetas.find(t=>t.id===importCtx.tarjetaId) : null;
     if(!card) card = S.tarjetas.find(t=>{
@@ -2353,8 +2549,25 @@
     card.resumenes[mes] = Object.assign({}, prev, {
       monto: Math.round(total*100)/100,
       pagado: prev.pagado || false,
-      detalle: importData.detalle.length ? importData.detalle : (prev.detalle||[])
+      detalle: importData.detalle.length ? importData.detalle : (prev.detalle||[]),
+      saldoAnterior: importData.saldoAnterior ?? prev.saldoAnterior ?? null,
+      pagos: importData.pagos || prev.pagos || 0,
+      impuestos: importData.impuestos ?? prev.impuestos ?? null,
+      pagoMinimo: importData.pagoMinimo || prev.pagoMinimo || 0,
+      usd: importData.usd || prev.usd || 0,
+      totalUsd: importData.totalUsd || prev.totalUsd || 0
     });
+    // los pagos que figuran en este resumen son el pago del resumen ANTERIOR
+    if(importData.pagos>0){
+      const [y,m] = mes.split("-").map(Number);
+      const pk = monthKey(new Date(y, m-2, 1));
+      const rAnt = card.resumenes[pk];
+      if(rAnt && Math.abs(resPagado(rAnt)-importData.pagos)>0.5){
+        rAnt.pagadoMonto = importData.pagos;
+        rAnt.pagado = rAnt.pagadoMonto >= rAnt.monto - 0.01;
+        setTimeout(()=>toast(`Detecté tu pago de ${fmtMoney(importData.pagos)} al resumen de ${monthKeyLabel(pk)} ✔`), 1400);
+      }
+    }
     save(); closeSheet(); switchView("tarjetas"); renderAll();
     toast("Resumen de "+nombre+" cargado ✔");
     importPendingSubs = importData.detalle.length ? {card, detalle: importData.detalle} : null;
@@ -2390,7 +2603,7 @@
       (suma>0 ? ` · ${(r.detalle||[]).length} consumos por ${fmtMoney(suma)}` : "") +
       (suma>0 && dif>0.5 ? `<br>La diferencia de ${fmtMoney(dif)} viene de arrastre anterior + intereses e impuestos.` : "") +
       `<br>Si pagaste menos que el total, el resto queda como deuda financiada.`;
-    $("prMonto").value = resPagado(r) || r.monto;
+    $("prMonto").value = fmtNum(resPagado(r) || r.monto);
     $("prBill").innerHTML = `<option value="">No descontar de ninguna billetera (pago viejo)</option>` +
       S.billeteras.filter(b=>!b.inversion).map(b=>`<option value="${b.id}">${esc(b.nombre)}</option>`).join("");
     openSheet("pagores");
@@ -2404,7 +2617,7 @@
     const {card, mes} = pagoResCtx;
     const r = (card.resumenes||{})[mes];
     if(!r){ pagoResCtx=null; closeSheet(); afterPagoRes(); return; }
-    const monto = Math.max(0, parseFloat($("prMonto").value)||0);
+    const monto = Math.max(0, numVal($("prMonto").value)||0);
     r.pagadoMonto = monto;
     r.pagado = monto >= r.monto - 0.01;
     const bill = $("prBill").value ? Number($("prBill").value) : null;
@@ -2426,7 +2639,7 @@
   function openPay(ctx){
     payCtx = ctx;
     $("payTitle").textContent = "Pagar "+ctx.nombre;
-    $("pyMonto").value = ctx.monto;
+    $("pyMonto").value = fmtNum(ctx.monto);
     $("payNote").textContent = fmtMoney(ctx.monto)+(ctx.kind==="tarjeta"
       ? " es lo que falta pagar — si pagás menos, el resto queda financiado para el próximo resumen."
       : " — se anota como gasto y descuenta de la billetera que elijas.");
@@ -2436,7 +2649,7 @@
   }
   $("confirmPay").onclick = ()=>{
     if(!payCtx) return;
-    const monto = Math.max(0, parseFloat($("pyMonto").value) || payCtx.monto);
+    const monto = Math.max(0, numVal($("pyMonto").value) || payCtx.monto);
     if(!monto){ $("pyMonto").focus(); toast("Falta el monto"); return; }
     const bill = $("pyBill").value ? Number($("pyBill").value) : null;
     const fecha = $("pyFecha").value || todayISO();
@@ -2478,7 +2691,7 @@
   $("saveWallet").onclick = ()=>{
     const nombre = $("wNombre").value.trim();
     if(!nombre){ $("wNombre").focus(); toast("Falta el nombre"); return; }
-    const saldo = parseFloat($("wSaldo").value)||0;
+    const saldo = numVal($("wSaldo").value)||0;
     if(walletEdit){
       walletEdit.nombre = nombre;
       walletEdit.inversion = $("wInv").checked;
@@ -2507,13 +2720,13 @@
     $("walletTitle").textContent = "Editar "+walletEdit.nombre;
     $("delWallet").hidden = false;
     $("wNombre").value = walletEdit.nombre;
-    $("wSaldo").value = saldoBilletera(walletEdit.id);
+    $("wSaldo").value = fmtNum(saldoBilletera(walletEdit.id));
     $("wInv").checked = !!walletEdit.inversion;
     openSheet("wallet");
   });
   $("saveTransfer").onclick = ()=>{
     const de = Number($("trDe").value), a = Number($("trA").value);
-    const monto = parseFloat($("trMonto").value);
+    const monto = numVal($("trMonto").value);
     if(de===a){ toast("Elegí dos billeteras distintas"); return; }
     if(!monto || monto<=0){ $("trMonto").focus(); toast("Falta el monto"); return; }
     S.transf.push({id:nid(), de, a, monto, fecha:todayISO()});
@@ -2523,7 +2736,7 @@
   /* ---------- ajustes ---------- */
   $("cfgBtn").onclick = ()=>{
     $("cfgKey").value = S.config.apiKey||"";
-    $("cfgAlerta").value = S.config.alertaGrande||"";
+    $("cfgAlerta").value = S.config.alertaGrande ? fmtNum(S.config.alertaGrande) : "";
     $("cfgRemOn").checked = !!(S.config.recordatorio&&S.config.recordatorio.on);
     $("cfgRemHora").value = (S.config.recordatorio&&S.config.recordatorio.hora)||"21:30";
     $("remNote").hidden = !!(window.AndroidVoz && window.AndroidVoz.setReminder);
@@ -2539,7 +2752,7 @@
   window.__remPermiso = ok => { if(!ok) toast("Activá las notificaciones de Guita en los ajustes del celu"); };
   $("saveCfg").onclick = ()=>{
     S.config.apiKey = $("cfgKey").value.trim();
-    S.config.alertaGrande = Math.max(0, parseFloat($("cfgAlerta").value)||0);
+    S.config.alertaGrande = Math.max(0, numVal($("cfgAlerta").value)||0);
     S.config.recordatorio = {on: $("cfgRemOn").checked, hora: $("cfgRemHora").value||"21:30"};
     save(); closeSheet(); renderAll();
     aplicarRecordatorio();
@@ -2646,12 +2859,15 @@
       const hist = ks.slice(-4).map(k=>{
         const r = t.resumenes[k];
         const suma = sumaDetalle(r);
+        const cg = cargosMes(t, k), arr = arrastreMes(t, k);
         return `  ${monthKeyLabel(k)}: total $${Math.round(r.monto)}`+
-          (suma>0?`, consumos $${Math.round(suma)}, arrastre+cargos $${Math.round(Math.max(0,r.monto-suma))}`:"")+
+          (suma>0?`, consumos $${Math.round(suma)}`:"")+
+          (r.usd>0?` + U$D ${r.usd}`:"")+
+          (cg!=null?`, impuestos e intereses $${Math.round(cg)}`:"")+
+          (arr!=null?`, arrastre previo $${Math.round(arr)}`:"")+
           `, pagado $${Math.round(resPagado(r))}, financiado $${Math.round(resFinanciado(r))}`;
       }).join("\n");
-      const cargosArr = ks.map(k=>t.resumenes[k]).filter(r=>r.detalle&&r.detalle.length)
-        .map(r=>r.monto-sumaDetalle(r)).filter(c=>c>0);
+      const cargosArr = ks.map(k=>cargosMes(t, k)).filter(c=>c!=null && c>0);
       const cargoProm = cargosArr.length ? Math.round(cargosArr.reduce((a,b)=>a+b,0)/cargosArr.length) : 0;
       const fin = resFinanciado(t.resumenes[ks[ks.length-1]]);
       const nuevos = S.movs.filter(m=>m.tarjetaId===t.id && m.tipo==="gasto" && !(t.resumenes||{})[m.fecha.slice(0,7)])
