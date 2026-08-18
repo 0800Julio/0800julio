@@ -78,6 +78,10 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
   cuota por cuota qué sigue (y cuál es la última 🎉), qué cuotas terminan,
   suscripciones, consumos nuevos, financiado, impuestos estimados, total y
   pago mínimo estimado según tu proporción histórica.
+- ✨ **Diseño con profundidad** (v1.9): splash de inicio animado, tarjetas con
+  sombras en capas, resumen del mes con brillo de marca, micrófono y botones
+  con gradiente, barra inferior flotante con blur — todo respetando
+  `prefers-reduced-motion` y los modos claro/oscuro.
 - 🏷 **Categorías automáticas** por palabras clave (súper → Comida, nafta → Transporte,
   luz → Servicios, etc.). Siempre podés corregir antes de guardar.
 - ➕ **Carga manual** para cuando no querés hablar.

@@ -14,8 +14,12 @@
 <style>
   :root{
     --paper:#F1F4EF; --card:#FFFFFF; --ink:#1B2620; --muted:#5F6D64;
-    --line:#DCE3DA; --brand:#1E7A4F; --brand-ink:#FFFFFF; --brand-soft:#E1EFE7;
-    --expense:#B5473F; --income:#1E7A4F; --danger:#B5473F; --shadow:0 1px 3px rgba(27,38,32,.08);
+    --line:#DCE3DA; --brand:#1E7A4F; --brand-2:#166044; --brand-ink:#FFFFFF; --brand-soft:#E1EFE7;
+    --expense:#B5473F; --income:#1E7A4F; --danger:#B5473F;
+    --glow:rgba(30,122,79,.16); --nav-bg:rgba(255,255,255,.82);
+    --shadow:0 1px 2px rgba(27,38,32,.05), 0 6px 20px rgba(27,38,32,.08);
+    --shadow-lg:0 18px 50px rgba(27,38,32,.22);
+    --shadow-fab:0 6px 16px rgba(30,122,79,.38), 0 2px 5px rgba(30,122,79,.25);
     --c-comida:#A94401; --c-transporte:#5B94DB; --c-hogar:#925AE3; --c-servicios:#0FA78B;
     --c-salud:#C62A77; --c-salidas:#988700; --c-ropa:#0567B1; --c-educacion:#237246;
     --c-tarjeta:#F7636E; --c-otros:#64748B; --c-ingreso:#1E7A4F;
@@ -24,8 +28,12 @@
   @media (prefers-color-scheme: dark){
     :root{
       --paper:#111613; --card:#1A211C; --ink:#E7EDE7; --muted:#93A198;
-      --line:#2A332C; --brand:#43A879; --brand-ink:#0C1410; --brand-soft:#1E3328;
-      --expense:#E58B82; --income:#5CBE93; --danger:#E58B82; --shadow:0 1px 3px rgba(0,0,0,.35);
+      --line:#2A332C; --brand:#43A879; --brand-2:#2E8A61; --brand-ink:#0C1410; --brand-soft:#1E3328;
+      --expense:#E58B82; --income:#5CBE93; --danger:#E58B82;
+      --glow:rgba(67,168,121,.14); --nav-bg:rgba(26,33,28,.82);
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+      --shadow-lg:0 18px 50px rgba(0,0,0,.55);
+      --shadow-fab:0 6px 18px rgba(67,168,121,.4), 0 2px 6px rgba(0,0,0,.4);
       --c-comida:#A85101; --c-transporte:#3E6EA9; --c-hogar:#8B54DD; --c-servicios:#00A5A6;
       --c-salud:#BC2D8C; --c-salidas:#A79209; --c-ropa:#0795FD; --c-educacion:#30794E;
       --c-tarjeta:#CC767B; --c-otros:#9AA8BB; --c-ingreso:#5CBE93;
@@ -33,16 +41,24 @@
   }
   :root[data-theme="dark"]{
     --paper:#111613; --card:#1A211C; --ink:#E7EDE7; --muted:#93A198;
-    --line:#2A332C; --brand:#43A879; --brand-ink:#0C1410; --brand-soft:#1E3328;
-    --expense:#E58B82; --income:#5CBE93; --danger:#E58B82; --shadow:0 1px 3px rgba(0,0,0,.35);
+    --line:#2A332C; --brand:#43A879; --brand-2:#2E8A61; --brand-ink:#0C1410; --brand-soft:#1E3328;
+    --expense:#E58B82; --income:#5CBE93; --danger:#E58B82;
+    --glow:rgba(67,168,121,.14); --nav-bg:rgba(26,33,28,.82);
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    --shadow-lg:0 18px 50px rgba(0,0,0,.55);
+    --shadow-fab:0 6px 18px rgba(67,168,121,.4), 0 2px 6px rgba(0,0,0,.4);
     --c-comida:#A85101; --c-transporte:#3E6EA9; --c-hogar:#8B54DD; --c-servicios:#00A5A6;
     --c-salud:#BC2D8C; --c-salidas:#A79209; --c-ropa:#0795FD; --c-educacion:#30794E;
     --c-tarjeta:#CC767B; --c-otros:#9AA8BB; --c-ingreso:#5CBE93;
   }
   :root[data-theme="light"]{
     --paper:#F1F4EF; --card:#FFFFFF; --ink:#1B2620; --muted:#5F6D64;
-    --line:#DCE3DA; --brand:#1E7A4F; --brand-ink:#FFFFFF; --brand-soft:#E1EFE7;
-    --expense:#B5473F; --income:#1E7A4F; --danger:#B5473F; --shadow:0 1px 3px rgba(27,38,32,.08);
+    --line:#DCE3DA; --brand:#1E7A4F; --brand-2:#166044; --brand-ink:#FFFFFF; --brand-soft:#E1EFE7;
+    --expense:#B5473F; --income:#1E7A4F; --danger:#B5473F;
+    --glow:rgba(30,122,79,.16); --nav-bg:rgba(255,255,255,.82);
+    --shadow:0 1px 2px rgba(27,38,32,.05), 0 6px 20px rgba(27,38,32,.08);
+    --shadow-lg:0 18px 50px rgba(27,38,32,.22);
+    --shadow-fab:0 6px 16px rgba(30,122,79,.38), 0 2px 5px rgba(30,122,79,.25);
     --c-comida:#A94401; --c-transporte:#5B94DB; --c-hogar:#925AE3; --c-servicios:#0FA78B;
     --c-salud:#C62A77; --c-salidas:#988700; --c-ropa:#0567B1; --c-educacion:#237246;
     --c-tarjeta:#F7636E; --c-otros:#64748B; --c-ingreso:#1E7A4F;
@@ -55,12 +71,16 @@
     font-family:system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing:antialiased;
   }
+  body::before{content:""; position:fixed; inset:0 0 auto; height:46dvh; z-index:-1; pointer-events:none;
+    background:radial-gradient(120% 100% at 50% -30%, var(--glow), transparent 72%)}
   #guita{max-width:480px; margin:0 auto; min-height:100dvh; display:flex; flex-direction:column;
     padding:0 16px calc(108px + env(safe-area-inset-bottom));}
 
   header.g-top{display:flex; align-items:center; justify-content:space-between; padding:16px 2px 4px}
-  .g-brand{font-size:22px; font-weight:800; letter-spacing:-.02em}
-  .g-brand em{font-style:normal; color:var(--brand)}
+  .g-brand{font-size:22px; font-weight:800; letter-spacing:-.02em; display:flex; align-items:center; gap:9px}
+  .g-brand em{font-style:normal; width:30px; height:30px; border-radius:50%; display:grid; place-items:center;
+    font-size:16px; color:var(--brand-ink); background:linear-gradient(150deg,var(--brand),var(--brand-2));
+    box-shadow:0 2px 8px var(--glow)}
   .g-topbtns{display:flex; gap:8px}
   .g-icobtn{width:40px; height:40px; border-radius:50%; border:1px solid var(--line); background:var(--card);
     color:var(--ink); box-shadow:var(--shadow); cursor:pointer; display:flex; align-items:center; justify-content:center;
@@ -83,7 +103,12 @@
   .g-monthnav h2{font-size:15px; font-weight:600}
 
   .g-card{background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow)}
-  .g-summary{padding:18px 18px 16px; display:flex; flex-direction:column; gap:13px}
+  .g-summary{padding:18px 18px 16px; display:flex; flex-direction:column; gap:13px;
+    position:relative; overflow:hidden; box-shadow:var(--shadow), 0 14px 40px var(--glow)}
+  .g-summary::before{content:""; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(75% 120% at 100% 0%, var(--glow), transparent 65%),
+               linear-gradient(180deg, var(--brand-soft), transparent 46%);
+    opacity:.5}
   .g-label{font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
   .g-total{font-size:clamp(34px,10vw,42px); font-weight:800; letter-spacing:-.03em;
     font-variant-numeric:tabular-nums; color:var(--expense)}
@@ -213,7 +238,12 @@
 
   /* nav inferior */
   .g-nav{position:fixed; left:0; right:0; bottom:0; display:flex; justify-content:center; z-index:10;
-    padding:0 0 env(safe-area-inset-bottom); background:var(--card); border-top:1px solid var(--line)}
+    padding:0 0 env(safe-area-inset-bottom); background:var(--card); border-top:1px solid var(--line);
+    box-shadow:0 -6px 24px rgba(10,16,12,.06)}
+  @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    .g-nav{background:var(--nav-bg); -webkit-backdrop-filter:blur(16px) saturate(1.4);
+      backdrop-filter:blur(16px) saturate(1.4)}
+  }
   .g-navin{width:min(480px,100%); display:grid; grid-template-columns:1fr 1fr 84px 1fr 1fr; align-items:end}
   .g-tab{font:inherit; border:none; background:none; color:var(--muted); cursor:pointer; padding:9px 0 10px;
     display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10.5px; font-weight:600;
@@ -222,8 +252,9 @@
   .g-tab.on{color:var(--brand)}
   .g-tab.on svg{transform:translateY(-1px) scale(1.08)}
   .g-micwrap{display:flex; justify-content:center}
-  .g-mic{width:64px; height:64px; border-radius:50%; border:4px solid var(--paper); background:var(--brand);
-    color:var(--brand-ink); box-shadow:0 6px 16px rgba(30,122,79,.35); cursor:pointer; display:flex;
+  .g-mic{width:64px; height:64px; border-radius:50%; border:4px solid var(--paper);
+    background:linear-gradient(150deg,var(--brand),var(--brand-2));
+    color:var(--brand-ink); box-shadow:var(--shadow-fab); cursor:pointer; display:flex;
     align-items:center; justify-content:center; position:relative; margin-top:-24px; margin-bottom:8px;
     transition:transform .2s var(--spring); touch-action:none; user-select:none; -webkit-user-select:none}
   .g-mic svg{width:27px; height:27px; pointer-events:none}
@@ -268,7 +299,8 @@
   .g-chatrow input{flex:1; font:inherit; font-size:15px; color:var(--ink); background:var(--paper);
     border:1px solid var(--line); border-radius:999px; padding:10px 16px}
   .g-chatrow input:focus{outline:2px solid var(--brand); border-color:var(--brand)}
-  .g-chatrow button{width:44px; height:44px; flex:none; border-radius:50%; border:none; background:var(--brand);
+  .g-chatrow button{width:44px; height:44px; flex:none; border-radius:50%; border:none;
+    background:linear-gradient(150deg,var(--brand),var(--brand-2));
     color:var(--brand-ink); font-size:17px; cursor:pointer; transition:transform .15s var(--ease)}
   .g-chatrow button:active{transform:scale(.92)}
 
@@ -354,7 +386,8 @@
     transform:translateY(105%); transition:transform .26s var(--spring); visibility:hidden}
   .g-sheet.open{transform:none; visibility:visible}
   .g-sheetin{width:min(480px,100%); max-height:84dvh; overflow-y:auto; background:var(--card);
-    border-radius:20px 20px 0 0; border:1px solid var(--line); border-bottom:none;
+    border-radius:22px 22px 0 0; border:1px solid var(--line); border-bottom:none;
+    box-shadow:var(--shadow-lg);
     padding:18px 20px calc(22px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:13px}
   .g-sheetin h3{font-size:16px; font-weight:700}
   .g-transcript{min-height:56px; font-size:18px; line-height:1.4}
@@ -374,7 +407,8 @@
   .g-btn{flex:1; font:inherit; font-size:15px; font-weight:700; padding:13px 0; border-radius:14px;
     border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer; transition:transform .15s var(--ease)}
   .g-btn:active{transform:scale(.97)}
-  .g-btn.primary{background:var(--brand); border-color:var(--brand); color:var(--brand-ink)}
+  .g-btn.primary{background:linear-gradient(160deg,var(--brand),var(--brand-2)); border-color:var(--brand);
+    color:var(--brand-ink); box-shadow:0 3px 10px var(--glow)}
   .g-btn.danger{color:var(--danger); border-color:var(--danger)}
   .g-btn:focus-visible, .g-mic:focus-visible, .g-icobtn:focus-visible, .g-tab:focus-visible{outline:2px solid var(--brand); outline-offset:2px}
   .g-note{font-size:12.5px; color:var(--muted); line-height:1.45}
@@ -400,10 +434,34 @@
     border-radius:10px; padding:9px 12px; display:none}
   .g-notice.show{display:block}
 
+  /* splash de inicio */
+  #splash{position:fixed; inset:0; z-index:60; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:14px; background:var(--paper); pointer-events:none;
+    animation:splashOut .45s var(--ease) 1.25s forwards}
+  #splash::before{content:""; position:absolute; inset:0;
+    background:radial-gradient(60% 45% at 50% 40%, var(--glow), transparent 72%)}
+  .s-coin{width:78px; height:78px; border-radius:50%; display:grid; place-items:center;
+    font-size:38px; font-weight:800; color:var(--brand-ink);
+    background:linear-gradient(150deg,var(--brand),var(--brand-2));
+    box-shadow:var(--shadow-fab); animation:coinIn .65s var(--spring) both}
+  .s-word{font-size:32px; font-weight:800; letter-spacing:-.03em;
+    animation:wordIn .5s var(--ease) .2s both}
+  .s-word em{font-style:normal; color:var(--brand)}
+  .s-tag{font-size:13px; color:var(--muted); animation:wordIn .5s var(--ease) .38s both}
+  @keyframes coinIn{from{opacity:0; transform:scale(.4) rotate(-14deg)}}
+  @keyframes wordIn{from{opacity:0; transform:translateY(9px)}}
+  @keyframes splashOut{to{opacity:0; visibility:hidden}}
+
   @media (prefers-reduced-motion: reduce){
     *, *::before, *::after{animation:none !important; transition:none !important}
   }
 </style>
+
+<div id="splash" aria-hidden="true">
+  <div class="s-coin">$</div>
+  <div class="s-word"><em>G</em>uita</div>
+  <div class="s-tag">tus gastos, a viva voz</div>
+</div>
 
 <div id="guita">
   <header class="g-top">
@@ -1338,6 +1396,16 @@
 
   /* ---------- animación de números ---------- */
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- splash de inicio ---------- */
+  (function(){
+    const sp = document.getElementById("splash");
+    if(!sp) return;
+    const kill = ()=>{ if(sp.parentNode) sp.remove(); };
+    if(reduced){ kill(); return; }
+    sp.addEventListener("animationend", e=>{ if(e.animationName==="splashOut") kill(); });
+    setTimeout(kill, 2400);
+  })();
   const lastNum = {};
   function animMoney(el, val){
     const key = el.id;

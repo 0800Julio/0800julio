@@ -16,8 +16,19 @@ mano y muchas veces por voz. El tono es cercano y rioplatense ("Te escucho…",
 - Marca `--brand` verde peso `#1E7A4F` / `#43A879` (dark)
 - Gasto `--expense` terracota `#B5473F` / `#E58B82` — Ingreso `--income` = verde marca
 - Categorías: cada una tiene su token `--c-*` con variante clara y oscura
+- Gradiente de marca: `linear-gradient(150deg, var(--brand), var(--brand-2))` —
+  solo para superficies "héroe" (FAB, botón primario, coin del logo)
 - Nunca agregar colores sueltos: todo via tokens, redefinidos en
   `@media (prefers-color-scheme: dark)` **y** `:root[data-theme="dark"|"light"]`
+
+## Profundidad (v1.9)
+- Sombras en capas via tokens: `--shadow` (cards: key 1-2px + ambiente difusa),
+  `--shadow-lg` (sheets y popups), `--shadow-fab` (FAB y coin, teñida de marca)
+- Brillo de marca `--glow` (rgba verde ~.15): radial fijo arriba del `body`
+  (::before, z-index -1), aurora del héroe `.g-summary::before` y halo de sombras
+- Nav inferior flotante: `--nav-bg` translúcido + `backdrop-filter: blur(16px)
+  saturate(1.4)` dentro de `@supports` — el fallback queda `var(--card)` sólido
+- Nunca sombras duras ni negras al 100%; en dark suben alfa, no el tamaño
 
 ## Tipografía
 - Stack de sistema (`system-ui`) a propósito: sensación nativa y cero payload
@@ -29,7 +40,7 @@ mano y muchas veces por voz. El tono es cercano y rioplatense ("Te escucho…",
 - Una columna, `max-width: 480px`, padding 16px
 - Navegación inferior con FAB de micrófono central elevado — el mic es el héroe
 - Espaciado con `gap` de flex/grid, nunca márgenes sueltos que colapsen
-- Radios: cards 16px, inputs 12px, sheets 20px arriba
+- Radios: cards 16px, inputs 12px, sheets 22px arriba
 
 ## Motion
 - Easing estándar `--ease: cubic-bezier(.22,.9,.36,1)`; resorte suave
@@ -38,6 +49,10 @@ mano y muchas veces por voz. El tono es cercano y rioplatense ("Te escucho…",
 - Patrones: vista entra con fade + translateY(10px); items de lista en cascada
   (delay 25ms por ítem, máximo 10); números importantes cuentan con rAF (~400ms);
   mic pulsa mientras escucha
+- Splash de inicio `#splash`: coin con spring + wordmark en cascada, se
+  desvanece solo a los ~1.25s (`splashOut`) y el JS lo remueve del DOM
+  (`animationend` + timeout de seguridad). `pointer-events: none` SIEMPRE —
+  la app queda interactiva debajo. Con reduced-motion se remueve al instante.
 - TODO se apaga bajo `@media (prefers-reduced-motion: reduce)` — sin excepciones
 - Una sola pieza audaz por pantalla; el resto quieto
 
