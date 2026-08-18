@@ -251,7 +251,12 @@
   .g-tab svg{width:22px; height:22px; transition:transform .2s var(--spring)}
   .g-tab.on{color:var(--brand)}
   .g-tab.on svg{transform:translateY(-1px) scale(1.08)}
-  .g-micwrap{display:flex; justify-content:center}
+  .g-micwrap{display:flex; justify-content:center;
+    transition:transform .22s var(--spring), opacity .18s var(--ease)}
+  .g-mic.canceling, .g-mic.canceling.listening{
+    background:linear-gradient(150deg,var(--danger),var(--expense));
+    box-shadow:0 6px 16px rgba(181,71,63,.45)}
+  .g-mic.canceling.listening::after, .g-mic.canceling.listening::before{border-color:var(--danger)}
   .g-mic{width:64px; height:64px; border-radius:50%; border:4px solid var(--paper);
     background:linear-gradient(150deg,var(--brand),var(--brand-2));
     color:var(--brand-ink); box-shadow:var(--shadow-fab); cursor:pointer; display:flex;
@@ -3202,10 +3207,12 @@
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   let rec = null, recActive = false, androidListening = false;
   let pressT0 = 0, startedByPress = false, holding = false, vozBuffer = "", vozGen = 0;
+  let pressX0 = 0, micCancelled = false, vozCancelled = false;
   const isListening = () => recActive || androidListening;
 
   function stopRec(){
     vozGen++; // invalida cualquier interpretación en curso
+    if(isListening()) vozCancelled = true; // descartar resultados tardíos del reconocedor
     if(rec && recActive){ try{ rec.abort(); }catch(e){} }
     if(window.AndroidVoz && androidListening){ try{ window.AndroidVoz.stop(); }catch(e){} }
     recActive = false; androidListening = false; holding = false; vozBuffer = "";
@@ -3224,6 +3231,12 @@
       return;
     }
     if(rec && recActive){ try{ rec.stop(); }catch(e){} }
+  }
+
+  function cancelVoice(){
+    stopRec();
+    toast("Cancelado — no anoté nada ✕");
+    if(navigator.vibrate){ try{ navigator.vibrate(30); }catch(e){} }
   }
 
   async function processTranscript(text){
@@ -3254,6 +3267,7 @@
     if(el) el.textContent = ((vozBuffer+" "+(t||"")).trim()) || "…";
   };
   window.__vozResult = t => {
+    if(vozCancelled){ vozCancelled = false; vozBuffer = ""; return; }
     if(window.AndroidVoz && holding){
       // el reconocedor cortó por una pausa pero el usuario sigue apretando:
       // acumular y volver a escuchar sin perder nada
@@ -3267,6 +3281,7 @@
     if(full) processTranscript(full); else closeSheet();
   };
   window.__vozError = code => {
+    if(vozCancelled){ vozCancelled = false; vozBuffer = ""; return; }
     if(window.AndroidVoz && holding && (code==="no-speech" || code==="error")){
       try{ window.AndroidVoz.start(); return; }catch(e){}
     }
@@ -3297,9 +3312,10 @@
 
   function startVoice(){
     lastOrigen = "voz";
+    vozCancelled = false;
     if(window.AndroidVoz){
       const tEl = $("transcript");
-      tEl.innerHTML = '<span class="hint">Te escucho — hablá y soltá cuando termines</span>';
+      tEl.innerHTML = '<span class="hint">Te escucho — hablá y soltá cuando termines<br>↔ deslizá el mic a un costado para cancelar</span>';
       openListen();
       $("micBtn").classList.add("listening");
       androidListening = true;
@@ -3314,7 +3330,7 @@
     rec.continuous = true;
     rec.maxAlternatives = 1;
     const tEl = $("transcript");
-    tEl.innerHTML = '<span class="hint">Te escucho — hablá y soltá cuando termines</span>';
+    tEl.innerHTML = '<span class="hint">Te escucho — hablá y soltá cuando termines<br>↔ deslizá el mic a un costado para cancelar</span>';
     openListen();
     $("micBtn").classList.add("listening");
     let finalText = "";
@@ -3338,6 +3354,7 @@
     };
     rec.onend = ()=>{
       recActive = false; $("micBtn").classList.remove("listening");
+      if(vozCancelled){ vozCancelled = false; return; }
       if(finalText.trim()){ processTranscript(finalText.trim()); return; }
       const g = vozGen;
       setTimeout(()=>{ if(g===vozGen && !isListening()) closeListen(); }, 2500);
@@ -3347,20 +3364,45 @@
   }
 
   const micBtn = $("micBtn");
+  const micWrap = micBtn.parentElement;
+  const CANCEL_DX = 70; // px de arrastre lateral para cancelar
+  const resetMicDrag = ()=>{
+    micWrap.style.transition = ""; micWrap.style.transform = ""; micWrap.style.opacity = "";
+    micBtn.classList.remove("canceling");
+  };
   micBtn.addEventListener("contextmenu", e=>e.preventDefault());
   micBtn.addEventListener("touchstart", e=>e.preventDefault(), {passive:false});
   micBtn.addEventListener("pointerdown", e=>{
     e.preventDefault();
     try{ micBtn.setPointerCapture(e.pointerId); }catch(err){}
     pressT0 = performance.now();
+    pressX0 = e.clientX;
+    micCancelled = false;
     holding = true;
     document.body.classList.add("mic-hold");
     if(!isListening()){ startedByPress = true; startVoice(); }
     else startedByPress = false; // segundo toque: corta al soltar
   });
+  micBtn.addEventListener("pointermove", e=>{
+    if(!holding || micCancelled || !isListening()) return;
+    const dx = e.clientX - pressX0;
+    if(Math.abs(dx) > CANCEL_DX){
+      micCancelled = true;
+      resetMicDrag();
+      cancelVoice();
+      return;
+    }
+    // arrastre visual con freno: el mic sigue al dedo y se va apagando
+    micWrap.style.transition = "none";
+    micWrap.style.transform = `translateX(${dx*.55}px)`;
+    micWrap.style.opacity = String(1 - Math.abs(dx)/(CANCEL_DX*2.2));
+    micBtn.classList.toggle("canceling", Math.abs(dx) > 26);
+  });
   const endPress = e=>{
     if(e) e.preventDefault();
+    resetMicDrag();
     holding = false;
+    if(micCancelled){ micCancelled = false; return; }
     if(!isListening()){ document.body.classList.remove("mic-hold"); return; }
     const dur = performance.now() - pressT0;
     if(!startedByPress){ finishVoice(); return; }  // era el toque de corte

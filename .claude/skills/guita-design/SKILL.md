@@ -49,6 +49,11 @@ mano y muchas veces por voz. El tono es cercano y rioplatense ("Te escucho…",
 - Patrones: vista entra con fade + translateY(10px); items de lista en cascada
   (delay 25ms por ítem, máximo 10); números importantes cuentan con rAF (~400ms);
   mic pulsa mientras escucha
+- Mic mantener-apretado: arrastrar >70px a un costado cancela la grabación
+  (estilo WhatsApp). El wrap `.g-micwrap` sigue al dedo con freno (×.55) y
+  se desvanece; a >26px el botón toma `.canceling` (gradiente rojo). El
+  descarte real pasa por `stopRec()` + bandera `vozCancelled` que ignora
+  resultados tardíos del reconocedor (web `onend` y puente Android).
 - Splash de inicio `#splash`: coin con spring + wordmark en cascada, se
   desvanece solo a los ~1.25s (`splashOut`) y el JS lo remueve del DOM
   (`animationend` + timeout de seguridad). `pointer-events: none` SIEMPRE —

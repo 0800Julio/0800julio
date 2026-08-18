@@ -82,6 +82,10 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
   sombras en capas, resumen del mes con brillo de marca, micrófono y botones
   con gradiente, barra inferior flotante con blur — todo respetando
   `prefers-reduced-motion` y los modos claro/oscuro.
+- 👈 **Deslizar para cancelar** (v1.9.1): mientras grabás con el micrófono
+  apretado, arrastralo a un costado (como en WhatsApp) y se cancela la
+  grabación — el mic se tiñe de rojo al acercarte al punto de cancelar y no
+  se anota nada.
 - 🏷 **Categorías automáticas** por palabras clave (súper → Comida, nafta → Transporte,
   luz → Servicios, etc.). Siempre podés corregir antes de guardar.
 - ➕ **Carga manual** para cuando no querés hablar.
