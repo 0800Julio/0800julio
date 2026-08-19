@@ -86,6 +86,13 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
   apretado, arrastralo a un costado (como en WhatsApp) y se cancela la
   grabación — el mic se tiñe de rojo al acercarte al punto de cancelar y no
   se anota nada.
+- ↩️ **Deshacer al borrar** (v2.0): borrar un movimiento, una tarjeta (con todos
+  sus resúmenes), una billetera o un gasto fijo te deja 6 segundos para
+  arrepentirte — el aviso trae botón **Deshacer**.
+- ♿ **Accesible de verdad** (v2.0): las hojas mueven el foco al abrirse, el
+  tabulador queda adentro, **Escape** las cierra y el foco vuelve a donde
+  estabas; los avisos son región viva (`role="status"`) y ya no se cortan en
+  una línea; los movimientos se manejan con Enter/Espacio.
 - 🏷 **Categorías automáticas** por palabras clave (súper → Comida, nafta → Transporte,
   luz → Servicios, etc.). Siempre podés corregir antes de guardar.
 - ➕ **Carga manual** para cuando no querés hablar.

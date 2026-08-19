@@ -61,6 +61,18 @@ mano y muchas veces por voz. El tono es cercano y rioplatense ("Te escucho…",
 - TODO se apaga bajo `@media (prefers-reduced-motion: reduce)` — sin excepciones
 - Una sola pieza audaz por pantalla; el resto quieto
 
+## Accesibilidad y feedback (v2.0)
+- Toda hoja (`#sheet`) al abrirse mueve el foco al `h3` de su fase, atrapa el
+  tabulador adentro, cierra con **Escape** y devuelve el foco al disparador
+- El aviso `#toast` es `role="status" aria-live="polite"`: **nunca** `nowrap`
+  (se envuelve, `max-width: calc(100vw - 32px)`), hace **cola** en vez de
+  pisarse — con mensajes esperando cada uno dura 1.2s, el último 2.6s
+- Toda acción destructiva pasa por `borrarConUndo(msg, fn)`: snapshot del
+  estado + botón **Deshacer** de 6s en el toast. Nada de plata se borra sin
+  vuelta atrás y sin decir qué se borró (nombre y cantidad de resúmenes)
+- Todo control con `role="button"` necesita handler de Enter/Espacio, no solo
+  click; `:focus-visible` cubre botones, tabs, mic, segmentos y filas
+
 ## Reglas duras
 - La app es UN archivo (`index.html`), sin dependencias ni CDNs (la CSP del
   artifact bloquea todo lo externo)

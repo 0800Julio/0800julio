@@ -23,6 +23,8 @@
     --c-comida:#A94401; --c-transporte:#5B94DB; --c-hogar:#925AE3; --c-servicios:#0FA78B;
     --c-salud:#C62A77; --c-salidas:#988700; --c-ropa:#0567B1; --c-educacion:#237246;
     --c-tarjeta:#F7636E; --c-otros:#64748B; --c-ingreso:#1E7A4F;
+    /* impeccable-disable bounce-easing -- --spring es un overshoot suave (1.35), medido y
+       reservado a sheets, FAB y splash; los puntitos "bounce" usan ease-in-out */
     --ease:cubic-bezier(.22,.9,.36,1); --spring:cubic-bezier(.34,1.35,.64,1);
   }
   @media (prefers-color-scheme: dark){
@@ -111,7 +113,8 @@
     opacity:.5}
   .g-label{font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
   .g-total{font-size:clamp(34px,10vw,42px); font-weight:800; letter-spacing:-.03em;
-    font-variant-numeric:tabular-nums; color:var(--expense)}
+    font-variant-numeric:tabular-nums; color:var(--expense); transition:color .3s var(--ease)}
+  .g-total.cero{color:var(--muted)}
   .g-subrow{display:flex; gap:18px; flex-wrap:wrap}
   .g-subrow .val{font-weight:700; font-variant-numeric:tabular-nums; font-size:15px}
   .g-subrow .val.pos{color:var(--income)}
@@ -119,7 +122,8 @@
   .g-bar{display:grid; grid-template-columns:96px 1fr 76px; align-items:center; gap:10px; font-size:13px}
   .g-bar .name{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--muted)}
   .g-bar .track{display:block; height:8px; border-radius:4px; background:var(--brand-soft); overflow:hidden}
-  .g-bar .fill{display:block; height:100%; border-radius:4px; transition:width .4s var(--ease)}
+  .g-bar .fill{display:block; height:100%; border-radius:4px; transform-origin:left center;
+    transition:transform .4s var(--ease)}
   .g-bar .amt{text-align:right; font-variant-numeric:tabular-nums; font-weight:600}
 
   .g-due{display:flex; flex-direction:column; gap:6px; margin-top:14px}
@@ -145,7 +149,7 @@
   .g-del{flex:none; display:none; border:none; background:var(--danger); color:#fff; font-size:13px;
     font-weight:600; padding:8px 12px; border-radius:10px; cursor:pointer}
   .armed .g-del{display:block}
-  .g-item.armed .g-amt{display:none}
+  .g-item.armed .g-amt{opacity:.45}
 
   .g-empty{margin-top:22px; padding:26px 22px; text-align:center; display:flex; flex-direction:column; gap:10px}
   .g-empty strong{font-size:17px}
@@ -171,12 +175,16 @@
   .g-ivg{padding:14px 16px; display:flex; flex-direction:column; gap:10px; margin-top:14px}
   .g-ivgbar{display:grid; grid-template-columns:70px 1fr 96px; align-items:center; gap:10px; font-size:13px}
   .g-ivgbar .track{display:block; height:12px; border-radius:6px; background:var(--brand-soft); overflow:hidden}
-  .g-ivgbar .fill{display:block; height:100%; border-radius:6px; transition:width .4s var(--ease)}
+  .g-ivgbar .fill{display:block; height:100%; border-radius:6px; transform-origin:left center;
+    transition:transform .4s var(--ease)}
   .g-ivgbar .amt{text-align:right; font-variant-numeric:tabular-nums; font-weight:600}
   .g-evo{margin-top:14px; padding:14px 16px 10px}
   .g-evobars{display:flex; align-items:flex-end; justify-content:space-between; height:110px; gap:6px; margin-top:10px}
   .g-evomonth{flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; min-width:0}
   .g-evopair{display:flex; align-items:flex-end; gap:3px; height:88px}
+  /* scaleY deformaría el radio de 3px de estas barras de 9px; son 12 barritas
+     y la transición corre una sola vez al render.
+     impeccable-disable-next-line layout-transition */
   .g-evopair span{display:block; width:9px; border-radius:3px 3px 0 0; min-height:2px; transition:height .45s var(--ease)}
   .g-evomonth .lbl{font-size:10.5px; color:var(--muted); text-transform:capitalize; white-space:nowrap}
 
@@ -415,7 +423,10 @@
   .g-btn.primary{background:linear-gradient(160deg,var(--brand),var(--brand-2)); border-color:var(--brand);
     color:var(--brand-ink); box-shadow:0 3px 10px var(--glow)}
   .g-btn.danger{color:var(--danger); border-color:var(--danger)}
-  .g-btn:focus-visible, .g-mic:focus-visible, .g-icobtn:focus-visible, .g-tab:focus-visible{outline:2px solid var(--brand); outline-offset:2px}
+  .g-btn:focus-visible, .g-mic:focus-visible, .g-icobtn:focus-visible, .g-tab:focus-visible,
+  .g-seg button:focus-visible, .g-minibtn:focus-visible, .g-item:focus-visible, .g-del:focus-visible,
+  .g-toast .undo:focus-visible{outline:2px solid var(--brand); outline-offset:2px}
+  .g-sheetin h3:focus-visible, .g-sheetin h3:focus{outline:none}
   .g-note{font-size:12.5px; color:var(--muted); line-height:1.45}
 
   /* multi-gastos */
@@ -432,9 +443,17 @@
 
   .g-toast{position:fixed; left:50%; bottom:calc(104px + env(safe-area-inset-bottom));
     transform:translateX(-50%) translateY(8px); background:var(--ink); color:var(--paper); font-size:14px;
-    font-weight:600; padding:10px 18px; border-radius:999px; opacity:0;
-    transition:opacity .25s var(--ease), transform .25s var(--ease); pointer-events:none; z-index:30; white-space:nowrap}
+    font-weight:600; padding:10px 18px; border-radius:22px; opacity:0;
+    transition:opacity .25s var(--ease), transform .25s var(--ease); pointer-events:none; z-index:30;
+    max-width:min(420px, calc(100vw - 32px)); text-align:center; line-height:1.35;
+    overflow-wrap:break-word; display:flex; align-items:center; gap:12px; justify-content:center}
   .g-toast.show{opacity:1; transform:translateX(-50%)}
+  .g-toast .msg{min-width:0}
+  .g-toast .undo{flex:none; font:inherit; font-size:13.5px; font-weight:800; color:var(--paper);
+    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.28); border-radius:999px;
+    padding:5px 12px; cursor:pointer; pointer-events:auto}
+  .g-toast .undo:active{transform:scale(.95)}
+  .g-toast.has-undo{pointer-events:auto}
   .g-notice{margin-top:8px; font-size:12.5px; color:var(--muted); background:var(--brand-soft);
     border-radius:10px; padding:9px 12px; display:none}
   .g-notice.show{display:block}
@@ -707,7 +726,7 @@
           <input id="fjNombre" type="text" placeholder="Alquiler, Netflix, expensas…" autocomplete="off"></div>
         <div class="g-row2">
           <div class="g-field"><label class="g-label" for="fjMonto">Monto</label>
-            <input id="fjMonto" type="number" inputmode="decimal" step="any" min="0"></div>
+            <input id="fjMonto" type="text" inputmode="decimal" data-money></div>
           <div class="g-field"><label class="g-label" for="fjDia">Día de pago (1–28)</label>
             <input id="fjDia" type="number" inputmode="numeric" min="1" max="28" value="10"></div>
         </div>
@@ -891,7 +910,7 @@
           <input id="cfgAlerta" type="text" inputmode="decimal" data-money placeholder="Ej: 50000 — vacío para no avisar"></div>
         <label class="g-switch" style="padding:0"><input type="checkbox" id="cfgRemOn">
           Recordatorio diario para anotar los gastos</label>
-        <div class="g-field"><label class="g-label" for="cfgRemHora">Hora del recordatorio</label>
+        <div class="g-field" id="remHoraRow" hidden><label class="g-label" for="cfgRemHora">Hora del recordatorio</label>
           <input id="cfgRemHora" type="time" value="21:30"></div>
         <div class="g-note" id="remNote" hidden>La notificación diaria funciona en la app instalada (APK). En esta vista web te muestro el aviso al abrir la app si todavía no anotaste nada ese día.</div>
         <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
@@ -920,7 +939,7 @@
     </div>
   </div>
 
-  <div class="g-toast" id="toast"></div>
+  <div class="g-toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 </div>
 
 <script>
@@ -1286,11 +1305,61 @@
 
   const $ = id => document.getElementById(id);
   const toastEl = $("toast");
-  function toast(msg){
-    toastEl.textContent = msg;
+  const toastQ = [];
+  let toastBusy = false, toastDesde = 0, toastApurar = null;
+  function pintarToast(t){
+    toastBusy = true;
+    toastDesde = Date.now();
+    toastEl.textContent = "";
+    const m = document.createElement("span");
+    m.className = "msg"; m.textContent = t.msg;
+    toastEl.appendChild(m);
+    let cerrado = false;
+    const cerrar = ()=>{
+      if(cerrado) return; cerrado = true;
+      toastEl.classList.remove("show","has-undo");
+      clearTimeout(toast._t);
+      setTimeout(()=>{ toastBusy = false; siguienteToast(); }, 260);
+    };
+    if(t.undo){
+      toastEl.classList.add("has-undo");
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "undo"; b.textContent = "Deshacer";
+      b.onclick = ()=>{ cerrar(); t.undo(); };
+      toastEl.appendChild(b);
+    }
     toastEl.classList.add("show");
     clearTimeout(toast._t);
-    toast._t = setTimeout(()=>toastEl.classList.remove("show"), 2600);
+    // con mensajes esperando, cada uno pasa más rápido; el último se queda el tiempo completo
+    toast._t = setTimeout(cerrar, t.undo ? 6000 : (toastQ.length ? 1200 : 2600));
+    // si llega otro mensaje, este se acorta (nunca por debajo de 600ms) en vez de hacerlo esperar
+    toastApurar = t.undo ? null : ()=>{
+      clearTimeout(toast._t);
+      toast._t = setTimeout(cerrar, Math.max(0, 600 - (Date.now()-toastDesde)));
+    };
+  }
+  function siguienteToast(){
+    if(toastBusy || !toastQ.length) return;
+    pintarToast(toastQ.shift());
+  }
+  function toast(msg, undo){
+    // los mensajes hacen cola en vez de pisarse: ninguna alerta se pierde
+    toastQ.push({msg, undo});
+    if(toastQ.length > 4) toastQ.splice(0, toastQ.length-4);
+    if(toastBusy && toastApurar){ const a = toastApurar; toastApurar = null; a(); }
+    siguienteToast();
+  }
+
+  /* deshacer de 1 paso: guarda el estado completo antes de borrar */
+  function borrarConUndo(msg, aplicar){
+    const antes = JSON.stringify(S);
+    aplicar();
+    save(); renderAll();
+    toast(msg, ()=>{
+      try{ S = JSON.parse(antes); }catch(e){ return; }
+      save(); renderAll();
+      toast("Restaurado ✔");
+    });
   }
 
   /* ---------- billeteras: saldo ---------- */
@@ -1448,6 +1517,7 @@
     const out = mm.filter(x=>x.tipo==="gasto").reduce((s,x)=>s+x.monto,0);
     const inn = mm.filter(x=>x.tipo==="ingreso").reduce((s,x)=>s+x.monto,0);
     animMoney($("totalOut"), out);
+    $("totalOut").classList.toggle("cero", out === 0);
     $("totalIn").textContent = fmtMoney(inn);
     const bal = inn-out;
     const balEl = $("balance");
@@ -1464,7 +1534,7 @@
     const max = top.length ? top[0][1] : 1;
     $("catBars").innerHTML = top.map(([cat,val])=>
       `<div class="g-bar"><span class="name">${esc(cat)}</span>
-       <span class="track"><span class="fill" style="width:${Math.max(4,Math.round(val/max*100))}%;background:${catColor(cat)}"></span></span>
+       <span class="track"><span class="fill" style="width:100%;transform:scaleX(${(Math.max(4,Math.round(val/max*100))/100).toFixed(3)});background:${catColor(cat)}"></span></span>
        <span class="amt">${fmtMoney(val)}</span></div>`).join("");
 
     const hoyMk = monthKey(new Date());
@@ -1629,8 +1699,9 @@
     }).join("");
 
     const mx = Math.max(inn, out, 1);
-    $("ivgIn").style.width = Math.max(2, Math.round(inn/mx*100))+"%";
-    $("ivgOut").style.width = Math.max(2, Math.round(out/mx*100))+"%";
+    $("ivgIn").style.width = $("ivgOut").style.width = "100%";
+    $("ivgIn").style.transform = `scaleX(${(Math.max(2, Math.round(inn/mx*100))/100).toFixed(3)})`;
+    $("ivgOut").style.transform = `scaleX(${(Math.max(2, Math.round(out/mx*100))/100).toFixed(3)})`;
     $("ivgInAmt").textContent = fmtMoney(inn);
     $("ivgOutAmt").textContent = fmtMoney(out);
     const ahorro = inn>0 ? Math.round((inn-out)/inn*100) : null;
@@ -1739,7 +1810,7 @@
       const pct = Math.round(g/p*100), over = g>p;
       return `<div class="g-bar" title="${esc(c)}: ${fmtMoney(g)} de ${fmtMoney(p)}">
         <span class="name">${esc(c)}</span>
-        <span class="track"><span class="fill" style="width:${Math.min(100,Math.max(3,pct))}%;background:${over?"var(--expense)":catColor(c)}"></span></span>
+        <span class="track"><span class="fill" style="width:100%;transform:scaleX(${(Math.min(100,Math.max(3,pct))/100).toFixed(3)});background:${over?"var(--expense)":catColor(c)}"></span></span>
         <span class="amt">${over?"⚠ ":""}${pct}%</span></div>`;
     }).join("");
     const overs = keys.filter(c=>(byCat[c]||0)>pres[c]);
@@ -2027,17 +2098,45 @@
   /* ---------- sheet ---------- */
   const sheet=$("sheet"), scrim=$("scrim");
   const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy"];
+  const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]),' +
+    ' textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
+  const focoVisibles = () => Array.from(sheet.querySelectorAll(FOCUSABLE))
+    .filter(el => el.offsetParent !== null || el === document.activeElement);
+  let focoPrevio = null;
   function openSheet(name){
     closeListen();
+    const yaAbierto = sheet.classList.contains("open");
+    if(!yaAbierto) focoPrevio = document.activeElement;
     sheet.classList.add("open"); scrim.classList.add("open");
     phases.forEach(p=>{ $("phase"+p).hidden = p.toLowerCase()!==name.toLowerCase(); });
+    // el título de la fase toma el foco: lectores de pantalla anuncian qué se abrió
+    const fase = $("phase" + phases.find(p=>p.toLowerCase()===name.toLowerCase()));
+    const h = fase && fase.querySelector("h3");
+    if(h){ h.setAttribute("tabindex","-1"); setTimeout(()=>{ try{ h.focus({preventScroll:true}); }catch(e){} }, 60); }
   }
   function closeSheet(){
+    const estaba = sheet.classList.contains("open");
     sheet.classList.remove("open"); scrim.classList.remove("open");
     stopRec();
+    if(estaba && focoPrevio && document.contains(focoPrevio)){
+      try{ focoPrevio.focus({preventScroll:true}); }catch(e){}
+    }
+    focoPrevio = null;
   }
   scrim.onclick = closeSheet;
   document.querySelectorAll("[data-close]").forEach(b=>b.onclick = closeSheet);
+  document.addEventListener("keydown", e=>{
+    if(!sheet.classList.contains("open")) return;
+    if(e.key === "Escape"){ e.preventDefault(); closeSheet(); return; }
+    if(e.key !== "Tab") return;
+    // trampa de foco: el tabulador no se escapa detrás del sheet
+    const f = focoVisibles();
+    if(!f.length) return;
+    const primero = f[0], ultimo = f[f.length-1];
+    if(!sheet.contains(document.activeElement)){ e.preventDefault(); primero.focus(); return; }
+    if(e.shiftKey && document.activeElement === primero){ e.preventDefault(); ultimo.focus(); }
+    else if(!e.shiftKey && document.activeElement === ultimo){ e.preventDefault(); primero.focus(); }
+  });
 
   /* ---------- popup de escucha (flotante, no tapa el micrófono) ---------- */
   function openListen(){ $("listenPop").hidden = false; }
@@ -2176,29 +2275,43 @@
     const del = e.target.closest("[data-delmov]");
     if(del){
       const id = Number(del.dataset.delmov);
-      const borrado = S.movs.find(x=>x.id===id);
-      S.movs = S.movs.filter(x=>x.id !== id);
-      for(const mk in S.pagosFijos){
-        for(const fid in S.pagosFijos[mk]) if(S.pagosFijos[mk][fid]===id) delete S.pagosFijos[mk][fid];
-      }
-      for(const t of S.tarjetas){
-        for(const mk in (t.resumenes||{})){
-          const r = t.resumenes[mk];
-          if(r.pagadoMovId===id){
-            r.pagadoMonto = Math.max(0, resPagado(r) - (borrado ? borrado.monto : r.monto));
-            r.pagado = false;
-            delete r.pagadoMovId;
+      borrarConUndo("Movimiento eliminado", ()=>{
+        const borrado = S.movs.find(x=>x.id===id);
+        S.movs = S.movs.filter(x=>x.id !== id);
+        for(const mk in S.pagosFijos){
+          for(const fid in S.pagosFijos[mk]) if(S.pagosFijos[mk][fid]===id) delete S.pagosFijos[mk][fid];
+        }
+        for(const t of S.tarjetas){
+          for(const mk in (t.resumenes||{})){
+            const r = t.resumenes[mk];
+            if(r.pagadoMovId===id){
+              r.pagadoMonto = Math.max(0, resPagado(r) - (borrado ? borrado.monto : r.monto));
+              r.pagado = false;
+              delete r.pagadoMovId;
+            }
           }
         }
-      }
-      save(); renderAll(); toast("Eliminado");
+      });
       return;
     }
     const item = e.target.closest(".g-item");
     if(item){
       const was = item.classList.contains("armed");
       document.querySelectorAll(".armed").forEach(i=>i.classList.remove("armed"));
-      if(!was) item.classList.add("armed");
+      if(!was){ item.classList.add("armed"); item.setAttribute("aria-expanded","true"); }
+      else item.setAttribute("aria-expanded","false");
+    }
+  });
+  // teclado: Enter/Espacio arman y desarman el movimiento igual que el toque
+  $("list").addEventListener("keydown", e=>{
+    if(e.key!=="Enter" && e.key!==" ") return;
+    const item = e.target.closest(".g-item");
+    if(!item || e.target.closest(".g-del")) return;
+    e.preventDefault();
+    item.click();
+    if(item.classList.contains("armed")){
+      const b = item.querySelector(".g-del");
+      if(b) setTimeout(()=>b.focus(), 30);
     }
   });
 
@@ -2221,7 +2334,7 @@
   };
   $("saveFijo").onclick = ()=>{
     const nombre = $("fjNombre").value.trim();
-    const monto = parseFloat($("fjMonto").value);
+    const monto = numVal($("fjMonto").value);
     const dia = Math.min(28, Math.max(1, parseInt($("fjDia").value)||10));
     if(!nombre){ $("fjNombre").focus(); toast("Falta el nombre"); return; }
     if(!monto || monto<=0){ $("fjMonto").focus(); toast("Falta el monto"); return; }
@@ -2233,7 +2346,10 @@
     save(); closeSheet(); renderAll(); toast("Gasto fijo guardado ✔");
   };
   $("delFijo").onclick = ()=>{
-    if(fijoEdit){ S.fijos = S.fijos.filter(f=>f!==fijoEdit); save(); closeSheet(); renderAll(); toast("Eliminado"); }
+    if(!fijoEdit) return;
+    const nombre = fijoEdit.nombre, ref = fijoEdit;
+    closeSheet();
+    borrarConUndo(`"${nombre}" eliminado`, ()=>{ S.fijos = S.fijos.filter(f=>f!==ref); });
   };
   $("fijoList").addEventListener("click", e=>{
     const pay = e.target.closest("[data-payfijo]");
@@ -2250,7 +2366,7 @@
       $("fijoTitle").textContent = "Editar gasto fijo";
       $("delFijo").hidden = false;
       $("fjViaNote").hidden = !f.viaTarjeta;
-      $("fjNombre").value=f.nombre; $("fjMonto").value=f.monto; $("fjDia").value=f.dia;
+      $("fjNombre").value=f.nombre; $("fjMonto").value=fmtNum(f.monto); $("fjDia").value=f.dia;
       fillCats($("fjCat"), false); $("fjCat").value=f.categoria;
       openSheet("fijo");
     }
@@ -2276,7 +2392,12 @@
     save(); closeSheet(); renderAll(); toast("Tarjeta guardada ✔");
   };
   $("delCard").onclick = ()=>{
-    if(cardEdit){ S.tarjetas = S.tarjetas.filter(t=>t!==cardEdit); save(); closeSheet(); renderAll(); toast("Eliminada"); }
+    if(!cardEdit) return;
+    const ref = cardEdit, nombre = cardEdit.nombre;
+    const nRes = Object.keys(cardEdit.resumenes||{}).length;
+    closeSheet();
+    borrarConUndo(nRes ? `"${nombre}" eliminada con sus ${nRes} resúmenes` : `"${nombre}" eliminada`,
+      ()=>{ S.tarjetas = S.tarjetas.filter(t=>t!==ref); });
   };
 
   function fillMesSelect(sel){
@@ -2989,11 +3110,14 @@
   };
   $("delWallet").onclick = ()=>{
     if(!walletEdit) return;
-    S.billeteras = S.billeteras.filter(b=>b!==walletEdit);
-    S.movs.forEach(m=>{ if(m.billetera===walletEdit.id) m.billetera=null; });
-    S.transf = S.transf.filter(t=>t.de!==walletEdit.id && t.a!==walletEdit.id);
-    S.ajustes = S.ajustes.filter(a=>a.billetera!==walletEdit.id);
-    save(); closeSheet(); renderAll(); toast("Eliminada");
+    const ref = walletEdit, wid = walletEdit.id, nombre = walletEdit.nombre;
+    closeSheet();
+    borrarConUndo(`"${nombre}" eliminada`, ()=>{
+      S.billeteras = S.billeteras.filter(b=>b!==ref);
+      S.movs.forEach(m=>{ if(m.billetera===wid) m.billetera=null; });
+      S.transf = S.transf.filter(t=>t.de!==wid && t.a!==wid);
+      S.ajustes = S.ajustes.filter(a=>a.billetera!==wid);
+    });
   };
   $("walletList").addEventListener("click", e=>{
     const row = e.target.closest("[data-wallet]");
@@ -3024,8 +3148,11 @@
     $("cfgRemOn").checked = !!(S.config.recordatorio&&S.config.recordatorio.on);
     $("cfgRemHora").value = (S.config.recordatorio&&S.config.recordatorio.hora)||"21:30";
     $("remNote").hidden = !!(window.AndroidVoz && window.AndroidVoz.setReminder);
+    $("remHoraRow").hidden = !$("cfgRemOn").checked;
     openSheet("config");
   };
+  // la hora solo aparece si el recordatorio está prendido
+  $("cfgRemOn").addEventListener("change", ()=>{ $("remHoraRow").hidden = !$("cfgRemOn").checked; });
   function aplicarRecordatorio(){
     const r = S.config.recordatorio||{};
     if(window.AndroidVoz && window.AndroidVoz.setReminder){
@@ -3485,6 +3612,7 @@
   window.__guitaPdfText = pdfToText;
   window.__guitaStatement = parseStatementText;
   window.__guitaState = () => JSON.parse(JSON.stringify(S));
+  window.__guitaToast = () => ({busy: toastBusy, pend: toastQ.length, txt: toastEl.textContent});
   renderAll();
 })();
 </script>
