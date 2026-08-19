@@ -162,7 +162,7 @@
   .g-piecenter{position:absolute; top:50%; left:50%; transform:translate(-50%,-46%); text-align:center; pointer-events:none}
   .g-piecenter .num{font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:-.02em}
   .g-legend{display:flex; flex-direction:column; gap:2px; padding:6px 14px 14px}
-  .g-legrow{display:grid; grid-template-columns:14px 1fr 88px 44px; align-items:center; gap:8px;
+  .g-legrow{display:grid; grid-template-columns:14px 1fr 88px 40px 38px; align-items:center; gap:8px;
     font-size:13px; padding:6px 4px; border-radius:8px; cursor:pointer;
     animation:itemIn .3s var(--ease) both; animation-delay:var(--d,0s)}
   .g-legrow.sel{background:var(--brand-soft)}
@@ -170,6 +170,9 @@
   .g-legrow .dot{width:10px; height:10px; border-radius:50%}
   .g-legrow .amt{text-align:right; font-variant-numeric:tabular-nums; font-weight:600}
   .g-legrow .pct{text-align:right; font-variant-numeric:tabular-nums; color:var(--muted); font-size:12px}
+  .g-legrow .vercat{font:inherit; font-size:11px; font-weight:700; color:var(--brand);
+    background:var(--brand-soft); border:none; border-radius:999px; padding:4px 8px; cursor:pointer}
+  .g-legrow .vercat:active{transform:scale(.94)}
   .g-switch{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); padding:0 16px 12px; cursor:pointer}
   .g-switch input{accent-color:var(--brand); width:17px; height:17px}
   .g-ivg{padding:14px 16px; display:flex; flex-direction:column; gap:10px; margin-top:14px}
@@ -252,9 +255,10 @@
     .g-nav{background:var(--nav-bg); -webkit-backdrop-filter:blur(16px) saturate(1.4);
       backdrop-filter:blur(16px) saturate(1.4)}
   }
-  .g-navin{width:min(480px,100%); display:grid; grid-template-columns:1fr 1fr 84px 1fr 1fr; align-items:end}
-  .g-tab{font:inherit; border:none; background:none; color:var(--muted); cursor:pointer; padding:9px 0 10px;
-    display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10.5px; font-weight:600;
+  .g-navin{width:min(480px,100%); display:grid; grid-template-columns:1fr 1fr 78px 1fr 1fr 1fr; align-items:end}
+  .g-tab{font:inherit; border:none; background:none; color:var(--muted); cursor:pointer; padding:9px 2px 10px;
+    display:flex; flex-direction:column; align-items:center; gap:3px; font-size:9.5px; font-weight:600;
+    white-space:nowrap; overflow:hidden;
     transition:color .15s var(--ease)}
   .g-tab svg{width:22px; height:22px; transition:transform .2s var(--spring)}
   .g-tab.on{color:var(--brand)}
@@ -298,7 +302,9 @@
 
   /* asesor financiero */
   .g-advisor{margin-top:14px; padding:14px 16px 16px; display:flex; flex-direction:column; gap:10px}
+  .g-advisor.full{margin-top:4px}
   .g-chat{display:flex; flex-direction:column; gap:8px; max-height:320px; overflow-y:auto}
+  .g-advisor.full .g-chat{max-height:calc(100dvh - 350px); min-height:180px}
   .g-msg{max-width:88%; padding:9px 13px; border-radius:14px; font-size:14px; line-height:1.5; white-space:pre-wrap}
   .g-msg.user{align-self:flex-end; background:var(--brand); color:var(--brand-ink); border-bottom-right-radius:4px}
   .g-msg.ai{align-self:flex-start; background:var(--paper); border:1px solid var(--line); border-bottom-left-radius:4px;
@@ -354,6 +360,9 @@
   .g-strow input[data-f="monto"].neg{color:var(--income)}
   .g-cuota{font-size:10.5px; font-weight:700; color:var(--brand); background:var(--brand-soft);
     border-radius:999px; padding:2px 8px; white-space:nowrap; flex:none}
+  button.g-cuota{font-family:inherit; border:1px solid transparent; cursor:pointer;
+    color:var(--muted); background:var(--paper)}
+  button.g-cuota.on{color:var(--brand); background:var(--brand-soft); border-color:var(--brand-soft)}
   .g-strow .rm{width:24px; height:24px; border:none; border-radius:50%; background:var(--paper);
     color:var(--muted); font-size:12px; cursor:pointer; display:grid; place-items:center}
   .g-ccdetail .cemoji{width:20px; font-size:13px; text-align:center; flex:none}
@@ -533,6 +542,7 @@
         <div class="eg">“gasté 5 lucas en la verdulería”</div>
         <div class="eg">“30 del súper, 20 de nafta y 5 de birras”</div>
         <div class="eg">“cobré 150 mil del laburo”</div>
+        <button class="g-btn" id="escribirBtn" style="margin-top:12px">⌨️ …o escribilo</button>
       </div>
     </section>
 
@@ -559,7 +569,8 @@
         <div class="g-note" id="ahorroNote"></div>
       </section>
       <section class="g-card g-tips" aria-label="Recomendaciones">
-        <div class="g-label">💡 Recomendaciones</div>
+        <div class="g-viewtitle" style="margin:0 0 6px"><div class="g-label" style="margin:0">💡 Recomendaciones</div>
+          <button class="g-minibtn" id="tipsBtn">Recalcular</button></div>
         <div id="tipsList"></div>
       </section>
       <section class="g-card g-budget" aria-label="Presupuestos del mes">
@@ -573,7 +584,18 @@
         <div class="g-evobars" id="evoBars"></div>
         <div class="g-note" style="margin-top:8px">Barra verde: ingresos · barra roja: gastos</div>
       </section>
-      <section class="g-card g-advisor" aria-label="Asesor financiero">
+      <button class="g-btn primary" id="irAsesor" style="margin-top:14px">🤖 Preguntale a tu asesor financiero</button>
+      <div class="g-empty g-card" id="anEmpty" hidden>
+        <strong>Nada para analizar todavía</strong>
+        <p>Cuando cargues gastos, acá vas a ver la torta por categoría, ingresos vs gastos y la evolución mensual.</p>
+      </div>
+    </section>
+
+    <!-- ASESOR -->
+    <section class="view" id="view-asesor">
+      <div class="g-viewtitle"><h2>🤖 Tu asesor financiero</h2>
+        <button class="g-minibtn" id="chatClear">Limpiar</button></div>
+      <section class="g-card g-advisor full" aria-label="Asesor financiero" id="advisorCard">
         <div class="g-label">🤖 Tu asesor financiero</div>
         <div class="g-chat" id="chatLog"><div class="g-msg ai">¡Hola! Conozco tus números: gastos, ingresos, tarjetas, fijos y billeteras. Preguntame lo que quieras — en qué recortar, cómo venís, un presupuesto…</div></div>
         <div class="g-chips" id="chatChips">
@@ -588,10 +610,6 @@
         </div>
         <div class="g-note" id="advisorNote" hidden>Para usar el asesor, cargá tu API key de Claude en Ajustes ⚙ (arriba a la derecha).</div>
       </section>
-      <div class="g-empty g-card" id="anEmpty" hidden>
-        <strong>Nada para analizar todavía</strong>
-        <p>Cuando cargues gastos, acá vas a ver la torta por categoría, ingresos vs gastos y la evolución mensual.</p>
-      </div>
     </section>
 
     <!-- TARJETAS -->
@@ -659,6 +677,9 @@
           </svg>
         </button>
       </div>
+      <button class="g-tab" data-view="asesor">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a7 7 0 0 1 7 7v1a6 6 0 0 1-6 6h-1l-4 3v-3.6A7 7 0 0 1 12 3Z"/><path d="M9.5 10h.01M14.5 10h.01"/></svg>
+        Asesor</button>
       <button class="g-tab" data-view="tarjetas">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="13" rx="2.5"/><path d="M2.5 10h19"/><path d="M6 15h4"/></svg>
         Tarjetas</button>
@@ -851,11 +872,29 @@
           <button class="g-btn primary" id="confirmPay">Pagar</button></div>
       </div>
 
+      <div id="phaseCat" hidden>
+        <h3 id="catTitle">Detalle de la categoría</h3>
+        <div class="g-stsum" id="catResumen"></div>
+        <div id="catList"></div>
+        <div class="g-note" id="catNota"></div>
+        <div class="g-actions"><button class="g-btn primary" data-close>Listo</button></div>
+      </div>
+
       <div id="phaseProy" hidden>
         <h3 id="proyTitle">Próximo resumen (estimado)</h3>
+        <div class="g-field"><label class="g-label" for="proyPlan">¿Cuánto vas a pagar de este resumen?</label>
+          <select id="proyPlan">
+            <option value="historico">Lo que venís pagando (según tu historial)</option>
+            <option value="todo">Todo — no arrastro nada</option>
+            <option value="minimo">El pago mínimo</option>
+            <option value="monto">Un monto que yo diga</option>
+          </select></div>
+        <div class="g-field" id="proyMontoRow" hidden><label class="g-label" for="proyMonto">Monto que vas a pagar</label>
+          <input id="proyMonto" type="text" inputmode="decimal" data-money></div>
+        <div class="g-note" id="proyPlanNota"></div>
         <div class="g-stsum" id="proyResumen"></div>
         <div id="proyList"></div>
-        <div class="g-note">Es una estimación con lo que ya se sabe: cuotas comprometidas, suscripciones, consumos que anotaste "con tarjeta", lo financiado y el promedio de impuestos. Los consumos nuevos que hagas la van a subir.</div>
+        <div class="g-note">Proyecta solo lo que vuelve el mes que viene: cuotas comprometidas, servicios y suscripciones, fijos, lo que anotaste "con tarjeta" y el promedio de impuestos. Las compras de una sola vez quedan afuera. Si algo está mal clasificado, tocá "Ver consumos" y marcá 🔁 en el que corresponda.</div>
         <div class="g-actions"><button class="g-btn primary" data-close>Listo</button></div>
       </div>
 
@@ -961,6 +1000,22 @@
     {id:"Ingreso",    v:"--c-ingreso",    kw:[]}
   ];
   const SUBS_KW = ["netflix","spotify","hbo","max","disney","star+","star plus","prime","amazon prime","youtube premium","youtube","icloud","google one","apple","crunchyroll","paramount","flow","directv","dgo","gimnasio","gym","club","openai","chatgpt","claude","anthropic","twitch","deezer","tidal","office","microsoft 365","canva","dropbox","mercado libre nivel","meli+","personal pay","udemy","coursera","platzi","psn","playstation","xbox","game pass","nintendo","steam"];
+  // servicios/seguros que vuelven todos los meses aunque no sean "suscripción"
+  const RECUR_KW = ["camuzzi","metrogas","naturgy","edenor","edesur","edea","edelap","epe","luz","gas ",
+    "aysa","absa","agua","obras sanitarias","telecom","fibertel","flow","personal","claro","movistar",
+    "tuenti","cablevision","directv","internet","telefon","seguro","seguros","rio uruguay","sancor",
+    "provincia seguros","federacion patronal","zurich","allianz","mapfre","galicia seguros","prevencion",
+    "swiss medical","osde","medife","galeno","omint","sancor salud","expensas","alquiler","abl","rentas",
+    "municipal","monotributo","afip","arca","obra social","prepaga","colegio","cuota social"];
+  // true = vuelve el mes que viene (suscripción, servicio, seguro, prepaga…)
+  function esRecurrente(d){
+    if(!d) return false;
+    if(d.recur === true || d.recur === false) return d.recur;   // lo que marcaste a mano manda
+    if(d.sub) return true;
+    const t = (d.desc||"").toLowerCase();
+    return SUBS_KW.some(k=>t.includes(k)) || RECUR_KW.some(k=>t.includes(k));
+  }
+
   const catColor = id => {
     const c = CATS.find(c=>c.id===id) || CATS.find(c=>c.id==="Otros");
     return getComputedStyle(document.documentElement).getPropertyValue(c.v).trim() || "#64748B";
@@ -1402,6 +1457,17 @@
     return null;
   }
   // proyección detallada del próximo resumen de una tarjeta
+  /* ---------- cuotas: "Cuota 03/06", "0010/18" o "02/09" sueltos ---------- */
+  const RE_CUOTA = /(?:cuota\s*)?\b(\d{1,4})\s*\/\s*(\d{1,2})\b/i;
+  function cuotaDe(desc){
+    const m = (desc||"").match(RE_CUOTA);
+    if(!m) return null;
+    const a = +m[1], b = +m[2];
+    // 03/06 sí; 13/08 (una fecha) no; y la actual nunca puede pasar al total
+    if(!(b>=2 && b<=99) || !(a>=1 && a<=b)) return null;
+    return {a, b, txt:m[0], limpio:(desc||"").replace(m[0],"").replace(/[\s.·-]+$/,"").trim() || "Consumo"};
+  }
+
   function proyeccionTarjeta(t){
     const keys = Object.keys(t.resumenes||{}).sort();
     if(!keys.length) return null;
@@ -1410,27 +1476,43 @@
     const cuotasSiguen = [], cuotasTerminan = [];
     for(const d of (r.detalle||[])){
       if(!(d.monto>0)) continue;
-      const m = (d.desc||"").match(/cuota\s*(\d{1,2})\s*\/\s*(\d{1,2})/i);
-      if(!m) continue;
-      const a = +m[1], b = +m[2];
-      const desc = d.desc.replace(m[0],"").replace(/[\s.·-]+$/,"").trim() || "Consumo";
+      const c = cuotaDe(d.desc);
+      if(!c) continue;
+      const {a, b, limpio:desc} = c;
       if(a<b) cuotasSiguen.push({desc, monto:d.monto, prox:(a+1)+"/"+b, ultima:a+1===b, categoria:d.categoria});
       else cuotasTerminan.push({desc, monto:d.monto, categoria:d.categoria});
     }
+    // gastos que vuelven todos los meses (servicios, seguros, suscripciones), sin las cuotas
+    const recurrentes = (r.detalle||[]).filter(d=>d.monto>0 && !cuotaDe(d.desc) && esRecurrente(d))
+      .map(d=>({desc:d.desc, monto:d.monto, categoria:d.categoria}));
+    // lo único que NO vuelve: compras de una sola vez (no se proyectan)
+    const unicos = (r.detalle||[]).filter(d=>d.monto>0 && !cuotaDe(d.desc) && !esRecurrente(d))
+      .map(d=>({desc:d.desc, monto:d.monto, categoria:d.categoria}));
     const fijosVia = S.fijos.filter(f=>f.viaTarjeta && f.tarjetaId===t.id && f.activo!==false);
     const nuevos = S.movs.filter(m=>m.tarjetaId===t.id && m.tipo==="gasto" && !(t.resumenes||{})[m.fecha.slice(0,7)]);
     const cargosArr = keys.map(k=>cargosMes(t, k)).filter(c=>c!=null && c>0);
     const cargoProm = cargosArr.length ? cargosArr.reduce((a,b)=>a+b,0)/cargosArr.length : 0;
-    const fin = resFinanciado(r);
+    // cuánto solés pagar: promedio de lo pagado sobre el total, de los resúmenes ya saldados
+    const pagos = keys.map(k=>t.resumenes[k]).filter(x=>x.monto>0 && resPagado(x)>0);
+    const ratioPago = pagos.length ? Math.min(1, pagos.reduce((a,x)=>a+resPagado(x)/x.monto,0)/pagos.length) : 1;
+    // arrastre: lo que quede sin pagar de este resumen, según el plan que elijas
+    const plan = t.planPago || "historico";
+    const deuda = resFinanciado(r);
+    const fin = plan==="todo" ? 0
+      : plan==="minimo" ? Math.max(0, deuda - (r.pagoMinimo||0))
+      : plan==="monto" ? Math.max(0, deuda - (t.planMonto||0))
+      : Math.max(0, deuda - deuda*ratioPago);   // histórico
     const sumaCuotas = cuotasSiguen.reduce((s,c)=>s+c.monto,0);
+    const sumaRecur = recurrentes.reduce((s,c)=>s+c.monto,0);
+    const sumaUnicos = unicos.reduce((s,c)=>s+c.monto,0);
     const sumaFijos = fijosVia.reduce((s,f)=>s+f.monto,0);
     const sumaNuevos = nuevos.reduce((s,m)=>s+m.monto,0);
-    const total = fin + cargoProm + sumaCuotas + sumaFijos + sumaNuevos;
+    const total = fin + cargoProm + sumaCuotas + sumaRecur + sumaFijos + sumaNuevos;
     // pago mínimo estimado: proporción histórica mínimo/total de tus resúmenes
     const ratios = keys.map(k=>t.resumenes[k]).filter(x=>x.pagoMinimo>0 && x.monto>0).map(x=>x.pagoMinimo/x.monto);
     const ratio = ratios.length ? ratios.reduce((a,b)=>a+b,0)/ratios.length : 0.17;
-    return {t, lastK, r, cuotasSiguen, cuotasTerminan, fijosVia, nuevos,
-      fin, cargoProm, sumaCuotas, sumaFijos, sumaNuevos, total,
+    return {t, lastK, r, cuotasSiguen, cuotasTerminan, fijosVia, nuevos, recurrentes, unicos, plan, ratioPago, deuda,
+      fin, cargoProm, sumaCuotas, sumaRecur, sumaUnicos, sumaFijos, sumaNuevos, total,
       pagoMin: total*ratio,
       liberado: cuotasTerminan.reduce((s,c)=>s+c.monto,0)};
   }
@@ -1579,7 +1661,8 @@
     const out = [];
     for(const t of S.tarjetas){
       const r = (t.resumenes||{})[mk];
-      if(r) out.push(r);
+      // copia superficial con el nombre de la tarjeta: solo se lee, nunca se guarda
+      if(r) out.push(Object.assign({}, r, {__tarjeta: t.nombre, __tid: t.id}));
     }
     return out;
   }
@@ -1606,6 +1689,39 @@
       }
     }
     return byCat;
+  }
+
+  // los gastos uno por uno de cada categoría, diciendo de dónde sale cada peso
+  function itemsByCat(desglosar){
+    const out = {};
+    const mk = monthKey(view);
+    const res = cardResumenesMes(mk);
+    const resPorTarjeta = {};
+    for(const t of S.tarjetas){ if((t.resumenes||{})[mk]) resPorTarjeta[t.id] = true; }
+    const push = (cat, it) => { (out[cat||"Otros"] = out[cat||"Otros"] || []).push(it); };
+    for(const x of monthMovs()){
+      if(x.tipo!=="gasto") continue;
+      if(res.length && x.categoria==="Tarjeta") continue;
+      if(x.tarjetaId && resPorTarjeta[x.tarjetaId]) continue;
+      const tj = x.tarjetaId ? (S.tarjetas.find(t=>t.id===x.tarjetaId)||{}).nombre : null;
+      push(x.categoria, {desc:x.descripcion||x.categoria, monto:x.monto, fecha:x.fecha,
+        origen: tj ? "💳 "+tj+" (anotado)" : (x.origen==="voz" ? "🎙 por voz" : "✍️ a mano")
+          + (billName(x.billetera) ? " · "+billName(x.billetera) : ""),
+        movId: x.id});
+    }
+    for(const r of res){
+      const nom = r.__tarjeta || "Tarjeta";
+      if(desglosar && r.detalle && r.detalle.length){
+        for(const d of r.detalle) if(d.monto>0)
+          push(d.categoria, {desc:d.desc, monto:d.monto, fecha:null,
+            origen:"💳 "+nom+" · resumen de "+monthKeyLabel(mk)});
+      } else {
+        push("Tarjeta", {desc:"Resumen "+nom, monto:r.monto, fecha:null,
+          origen:"💳 "+nom+" · resumen de "+monthKeyLabel(mk)});
+      }
+    }
+    for(const k in out) out[k].sort((a,b)=>b.monto-a.monto);
+    return out;
   }
 
   function gastosPorCategoria(){
@@ -1690,11 +1806,13 @@
       const color = cat==="Otros*" ? catColor("Otros") : catColor(cat);
       const name = cat==="Otros*" ? "Otras categorías" : cat;
       const cls = pieSel===null ? "" : (pieSel===i ? " sel" : " dim");
-      return `<div class="g-legrow${cls}" data-slice="${i}" style="--d:${i*0.04}s">
+      return `<div class="g-legrow${cls}" data-slice="${i}" style="--d:${i*0.04}s"
+          role="button" tabindex="0" aria-label="Ver los gastos de ${esc(name)}">
         <span class="dot" style="background:${color}"></span>
         <span>${esc(name)}</span>
         <span class="amt">${fmtMoney(val)}</span>
         <span class="pct">${Math.round(val/total*100)}%</span>
+        <button class="vercat" data-vercat="${esc(name)}" aria-label="Ver el detalle de ${esc(name)}">ver</button>
       </div>`;
     }).join("");
 
@@ -1738,6 +1856,7 @@
 
   /* ---------- recomendaciones locales (gratis, sin IA) ---------- */
   function renderTips(){
+    const nMovs = monthMovs().length;
     const tips = [];
     const mk = monthKey(view);
 
@@ -1793,9 +1912,14 @@
       if(meses<3) tips.push({ic:"🛟", html:`Tu plata disponible cubre <strong>${meses<1?"menos de un mes":Math.floor(meses)+" mes"+(Math.floor(meses)>1?"es":"")}</strong> de gastos fijos. La meta sana son 3 meses en una cuenta remunerada (Mercado Pago o Lemon te pagan interés diario).`});
     }
 
-    $("tipsList").innerHTML = tips.length
+    $("tipsList").innerHTML = (tips.length
       ? tips.slice(0,5).map((t,i)=>`<div class="g-tip" style="--d:${i*0.05}s"><span class="ic">${t.ic}</span><div>${t.html}</div></div>`).join("")
-      : `<div class="g-note">Todo en orden por ahora 👌 — a medida que cargues resúmenes, ingresos y fijos van a aparecer consejos acá.</div>`;
+      : `<div class="g-note">Todo en orden por ahora 👌 — a medida que cargues resúmenes, ingresos y fijos van a aparecer consejos acá.</div>`)
+      + `<div class="g-note" style="margin-top:8px; text-align:right">Recalculado con ${nMovs} movimiento${nMovs===1?"":"s"} de ${monthKeyLabel(monthKey(view))}${horaTips()}</div>`;
+  }
+  function horaTips(){
+    const d = new Date();
+    return " · "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
   }
 
   /* ---------- presupuestos ---------- */
@@ -1857,11 +1981,19 @@
   }
 
   $("pieLegend").addEventListener("click", e=>{
+    const ver = e.target.closest("[data-vercat]");
+    if(ver){ openCat(ver.dataset.vercat); return; }
     const row = e.target.closest("[data-slice]");
     if(!row) return;
     const i = Number(row.dataset.slice);
     pieSel = (pieSel===i) ? null : i;
     renderAnalisis();
+  });
+  $("pieLegend").addEventListener("keydown", e=>{
+    if(e.key!=="Enter" && e.key!==" ") return;
+    const row = e.target.closest("[data-slice]");
+    if(!row) return;
+    e.preventDefault(); row.click();
   });
   $("pieCanvas").addEventListener("click", e=>{
     const rect = e.target.getBoundingClientRect();
@@ -1875,7 +2007,11 @@
     let acc=0;
     for(let i=0;i<pieData.length;i++){
       acc += pieData[i][1]/total*Math.PI*2;
-      if(ang<=acc){ pieSel = (pieSel===i)?null:i; break; }
+      if(ang<=acc){
+        // tocar la porción ya elegida abre su detalle completo
+        if(pieSel===i){ openCat(pieData[i][0]); return; }
+        pieSel = i; break;
+      }
     }
     renderAnalisis();
   });
@@ -1888,13 +2024,18 @@
     $("cardEmpty").hidden = S.tarjetas.length>0;
     // deuda: financiada declarada + lo que falta pagar de cada resumen
     const deudaFin = S.tarjetas.reduce((s,t)=>s+(t.deuda||0),0);
+    // solo el último resumen de cada tarjeta: su total YA incluye el arrastre de los
+    // meses anteriores, sumarlos todos contaría la misma deuda muchas veces
     let pendiente = 0;
-    for(const t of S.tarjetas) for(const r of Object.values(t.resumenes||{})) pendiente += resFinanciado(r);
+    for(const t of S.tarjetas){
+      const ks = Object.keys(t.resumenes||{}).sort();
+      if(ks.length) pendiente += resFinanciado(t.resumenes[ks[ks.length-1]]);
+    }
     $("debtCard").hidden = deudaFin<=0 && pendiente<=0;
     animMoney($("debtTotal"), deudaFin+pendiente);
     $("debtNote").textContent = [
       deudaFin>0 ? fmtMoney(deudaFin)+" financiado declarado (interés altísimo: prioridad nº1)" : null,
-      pendiente>0 ? fmtMoney(pendiente)+" pendiente de resúmenes" : null
+      pendiente>0 ? fmtMoney(pendiente)+" del último resumen de cada tarjeta" : null
     ].filter(Boolean).join(" · ");
     renderHistorial();
     $("cardList").innerHTML = S.tarjetas.map(t=>{
@@ -1964,9 +2105,10 @@
       const p = proyeccionTarjeta(t);
       const desglose = p ? [
         p.sumaCuotas>0.5 ? fmtMoney(p.sumaCuotas)+" en cuotas" : null,
-        p.sumaFijos>0.5 ? fmtMoney(p.sumaFijos)+" de suscripciones" : null,
+        p.sumaRecur>0.5 ? fmtMoney(p.sumaRecur)+" de servicios y subs" : null,
+        p.sumaFijos>0.5 ? fmtMoney(p.sumaFijos)+" de fijos" : null,
         p.sumaNuevos>0.5 ? fmtMoney(p.sumaNuevos)+" de consumos nuevos" : null,
-        p.fin>0.5 ? fmtMoney(p.fin)+" financiado" : null,
+        p.fin>0.5 ? fmtMoney(p.fin)+" que arrastrás" : null,
         p.cargoProm>0.5 ? "≈"+fmtMoney(p.cargoProm)+" de cargos" : null
       ].filter(Boolean).join(" + ") : "";
       return `<div class="g-histcard">
@@ -1991,13 +2133,22 @@
   function openProy(t){
     const p = proyeccionTarjeta(t);
     if(!p){ toast("Cargá al menos un resumen primero"); return; }
+    proyTarjeta = t;
     $("proyTitle").textContent = "Próximo resumen de "+t.nombre;
     const row = (lbl, val, cls="") => val==null ? "" :
       `<div class="r ${cls}"><span>${lbl}</span><span>${val}</span></div>`;
+    const planLbl = {todo:"pago todo", minimo:"pago el mínimo", monto:"pago un monto fijo",
+      historico:"lo que venís pagando (≈"+Math.round(p.ratioPago*100)+"% del resumen)"};
+    $("proyPlan").value = p.plan;
+    $("proyMonto").value = t.planMonto ? fmtNum(t.planMonto) : "";
+    $("proyMontoRow").hidden = p.plan!=="monto";
+    $("proyPlanNota").textContent = "Este resumen es de "+fmtMoney(p.deuda)+
+      ". Con \u201c"+planLbl[p.plan]+"\u201d, al próximo se arrastran "+fmtMoney(p.fin)+".";
     $("proyResumen").innerHTML =
-      row("Financiado que arrastrás", p.fin>0.5 ? fmtMoney(p.fin) : null, "neg") +
+      row("Arrastre de este resumen", p.fin>0.5 ? fmtMoney(p.fin) : "$ 0 — lo pagás entero", p.fin>0.5?"neg":"pos") +
       row("Cuotas que siguen ("+p.cuotasSiguen.length+")", p.sumaCuotas>0.5 ? fmtMoney(p.sumaCuotas) : null) +
-      row("Suscripciones fijas ("+p.fijosVia.length+")", p.sumaFijos>0.5 ? fmtMoney(p.sumaFijos) : null) +
+      row("Servicios y suscripciones ("+p.recurrentes.length+")", p.sumaRecur>0.5 ? fmtMoney(p.sumaRecur) : null) +
+      row("Fijos vía tarjeta ("+p.fijosVia.length+")", p.sumaFijos>0.5 ? fmtMoney(p.sumaFijos) : null) +
       row("Consumos nuevos anotados ("+p.nuevos.length+")", p.sumaNuevos>0.5 ? fmtMoney(p.sumaNuevos) : null) +
       row("Impuestos e intereses (promedio)", p.cargoProm>0.5 ? "≈ "+fmtMoney(p.cargoProm) : null) +
       row("Total estimado", "≈ "+fmtMoney(p.total), "tot") +
@@ -2013,10 +2164,84 @@
         ic: iconFor(c.desc, c.categoria), nm: c.desc, chip: "se liberan", m: fmtMoney(c.monto)}))) +
       seccion("🔁 Suscripciones", p.fijosVia.map(f=>({
         ic: iconFor(f.nombre, f.categoria), nm: f.nombre, chip: "", m: fmtMoney(f.monto)}))) +
+      seccion("🔁 Servicios y suscripciones que vuelven", p.recurrentes.map(c=>({
+        ic: iconFor(c.desc, c.categoria), nm: c.desc, chip: "todos los meses", m: fmtMoney(c.monto)}))) +
       seccion("🛒 Consumos nuevos que anotaste", p.nuevos.map(m=>({
-        ic: iconFor(m.descripcion, m.categoria), nm: m.descripcion, chip: m.fecha.slice(5), m: fmtMoney(m.monto)})));
+        ic: iconFor(m.descripcion, m.categoria), nm: m.descripcion, chip: m.fecha.slice(5), m: fmtMoney(m.monto)}))) +
+      seccion("1️⃣ Compras de una vez (NO se proyectan)", p.unicos.map(c=>({
+        ic: iconFor(c.desc, c.categoria), nm: c.desc, chip: "no vuelve", m: fmtMoney(c.monto)})));
     openSheet("proy");
   }
+
+  $("irAsesor").onclick = ()=>switchView("asesor");
+  $("chatClear").onclick = ()=>{
+    $("chatLog").innerHTML = '<div class="g-msg ai">Listo, empecemos de nuevo. Preguntame lo que quieras sobre tus números.</div>';
+    toast("Chat limpio");
+  };
+
+  // recalcular a mano las recomendaciones (igual se recalculan solas al cargar gastos)
+  $("tipsBtn").onclick = ()=>{
+    renderTips(); renderPresupuestos();
+    toast("Recomendaciones actualizadas 💡");
+  };
+  // acceso directo a escribir el gasto, sin depender de que falle la voz
+  $("escribirBtn").onclick = ()=>{ openSheet("text"); setTimeout(()=>$("textPhrase").focus(), 120); };
+
+  /* ---------- detalle de una categoría del mes ---------- */
+  function openCat(cat){
+    const desg = $("desgloseChk").checked;
+    const todos = itemsByCat(desg);
+    // "Otros*" en la torta agrupa las categorías chicas: juntamos todo lo que quedó afuera
+    let items, titulo;
+    if(cat==="Otros*"){
+      const top5 = gastosPorCategoria().slice(0,5).map(e=>e[0]);
+      items = Object.entries(todos).filter(([c])=>!top5.includes(c)).flatMap(([c,l])=>l.map(i=>({...i, cat:c})));
+      titulo = "Otras categorías";
+    } else {
+      items = (todos[cat]||[]).map(i=>({...i, cat}));
+      titulo = cat;
+    }
+    items.sort((a,b)=>b.monto-a.monto);
+    const total = items.reduce((s,i)=>s+i.monto,0);
+    const deTarjeta = items.filter(i=>/^💳/.test(i.origen)).reduce((s,i)=>s+i.monto,0);
+    const deMano = total - deTarjeta;
+    $("catTitle").innerHTML = `${iconFor(titulo, cat)} ${esc(titulo)} — ${monthKeyLabel(monthKey(view))}`;
+    const row = (l,v,c="") => v==null ? "" : `<div class="r ${c}"><span>${l}</span><span>${v}</span></div>`;
+    $("catResumen").innerHTML =
+      row(items.length+" gasto"+(items.length===1?"":"s"), fmtMoney(total), "tot") +
+      row("De tarjeta", deTarjeta>0.5 ? fmtMoney(deTarjeta) : null) +
+      row("Anotados a mano o por voz", deMano>0.5 ? fmtMoney(deMano) : null);
+    $("catList").innerHTML = items.length ? items.map((i,n)=>
+      `<div class="g-strow" style="--d:${Math.min(n,10)*0.02}s; grid-template-columns:38px 1fr auto">
+        <span class="g-avatar" style="background:${catColor(i.cat)}22">${iconFor(i.desc, i.cat)}</span>
+        <div style="min-width:0">
+          <div style="font-size:14px; overflow:hidden; text-overflow:ellipsis">${esc(i.desc)}</div>
+          <div class="sub" style="color:var(--muted); font-size:12px">${esc(i.origen)}${
+            i.fecha ? " · "+i.fecha.slice(8)+"/"+i.fecha.slice(5,7) : ""}${
+            cat==="Otros*" ? " · "+esc(i.cat) : ""}</div>
+        </div>
+        <span style="font-variant-numeric:tabular-nums; font-weight:700">${fmtMoney(i.monto)}</span>
+      </div>`).join("")
+      : `<div class="g-note">No hay gastos de esta categoría en ${monthKeyLabel(monthKey(view))}.</div>`;
+    $("catNota").textContent = desg
+      ? "Incluye los consumos del resumen de tarjeta de este mes, uno por uno."
+      : "Los consumos de tarjeta están agrupados: activá \u201cDesglosar tarjetas\u201d en Análisis para verlos uno por uno.";
+    openSheet("cat");
+  }
+
+  // el plan de pago recalcula la proyección al toque
+  let proyTarjeta = null;
+  $("proyPlan").addEventListener("change", ()=>{
+    if(!proyTarjeta) return;
+    proyTarjeta.planPago = $("proyPlan").value;
+    $("proyMontoRow").hidden = proyTarjeta.planPago!=="monto";
+    save(); openProy(proyTarjeta); renderTarjetas();
+  });
+  $("proyMonto").addEventListener("change", ()=>{
+    if(!proyTarjeta) return;
+    proyTarjeta.planMonto = numVal($("proyMonto").value)||0;
+    save(); openProy(proyTarjeta); renderTarjetas();
+  });
 
   /* ---------- render: fijos ---------- */
   function renderFijos(){
@@ -2088,6 +2313,10 @@
       v.classList.toggle("active", on);
     });
     if(name==="analisis") renderAnalisis();
+    if(name==="asesor"){
+      $("advisorNote").hidden = !!(S.config.apiKey||"").trim();
+      $("chatLog").scrollTop = $("chatLog").scrollHeight;
+    }
   }
   tabs.forEach(t=>t.onclick = ()=>switchView(t.dataset.view));
   $("dueList").addEventListener("click", e=>{
@@ -2097,7 +2326,7 @@
 
   /* ---------- sheet ---------- */
   const sheet=$("sheet"), scrim=$("scrim");
-  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy"];
+  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat"];
   const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]),' +
     ' textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
   const focoVisibles = () => Array.from(sheet.querySelectorAll(FOCUSABLE))
@@ -2485,16 +2714,18 @@
   }
   function renderDetalleRows(){
     $("detalleList").innerHTML = detItems.length ? detItems.map((d,i)=>{
-      const cm = (d.desc||"").match(/cuota\s*(\d{1,2})\s*\/\s*(\d{1,2})/i);
-      const descLimpia = cm ? d.desc.replace(cm[0],"").replace(/[\s.·-]+$/,"").trim() : d.desc;
+      const cq = cuotaDe(d.desc);
+      const descLimpia = cq ? cq.limpio : d.desc;
+      const rec = esRecurrente(d);
       return `<div class="g-strow" data-di="${i}" style="--d:${Math.min(i,10)*0.02}s">
         <span class="g-avatar" style="background:${catColor(d.categoria||"Otros")}22">${iconFor(d.desc, d.categoria)}</span>
         <div>
           <input type="text" data-f="desc" value="${esc(descLimpia)}" placeholder="Descripción">
           <div class="sub">
             <select data-f="categoria">${GASTO_CATS.map(c=>`<option${c===d.categoria?" selected":""}>${c}</option>`).join("")}</select>
-            ${cm?`<span class="g-cuota">📅 Cuota ${cm[1]}/${cm[2]}</span>`:""}
-            ${d.sub?`<span class="g-cuota">🔁 sub</span>`:""}
+            ${cq?`<span class="g-cuota">📅 Cuota ${cq.a}/${cq.b}</span>`:""}
+            ${cq?"":`<button type="button" class="g-cuota rec${rec?" on":""}" data-rec="${i}"
+              title="¿Vuelve todos los meses?">${rec?"🔁 vuelve":"1️⃣ una vez"}</button>`}
             ${d.monto<0?`<span class="g-cuota">🎁 descuento</span>`:""}
           </div>
         </div>
@@ -2558,7 +2789,13 @@
   });
   $("detalleList").addEventListener("click", e=>{
     const rm = e.target.closest("[data-rmdet]");
-    if(rm){ detItems.splice(Number(rm.dataset.rmdet),1); renderDetalleRows(); }
+    if(rm){ detItems.splice(Number(rm.dataset.rmdet),1); renderDetalleRows(); return; }
+    // marcar/desmarcar "vuelve todos los meses": manda sobre lo que detectó la app
+    const rc = e.target.closest("[data-rec]");
+    if(rc){
+      const d = detItems[Number(rc.dataset.rec)];
+      if(d){ d.recur = !esRecurrente(d); renderDetalleRows(); }
+    }
   });
   $("saveDetalle").onclick = ()=>{
     if(!detCard) return;
@@ -3613,6 +3850,7 @@
   window.__guitaStatement = parseStatementText;
   window.__guitaState = () => JSON.parse(JSON.stringify(S));
   window.__guitaToast = () => ({busy: toastBusy, pend: toastQ.length, txt: toastEl.textContent});
+  window.__guitaVoz = () => ({holding, cancelado: micCancelled, escuchando: isListening(), x0: pressX0});
   renderAll();
 })();
 </script>

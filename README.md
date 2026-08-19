@@ -93,6 +93,22 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
   tabulador queda adentro, **Escape** las cierra y el foco vuelve a donde
   estabas; los avisos son región viva (`role="status"`) y ya no se cortan en
   una línea; los movimientos se manejan con Enter/Espacio.
+- 🔍 **Detalle por categoría** (v2.1): tocá una porción de la torta (o el botón
+  "ver" de la leyenda) y ves **todos** los gastos de esa categoría del mes, uno
+  por uno, diciendo si los anotaste a mano/por voz o de qué tarjeta salen.
+- 🧮 **Deuda real de tarjetas** (v2.1): cuenta solo el último resumen de cada
+  tarjeta — su total ya arrastra los meses anteriores, sumarlos todos multiplicaba
+  la deuda.
+- 🔮 **Estimado honesto del próximo resumen** (v2.1): proyecta solo lo que vuelve
+  (cuotas, servicios, seguros y suscripciones) y deja afuera las compras de una
+  sola vez, que aparecen listadas aparte. Reconoce cuotas tipo `0010/18` y podés
+  marcar 🔁 a mano cualquier consumo. Elegís cuánto vas a pagar del resumen
+  actual (todo, el mínimo, un monto o lo que venís pagando) y el arrastre se
+  recalcula solo.
+- 🤖 **Asesor en su propia pestaña** (v2.1), con chat a pantalla completa.
+- 💡 **Recomendaciones recalculables** (v2.1): se actualizan al cargar gastos y
+  tenés un botón para recalcularlas cuando quieras.
+- ⌨️ **"…o escribilo"** (v2.1): la carga por texto ya no depende de que falle la voz.
 - 🏷 **Categorías automáticas** por palabras clave (súper → Comida, nafta → Transporte,
   luz → Servicios, etc.). Siempre podés corregir antes de guardar.
 - ➕ **Carga manual** para cuando no querés hablar.
