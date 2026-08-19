@@ -109,6 +109,17 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
 - 💡 **Recomendaciones recalculables** (v2.1): se actualizan al cargar gastos y
   tenés un botón para recalcularlas cuando quieras.
 - ⌨️ **"…o escribilo"** (v2.1): la carga por texto ya no depende de que falle la voz.
+- 📸 **Subir captura de movimientos** (v2.2): en Plata, mandale una captura de
+  pantalla de Lemon, Mercado Pago, Cuenta DNI o tu homebanking y la IA lee
+  todos los movimientos que se vean — con su fecha, si entró o salió plata y
+  su categoría. Los revisás y los cargás todos juntos.
+- 🔔 **Lee las notificaciones de tus billeteras** (v2.2, solo APK): activalo en
+  Ajustes y cuando Lemon, Mercado Pago o tu banco te avisan de un pago o una
+  transferencia, Guita lo detecta y te lo propone para cargar. **Siempre te
+  pregunta antes de anotar nada** y todo queda en el teléfono: la app solo lee
+  las notificaciones de las billeteras y bancos de su lista, no las demás.
+  Requiere darle permiso una vez en *Ajustes de Android → Acceso a
+  notificaciones*.
 - 🏷 **Categorías automáticas** por palabras clave (súper → Comida, nafta → Transporte,
   luz → Servicios, etc.). Siempre podés corregir antes de guardar.
 - ➕ **Carga manual** para cuando no querés hablar.

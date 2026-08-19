@@ -27,6 +27,15 @@
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
     </activity>
+    <service
+        android:name=".GuitaNotifListener"
+        android:exported="false"
+        android:label="Guita — gastos de tus billeteras"
+        android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+      <intent-filter>
+        <action android:name="android.service.notification.NotificationListenerService"/>
+      </intent-filter>
+    </service>
     <receiver android:name=".ReminderReceiver" android:exported="false"/>
     <receiver android:name=".BootReceiver" android:exported="true">
       <intent-filter>

@@ -646,6 +646,11 @@
         <div class="big" id="walletGrandTotal">$ 0</div>
         <div class="g-note" id="invTotalRow" hidden>📈 Invertido aparte: <strong id="invTotal"></strong></div>
       </section>
+      <button class="g-upload" id="capturaBtn" style="margin-top:14px">
+        <strong>📸 Subir captura de movimientos</strong>
+        <span>Mandame una captura de Lemon, Mercado Pago, Cuenta DNI o tu homebanking y cargo todo lo que se vea.</span>
+      </button>
+      <input type="file" id="capturaInput" accept="image/*,application/pdf,.pdf" hidden>
       <div class="g-card" id="walletList" hidden style="margin-top:14px"></div>
       <div class="g-empty g-card" id="walletEmpty" hidden>
         <strong>Sin billeteras</strong>
@@ -872,6 +877,17 @@
           <button class="g-btn primary" id="confirmPay">Pagar</button></div>
       </div>
 
+      <div id="phaseNotif" hidden>
+        <h3 id="notifTitle">Movimientos de tus notificaciones</h3>
+        <div class="g-note">Los leí de las notificaciones de tus billeteras. Destildá lo que no quieras y elegí de dónde salió la plata.</div>
+        <div id="notifList"></div>
+        <div class="g-row2">
+          <div class="g-field"><label class="g-label" for="nBill">Billetera</label><select id="nBill"></select></div>
+        </div>
+        <div class="g-actions"><button class="g-btn" id="notifDescartar">Descartar</button>
+          <button class="g-btn primary" id="notifGuardar">Cargar los tildados</button></div>
+      </div>
+
       <div id="phaseCat" hidden>
         <h3 id="catTitle">Detalle de la categoría</h3>
         <div class="g-stsum" id="catResumen"></div>
@@ -949,6 +965,10 @@
           <input id="cfgAlerta" type="text" inputmode="decimal" data-money placeholder="Ej: 50000 — vacío para no avisar"></div>
         <label class="g-switch" style="padding:0"><input type="checkbox" id="cfgRemOn">
           Recordatorio diario para anotar los gastos</label>
+        <label class="g-switch" style="padding:0"><input type="checkbox" id="cfgNotif">
+          Leer las notificaciones de mis billeteras</label>
+        <div class="g-note" id="notifNota">Con esto, cuando Lemon, Mercado Pago o tu banco te avisan de un pago o una transferencia, Guita lo detecta y te lo propone para cargar (siempre te pregunta antes). Anda solo en la app instalada y tenés que darle permiso una vez en los ajustes del celu. Nada sale de tu teléfono.</div>
+        <button class="g-btn" id="notifRevisar" style="flex:none" hidden>🔔 Revisar notificaciones ahora</button>
         <div class="g-field" id="remHoraRow" hidden><label class="g-label" for="cfgRemHora">Hora del recordatorio</label>
           <input id="cfgRemHora" type="time" value="21:30"></div>
         <div class="g-note" id="remNote" hidden>La notificación diaria funciona en la app instalada (APK). En esta vista web te muestro el aviso al abrir la app si todavía no anotaste nada ese día.</div>
@@ -1053,7 +1073,8 @@
   catch(e){ persistent = false; }
   if(!persistent) document.getElementById("storageNotice").classList.add("show");
 
-  const blankConfig = () => ({apiKey:"", modeloIA:"eco", presupuestos:{}, alertaGrande:0, recordatorio:{on:false, hora:"21:30"}});
+  const blankConfig = () => ({apiKey:"", modeloIA:"eco", presupuestos:{}, alertaGrande:0,
+    recordatorio:{on:false, hora:"21:30"}, notificaciones:false});
   const blankState = () => ({movs:[], billeteras:[], tarjetas:[], fijos:[], pagosFijos:{}, transf:[], ajustes:[], config:blankConfig(), seq:0});
 
   function loadState(){
@@ -1276,6 +1297,21 @@
         descripcion:{type:"string"}
       }}}}};
   const SYS_VOICE = "Sos el intérprete de voz de Guita, una app argentina de finanzas personales. El usuario dicta uno o varios movimientos en español rioplatense. Jerga: una luca = $1.000, un palo = $1.000.000, una gamba = $100, 'y media' suma 500 a las lucas. Devolvé cada movimiento por separado con su monto en pesos argentinos (número), tipo gasto o ingreso (cobré/me pagaron/sueldo = ingreso, con categoria Ingreso), la categoría que mejor corresponda y una descripción corta y natural (ej: 'El súper', 'Nafta'). Si un monto es ambiguo interpretalo como se diría hablando de plata en Argentina.";
+
+  // captura de movimientos de una billetera (Lemon, Mercado Pago, homebanking…)
+  const SCHEMA_CAPTURA = {type:"object", additionalProperties:false, required:["billetera","movimientos"],
+    properties:{
+      billetera:{type:"string"},
+      movimientos:{type:"array", items:{type:"object", additionalProperties:false,
+        required:["tipo","monto","categoria","descripcion","fecha"],
+        properties:{
+          tipo:{type:"string", enum:["gasto","ingreso"]},
+          monto:{type:"number"},
+          categoria:{type:"string", enum: CATS.map(c=>c.id)},
+          descripcion:{type:"string"},
+          fecha:{type:"string"}
+        }}}}};
+  const SYS_CAPTURA = "Leés capturas de pantalla de billeteras virtuales y bancos argentinos (Lemon, Mercado Pago, Cuenta DNI, Astropay, Balanz, Santander, Brubank, Uala, Naranja X, Personal Pay…). Devolvé: 'billetera' = nombre de la app o banco que se ve en la captura (string vacío si no se distingue); 'movimientos' = CADA movimiento visible de la lista, con: 'tipo' gasto o ingreso (una transferencia ENVIADA, un pago, una compra o una extracción es gasto; una transferencia RECIBIDA, un ingreso de dinero, un sueldo, un reintegro, un cashback o un rendimiento es ingreso), 'monto' SIEMPRE positivo en pesos argentinos (los montos suelen venir con signo - o + adelante: usá el signo para decidir el tipo, no para el monto; ojo con el formato argentino donde el punto separa miles y la coma los decimales), 'descripcion' corta y legible (a quién le transferiste o de quién recibiste, o el comercio), 'categoria' la que mejor corresponda, y 'fecha' en formato YYYY-MM-DD si se ve en la captura (si solo dice 'Hoy' o 'Ayer' o no se ve, devolvé string vacío). NO inventes movimientos que no estén en la imagen. NO incluyas saldos, totales, ni encabezados. Si la captura tiene un solo movimiento (un comprobante), devolvé ese solo.";
 
   const SCHEMA_RESUMEN = {type:"object", additionalProperties:false,
     required:["tarjeta","cierre_dia","vencimiento_dia","mes","total","total_usd","saldo_anterior","pagos","impuestos","pago_minimo","consumos_usd_total","consumos"],
@@ -2326,7 +2362,7 @@
 
   /* ---------- sheet ---------- */
   const sheet=$("sheet"), scrim=$("scrim");
-  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat"];
+  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif"];
   const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]),' +
     ' textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
   const focoVisibles = () => Array.from(sheet.querySelectorAll(FOCUSABLE))
@@ -2444,8 +2480,11 @@
 
   /* ---------- varios movimientos ---------- */
   let multiItems = [];
-  function openMulti(items, frase){
-    multiItems = items.map(m=>({tipo:m.tipo||"gasto", monto:m.monto||0, categoria:m.categoria||"Otros", descripcion:m.descripcion||""}));
+  let multiOrigen = "voz";
+  function openMulti(items, frase, origen){
+    multiItems = items.map(m=>({tipo:m.tipo||"gasto", monto:m.monto||0, categoria:m.categoria||"Otros",
+      descripcion:m.descripcion||"", fecha:m.fecha||null}));
+    multiOrigen = origen || "voz";
     $("multiTitle").textContent = `Entendí ${multiItems.length} movimientos`;
     $("mFecha").value = todayISO();
     fillWalletSelect($("mBill"), true, true);
@@ -2463,6 +2502,7 @@
           <input type="text" inputmode="decimal" data-money data-f="monto" value="${m.monto?fmtNum(m.monto):""}" placeholder="Monto">
         </div>
         <button class="rm" data-rm="${i}" aria-label="Quitar">✕</button>
+        ${m.fecha?`<div class="g-note" style="grid-column:1/-1; margin:0">📅 ${m.fecha.slice(8)}/${m.fecha.slice(5,7)} — de la captura</div>`:""}
       </div>`).join("");
   }
   $("multiList").addEventListener("input", e=>{
@@ -2486,9 +2526,9 @@
     const nuevos = [];
     for(const m of good){
       const mov = {
-        id: nid(), fecha, tipo: m.categoria==="Ingreso"?"ingreso":m.tipo, monto:m.monto,
+        id: nid(), fecha: m.fecha || fecha, tipo: m.categoria==="Ingreso"?"ingreso":m.tipo, monto:m.monto,
         categoria:m.categoria, billetera:bsel.billetera, tarjetaId:bsel.tarjetaId||undefined,
-        descripcion:(m.descripcion||"").trim()||m.categoria, origen:"voz"
+        descripcion:(m.descripcion||"").trim()||m.categoria, origen: multiOrigen
       };
       S.movs.push(mov); nuevos.push(mov);
     }
@@ -3106,6 +3146,159 @@
     };
   }
 
+  /* ---------- notificaciones de billeteras (solo APK) ---------- */
+  const NOTIF_APPS = [
+    [/lemon/i, "Lemon"], [/mercadopago|mercadolibre/i, "Mercado Pago"],
+    [/bapro/i, "Cuenta DNI"], [/santander/i, "Santander"], [/astropay/i, "Astropay"],
+    [/balanz/i, "Balanz"], [/brubank/i, "Brubank"], [/uala/i, "Ualá"],
+    [/naranja/i, "Naranja X"], [/personalpay/i, "Personal Pay"], [/bbva/i, "BBVA"],
+    [/galicia/i, "Galicia"], [/macro/i, "Macro"], [/bna/i, "Banco Nación"]
+  ];
+  const nombreApp = pkg => (NOTIF_APPS.find(([re])=>re.test(pkg||""))||[null,"tu billetera"])[1];
+
+  // palabras que marcan que entró plata (el resto se toma como gasto)
+  const RE_INGRESO = /recib|te transfir|te envi|acredit|ingres|cobra|devoluc|reintegr|cashback|rendimiento|deposit/i;
+
+  /** De un texto de notificación saca monto, tipo y una descripción usable. */
+  function parseNotif(n){
+    const txt = ((n.titulo||"")+" "+(n.texto||"")).replace(/\s+/g," ").trim();
+    // montos en formato argentino: $ 12.345,67 · $12345 · 1.234,56
+    const m = txt.match(/\$\s*(\d{1,3}(?:\.\d{3})*(?:,\d{1,2})?|\d+(?:,\d{1,2})?)/)
+           || txt.match(/\b(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?)\b/);
+    if(!m) return null;
+    const monto = numVal(m[1]);
+    if(!(monto>0)) return null;
+    const tipo = RE_INGRESO.test(txt) ? "ingreso" : "gasto";
+    // descripción: lo que viene después de "a"/"en"/"de", o el título
+    let desc = "";
+    const d1 = txt.match(/(?:pagaste|compraste|transferiste|enviaste)\s+.*?\s+(?:a|en)\s+([^.,;]{2,40})/i);
+    const d2 = txt.match(/(?:de|desde)\s+([^.,;]{2,40})/i);
+    desc = (d1 && d1[1]) || (n.titulo||"") || (d2 && d2[1]) || "";
+    desc = desc.replace(/\s+/g," ").trim().slice(0,44);
+    const app = nombreApp(n.app);
+    if(!desc || /^\W*$/.test(desc)) desc = (tipo==="ingreso"?"Ingreso en ":"Gasto en ")+app;
+    const cat = parseCategoria(desc+" "+txt, tipo);
+    return {tipo, monto, categoria:cat, descripcion:desc, app,
+      fecha: n.cuando ? new Date(n.cuando).toISOString().slice(0,10) : todayISO(),
+      id: n.id, texto: txt};
+  }
+
+  const notifOn = () => !!(window.AndroidVoz && window.AndroidVoz.notifPendientes);
+  let notifItems = [];
+
+  function revisarNotificaciones(silencioso){
+    if(!notifOn()){ if(!silencioso) toast("Esto anda solo en la app instalada (APK)"); return; }
+    let cola = [];
+    try{ cola = JSON.parse(window.AndroidVoz.notifPendientes()||"[]"); }catch(e){}
+    const vistos = S.notifVistas || {};
+    const nuevos = cola.filter(n=>n && n.id && !vistos[n.id]);
+    const parseados = nuevos.map(parseNotif).filter(Boolean);
+    if(!parseados.length){
+      if(!silencioso) toast("No hay movimientos nuevos en tus notificaciones");
+      try{ window.AndroidVoz.notifLimpiar(); }catch(e){}
+      return;
+    }
+    notifItems = parseados;
+    fillWalletSelect($("nBill"), true, true);
+    $("notifTitle").textContent = `Vi ${parseados.length} movimiento${parseados.length===1?"":"s"} en tus notificaciones`;
+    renderNotifRows();
+    openSheet("notif");
+  }
+
+  function renderNotifRows(){
+    $("notifList").innerHTML = notifItems.map((m,i)=>`
+      <div class="g-subrow2" data-ni="${i}">
+        <input type="checkbox" ${m.off?"":"checked"} data-nchk="${i}" aria-label="Cargar este">
+        <span class="inf">
+          <span style="font-size:14px">${iconFor(m.descripcion, m.categoria)} ${esc(m.descripcion)}</span><br>
+          <span class="g-note" style="margin:0">${esc(m.app)} · ${m.fecha.slice(8)}/${m.fecha.slice(5,7)} · ${m.tipo==="ingreso"?"entró":"salió"} · ${esc(m.categoria)}</span>
+        </span>
+        <span class="m" style="color:${m.tipo==="ingreso"?"var(--income)":"var(--expense)"}">
+          ${m.tipo==="ingreso"?"+":"−"} ${fmtMoney(m.monto)}</span>
+      </div>`).join("");
+  }
+
+  $("notifList").addEventListener("change", e=>{
+    const chk = e.target.closest("[data-nchk]");
+    if(chk) notifItems[Number(chk.dataset.nchk)].off = !chk.checked;
+  });
+  $("notifDescartar").onclick = ()=>{
+    marcarNotifVistas();
+    closeSheet();
+    toast("Listo, no anoté nada");
+  };
+  $("notifGuardar").onclick = ()=>{
+    const bsel = parseBillSel($("nBill").value);
+    const elegidos = notifItems.filter(m=>!m.off);
+    if(!elegidos.length){ marcarNotifVistas(); closeSheet(); toast("No tildaste ninguno"); return; }
+    const nuevos = [];
+    for(const m of elegidos){
+      const mov = {id:nid(), fecha:m.fecha, tipo:m.tipo, monto:m.monto, categoria:m.categoria,
+        billetera:bsel.billetera, tarjetaId:bsel.tarjetaId||undefined,
+        descripcion:m.descripcion, origen:"notificacion"};
+      S.movs.push(mov); nuevos.push(mov);
+    }
+    marcarNotifVistas();
+    save(); closeSheet(); renderAll();
+    toast(`${elegidos.length} movimiento${elegidos.length===1?"":"s"} anotado${elegidos.length===1?"":"s"} ✔`);
+    checkAlertas(nuevos);
+  };
+  function marcarNotifVistas(){
+    S.notifVistas = S.notifVistas || {};
+    for(const m of notifItems) if(m.id) S.notifVistas[m.id] = 1;
+    // no dejar crecer el registro para siempre
+    const ks = Object.keys(S.notifVistas);
+    if(ks.length > 400) ks.slice(0, ks.length-400).forEach(k=>delete S.notifVistas[k]);
+    try{ if(notifOn()) window.AndroidVoz.notifLimpiar(); }catch(e){}
+    save();
+  }
+
+  /* ---------- captura de movimientos de billetera ---------- */
+  async function aiReadCaptura(b64, mediaType){
+    const block = mediaType==="application/pdf"
+      ? {type:"document", source:{type:"base64", media_type:"application/pdf", data:b64}}
+      : {type:"image", source:{type:"base64", media_type:mediaType, data:b64}};
+    const out = await callClaude(SYS_CAPTURA,
+      [block, {type:"text", text:"Sacá todos los movimientos que se vean en esta captura."}],
+      SCHEMA_CAPTURA, 8000);
+    if(!out || !Array.isArray(out.movimientos)) return null;
+    return out;
+  }
+
+  async function processCapturaFile(file){
+    const isImage = /^image\//.test(file.type||"");
+    const isPdf = file.type==="application/pdf" || /\.pdf$/i.test(file.name||"");
+    if(!(S.config.apiKey||"").trim()){
+      toast("Para leer capturas activá la IA en Ajustes ⚙");
+      openSheet("config");
+      return;
+    }
+    if(!isImage && !isPdf){ toast("Mandame una captura de pantalla o un PDF"); return; }
+    openSheet("busy");
+    $("busyTitle").textContent = "Leyendo tu captura…";
+    $("busyNote").textContent = "Buscando los movimientos que se ven en la imagen.";
+    try{
+      const b64 = await fileToBase64(file);
+      const out = await aiReadCaptura(b64, isImage ? (file.type||"image/jpeg") : "application/pdf");
+      const movs = (out && out.movimientos || []).filter(m=>m.monto>0);
+      if(!movs.length){ closeSheet(); toast("No encontré movimientos en esa captura"); return; }
+      // billetera sugerida: la que mejor coincida con lo que dice la captura
+      const nom = (out.billetera||"").toLowerCase();
+      const bil = S.billeteras.find(b=>nom && (nom.includes(b.nombre.toLowerCase()) || b.nombre.toLowerCase().includes(nom)));
+      openMulti(movs.map(m=>({
+        tipo: m.tipo, monto: m.monto, categoria: m.categoria,
+        descripcion: m.descripcion, fecha: /^\d{4}-\d{2}-\d{2}$/.test(m.fecha||"") ? m.fecha : null
+      })), out.billetera ? "captura de "+out.billetera : "captura", "captura");
+      if(bil) $("mBill").value = String(bil.id);
+      $("multiTitle").textContent = out.billetera
+        ? `Leí ${movs.length} movimiento${movs.length===1?"":"s"} de ${out.billetera}`
+        : `Leí ${movs.length} movimiento${movs.length===1?"":"s"}`;
+    }catch(e){
+      closeSheet();
+      toast("No pude leer la captura — probá con otra");
+    }
+  }
+
   let importCtx = null, importData = null;
   async function processStatementFile(file){
     const isImage = /^image\//.test(file.type||"");
@@ -3322,6 +3515,12 @@
 
   /* ---------- billeteras ---------- */
   let walletEdit = null;
+  $("capturaBtn").onclick = ()=>{ $("capturaInput").value=""; $("capturaInput").click(); };
+  $("capturaInput").addEventListener("change", e=>{
+    const f = e.target.files && e.target.files[0];
+    if(f) processCapturaFile(f);
+  });
+
   $("addWalletBtn").onclick = ()=>{
     walletEdit = null;
     $("walletTitle").textContent = "Nueva billetera";
@@ -3386,8 +3585,25 @@
     $("cfgRemHora").value = (S.config.recordatorio&&S.config.recordatorio.hora)||"21:30";
     $("remNote").hidden = !!(window.AndroidVoz && window.AndroidVoz.setReminder);
     $("remHoraRow").hidden = !$("cfgRemOn").checked;
+    const hayNotif = notifOn();
+    $("cfgNotif").checked = !!(S.config.notificaciones && hayNotif);
+    $("cfgNotif").disabled = !hayNotif;
+    $("notifRevisar").hidden = !(hayNotif && S.config.notificaciones);
+    $("notifNota").textContent = hayNotif
+      ? "Cuando Lemon, Mercado Pago o tu banco te avisan de un pago o una transferencia, Guita lo detecta y te lo propone para cargar — siempre te pregunta antes. Nada sale de tu teléfono."
+      : "Esto anda solo en la app instalada (APK). En el navegador no se pueden leer las notificaciones de otras apps.";
     openSheet("config");
   };
+  // prender la lectura de notificaciones pide el permiso del sistema una sola vez
+  $("cfgNotif").addEventListener("change", ()=>{
+    if(!notifOn()){ $("cfgNotif").checked = false; return; }
+    if($("cfgNotif").checked && !window.AndroidVoz.notifPermiso()){
+      toast("Buscá \u201cGuita\u201d en la lista y activalo");
+      try{ window.AndroidVoz.notifPedirPermiso(); }catch(e){}
+    }
+    $("notifRevisar").hidden = !$("cfgNotif").checked;
+  });
+  $("notifRevisar").onclick = ()=>{ closeSheet(); setTimeout(()=>revisarNotificaciones(false), 300); };
   // la hora solo aparece si el recordatorio está prendido
   $("cfgRemOn").addEventListener("change", ()=>{ $("remHoraRow").hidden = !$("cfgRemOn").checked; });
   function aplicarRecordatorio(){
@@ -3403,6 +3619,8 @@
     S.config.modeloIA = $("cfgModelo").value==="max" ? "max" : "eco";
     S.config.alertaGrande = Math.max(0, numVal($("cfgAlerta").value)||0);
     S.config.recordatorio = {on: $("cfgRemOn").checked, hora: $("cfgRemHora").value||"21:30"};
+    S.config.notificaciones = notifOn() && $("cfgNotif").checked;
+    try{ if(notifOn()) window.AndroidVoz.notifActivar(!!S.config.notificaciones); }catch(e){}
     save(); closeSheet(); renderAll();
     aplicarRecordatorio();
     toast(S.config.apiKey ? "IA activada ✔ (clave guardada en este dispositivo)" : "Ajustes guardados ✔");
@@ -3829,6 +4047,15 @@
     navigator.serviceWorker.register("sw.js").catch(()=>{});
   }
 
+  /* ---------- notificaciones de billeteras: revisar lo que llegó mientras no estabas ---------- */
+  (function(){
+    if(!notifOn()) return;
+    try{ window.AndroidVoz.notifActivar(!!S.config.notificaciones); }catch(e){}
+    if(!S.config.notificaciones) return;
+    // esperar a que la app termine de dibujar para no tapar el arranque
+    setTimeout(()=>revisarNotificaciones(true), 1800);
+  })();
+
   /* ---------- recordatorio diario: reprogramar al abrir + aviso web ---------- */
   aplicarRecordatorio();
   (function(){
@@ -3850,6 +4077,7 @@
   window.__guitaStatement = parseStatementText;
   window.__guitaState = () => JSON.parse(JSON.stringify(S));
   window.__guitaToast = () => ({busy: toastBusy, pend: toastQ.length, txt: toastEl.textContent});
+  window.__guitaNotif = n => parseNotif(n);
   window.__guitaVoz = () => ({holding, cancelado: micCancelled, escuchando: isListening(), x0: pressX0});
   renderAll();
 })();

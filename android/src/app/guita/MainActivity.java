@@ -264,6 +264,50 @@ public class MainActivity extends Activity {
             runOnUiThread(() -> ReminderReceiver.cancel(MainActivity.this));
         }
 
+        /* ---- notificaciones de billeteras ---- */
+
+        /** ¿El usuario ya nos dio acceso a leer notificaciones? */
+        @JavascriptInterface
+        public boolean notifPermiso() {
+            String activos = android.provider.Settings.Secure.getString(
+                    getContentResolver(), "enabled_notification_listeners");
+            return activos != null && activos.contains(getPackageName());
+        }
+
+        /** Abre la pantalla del sistema donde se habilita el acceso. */
+        @JavascriptInterface
+        public void notifPedirPermiso() {
+            runOnUiThread(() -> {
+                try {
+                    startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
+                } catch (Exception e) {
+                    try { startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS)); }
+                    catch (Exception ignored) {}
+                }
+            });
+        }
+
+        /** Prende o apaga la captura (la app decide, el servicio obedece). */
+        @JavascriptInterface
+        public void notifActivar(boolean on) {
+            getSharedPreferences(GuitaNotifListener.PREFS, MODE_PRIVATE)
+                    .edit().putBoolean(GuitaNotifListener.KEY_ON, on).apply();
+        }
+
+        /** Devuelve la cola de notificaciones de plata pendientes, como JSON. */
+        @JavascriptInterface
+        public String notifPendientes() {
+            return GuitaNotifListener.leerCola(
+                    getSharedPreferences(GuitaNotifListener.PREFS, MODE_PRIVATE)).toString();
+        }
+
+        /** Vacía la cola una vez que la app ya la procesó. */
+        @JavascriptInterface
+        public void notifLimpiar() {
+            getSharedPreferences(GuitaNotifListener.PREFS, MODE_PRIVATE)
+                    .edit().putString(GuitaNotifListener.KEY_COLA, "[]").apply();
+        }
+
         @JavascriptInterface
         public void saveCsv(String csv, String filename) {
             pendingCsv = csv;
