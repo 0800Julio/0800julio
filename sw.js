@@ -1,4 +1,4 @@
-const CACHE = "guita-v14";
+const CACHE = "guita-v15";
 const SHELL = [
   "./",
   "./index.html",

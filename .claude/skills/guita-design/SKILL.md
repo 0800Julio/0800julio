@@ -73,6 +73,16 @@ mano y muchas veces por voz. El tono es cercano y rioplatense ("Te escucho…",
 - Todo control con `role="button"` necesita handler de Enter/Espacio, no solo
   click; `:focus-visible` cubre botones, tabs, mic, segmentos y filas
 
+## Entrada de datos (v2.2)
+- Cuatro caminos, todos terminan en una hoja de revisión antes de guardar:
+  voz (mantener apretado), texto, captura de pantalla (IA) y notificaciones
+  del sistema (solo APK)
+- **Nada se anota sin confirmación**: la IA y el parser proponen, el usuario
+  tilda y corrige. Cada movimiento guardado lleva `origen`
+  (voz/manual/captura/notificacion) para poder rastrearlo después
+- Las notificaciones se leen con lista blanca de apps y filtro de "habla de
+  plata"; la cola vive en el teléfono y se vacía al procesarla
+
 ## Reglas duras
 - La app es UN archivo (`index.html`), sin dependencias ni CDNs (la CSP del
   artifact bloquea todo lo externo)

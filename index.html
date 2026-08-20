@@ -882,7 +882,7 @@
         <div class="g-note">Los leí de las notificaciones de tus billeteras. Destildá lo que no quieras y elegí de dónde salió la plata.</div>
         <div id="notifList"></div>
         <div class="g-row2">
-          <div class="g-field"><label class="g-label" for="nBill">Billetera</label><select id="nBill"></select></div>
+          <div class="g-field"><label class="g-label" for="nBill">Billetera (para los que no reconocí)</label><select id="nBill"></select></div>
         </div>
         <div class="g-actions"><button class="g-btn" id="notifDescartar">Descartar</button>
           <button class="g-btn primary" id="notifGuardar">Cargar los tildados</button></div>
@@ -3170,15 +3170,29 @@
     if(!(monto>0)) return null;
     const tipo = RE_INGRESO.test(txt) ? "ingreso" : "gasto";
     // descripción: lo que viene después de "a"/"en"/"de", o el título
-    let desc = "";
-    const d1 = txt.match(/(?:pagaste|compraste|transferiste|enviaste)\s+.*?\s+(?:a|en)\s+([^.,;]{2,40})/i);
-    const d2 = txt.match(/(?:de|desde)\s+([^.,;]{2,40})/i);
-    desc = (d1 && d1[1]) || (n.titulo||"") || (d2 && d2[1]) || "";
-    desc = desc.replace(/\s+/g," ").trim().slice(0,44);
     const app = nombreApp(n.app);
+    // el comercio o la persona vale más que un título genérico tipo "Cuenta DNI"
+    const cand = [
+      txt.match(/(?:compra|consumo|pago)\s+en\s+([^.,;$]{2,40})/i),
+      txt.match(/(?:pagaste|compraste|transferiste|enviaste|debitamos)\b[^;]{0,30}?\s(?:a|en)\s+([^.,;$]{2,40})/i),
+      txt.match(/(?:le pagaste a|te transfiri[oó]|te envi[oó])\s+([^.,;$]{2,40})/i),
+      txt.match(/(?:de|desde)\s+([^.,;$]{2,40})/i)
+    ].map(m=>m && m[1]).filter(Boolean);
+    let desc = (cand[0]||"").replace(/\s+/g," ").trim();
+    // el título solo si no dice apenas el nombre del banco o de la app
+    const tit = (n.titulo||"").replace(/\s+/g," ").trim();
+    const tituloGenerico = !tit || norm(tit)===norm(app) || /^(cuenta dni|lemon|mercado ?pago|banco|notificaci)/i.test(tit);
+    if(!desc) desc = tituloGenerico ? "" : tit;
+    // limpiar colas típicas: "Farmacity por $21.000" → "Farmacity"
+    desc = desc.replace(/\s*\$.*$/,"")
+               .replace(/\s+(por|de|el|la)\s*$/i,"")
+               .trim().slice(0,44);
+    if(desc) desc = desc.charAt(0).toUpperCase()+desc.slice(1);
     if(!desc || /^\W*$/.test(desc)) desc = (tipo==="ingreso"?"Ingreso en ":"Gasto en ")+app;
     const cat = parseCategoria(desc+" "+txt, tipo);
-    return {tipo, monto, categoria:cat, descripcion:desc, app,
+    const bil = S.billeteras.find(b=>norm(b.nombre)===norm(app))
+             || S.billeteras.find(b=>norm(app).includes(norm(b.nombre)) || norm(b.nombre).includes(norm(app)));
+    return {tipo, monto, categoria:cat, descripcion:desc, app, billetera: bil ? bil.id : null,
       fecha: n.cuando ? new Date(n.cuando).toISOString().slice(0,10) : todayISO(),
       id: n.id, texto: txt};
   }
@@ -3211,7 +3225,7 @@
         <input type="checkbox" ${m.off?"":"checked"} data-nchk="${i}" aria-label="Cargar este">
         <span class="inf">
           <span style="font-size:14px">${iconFor(m.descripcion, m.categoria)} ${esc(m.descripcion)}</span><br>
-          <span class="g-note" style="margin:0">${esc(m.app)} · ${m.fecha.slice(8)}/${m.fecha.slice(5,7)} · ${m.tipo==="ingreso"?"entró":"salió"} · ${esc(m.categoria)}</span>
+          <span class="g-note" style="margin:0">${esc(m.app)}${m.billetera?" 👛":""} · ${m.fecha.slice(8)}/${m.fecha.slice(5,7)} · ${m.tipo==="ingreso"?"entró":"salió"} · ${esc(m.categoria)}</span>
         </span>
         <span class="m" style="color:${m.tipo==="ingreso"?"var(--income)":"var(--expense)"}">
           ${m.tipo==="ingreso"?"+":"−"} ${fmtMoney(m.monto)}</span>
@@ -3233,8 +3247,10 @@
     if(!elegidos.length){ marcarNotifVistas(); closeSheet(); toast("No tildaste ninguno"); return; }
     const nuevos = [];
     for(const m of elegidos){
+      // cada movimiento va a la billetera de su app; el selector cubre los que no reconocí
       const mov = {id:nid(), fecha:m.fecha, tipo:m.tipo, monto:m.monto, categoria:m.categoria,
-        billetera:bsel.billetera, tarjetaId:bsel.tarjetaId||undefined,
+        billetera: m.billetera != null ? m.billetera : bsel.billetera,
+        tarjetaId: m.billetera != null ? undefined : (bsel.tarjetaId||undefined),
         descripcion:m.descripcion, origen:"notificacion"};
       S.movs.push(mov); nuevos.push(mov);
     }
@@ -4078,6 +4094,7 @@
   window.__guitaState = () => JSON.parse(JSON.stringify(S));
   window.__guitaToast = () => ({busy: toastBusy, pend: toastQ.length, txt: toastEl.textContent});
   window.__guitaNotif = n => parseNotif(n);
+  window.__guitaRevisarNotif = () => revisarNotificaciones(false);
   window.__guitaVoz = () => ({holding, cancelado: micCancelled, escuchando: isListening(), x0: pressX0});
   renderAll();
 })();
