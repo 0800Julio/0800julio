@@ -120,6 +120,22 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
   las notificaciones de las billeteras y bancos de su lista, no las demás.
   Requiere darle permiso una vez en *Ajustes de Android → Acceso a
   notificaciones*.
+- 🗓 **Pestaña Plan** (v2.3): todo lo que se repite todos los meses en un solo
+  lugar — gastos fijos + suscripciones y servicios que vienen dentro del
+  resumen de la tarjeta. Te dice cuánto te sale el mes completo, qué
+  porcentaje de tus ingresos se lleva, y un calendario de qué se paga cada
+  día (marcando lo vencido en rojo).
+- 🎯 **Metas** (v2.3): viajes, fondo de emergencia, gimnasio, cursos. Ponés
+  cuánto necesitás y para cuándo, y te dice **cuánto guardar por mes** para
+  llegar. Cada vez que guardás plata, se descuenta de una billetera y queda
+  anotada como gasto de ahorro.
+- 📊 **Gráfico de 6 meses apilado por categoría** (v2.3), dibujado en canvas
+  nativo (sin librerías): cada mes es una barra partida por categoría, con
+  el total y la comparación contra el mes anterior. Se cambia a "ingresos vs
+  gastos" con un toque.
+- 👆 **Deslizar entre pantallas** (v2.3): pasás de Inicio a Análisis a Plan y
+  así, arrastrando el dedo, con animación en la dirección del gesto. El
+  micrófono quedó centrado en la barra (3 pestañas de cada lado).
 - 🏷 **Categorías automáticas** por palabras clave (súper → Comida, nafta → Transporte,
   luz → Servicios, etc.). Siempre podés corregir antes de guardar.
 - ➕ **Carga manual** para cuando no querés hablar.
@@ -164,6 +180,18 @@ y guardado de CSV con el selector de archivos del sistema.
 > El dictado por voz usa la Web Speech API del navegador — anda muy bien en
 > Chrome para Android. En iPhone es limitado; ahí está la carga por texto con el
 > mismo parser ("escribilo como lo dirías").
+
+## Tests
+
+```bash
+node tests/app.test.mjs     # o: npm test
+```
+
+Suite de Playwright sobre el `index.html` real: parser de voz, montos en
+formato argentino, lectura de resúmenes, deuda y proyección de tarjetas,
+detalle por categoría, navegación por deslizamiento, Plan y metas, gráfico,
+accesibilidad de las hojas y parser de notificaciones. Vive en el repo a
+propósito: es la red de seguridad de la app.
 
 ## Estructura
 

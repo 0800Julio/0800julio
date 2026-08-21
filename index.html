@@ -92,7 +92,13 @@
 
   .view{display:none}
   .view.active{display:block; animation:viewIn .22s var(--ease)}
+  .view.active.from-right{animation:viewFromRight .26s var(--ease)}
+  .view.active.from-left{animation:viewFromLeft .26s var(--ease)}
   @keyframes viewIn{from{opacity:0; transform:translateY(10px)}}
+  @keyframes viewFromRight{from{opacity:0; transform:translateX(38px)}}
+  @keyframes viewFromLeft{from{opacity:0; transform:translateX(-38px)}}
+  /* el dedo arrastra la pantalla mientras deslizás */
+  #guita.swiping{will-change:transform}
   .g-viewtitle{display:flex; align-items:center; justify-content:space-between; padding:12px 2px 12px}
   .g-viewtitle h2{font-size:17px; font-weight:700}
   .g-minibtn{font:inherit; font-size:13px; font-weight:700; color:var(--brand); background:var(--brand-soft);
@@ -181,7 +187,10 @@
   .g-ivgbar .fill{display:block; height:100%; border-radius:6px; transform-origin:left center;
     transition:transform .4s var(--ease)}
   .g-ivgbar .amt{text-align:right; font-variant-numeric:tabular-nums; font-weight:600}
-  .g-evo{margin-top:14px; padding:14px 16px 10px}
+  .g-evo{margin-top:14px; padding:14px 16px 12px}
+  #evoCanvas{width:100%; height:auto; display:block; touch-action:manipulation}
+  .g-evo .g-legend{display:flex; flex-direction:row; flex-wrap:wrap; gap:4px 12px}
+  .g-evo .g-legrow{grid-template-columns:12px auto; padding:2px 0; cursor:default; font-size:12px}
   .g-evobars{display:flex; align-items:flex-end; justify-content:space-between; height:110px; gap:6px; margin-top:10px}
   .g-evomonth{flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; min-width:0}
   .g-evopair{display:flex; align-items:flex-end; gap:3px; height:88px}
@@ -255,12 +264,12 @@
     .g-nav{background:var(--nav-bg); -webkit-backdrop-filter:blur(16px) saturate(1.4);
       backdrop-filter:blur(16px) saturate(1.4)}
   }
-  .g-navin{width:min(480px,100%); display:grid; grid-template-columns:1fr 1fr 78px 1fr 1fr 1fr; align-items:end}
+  .g-navin{width:min(480px,100%); display:grid; grid-template-columns:repeat(3,1fr) 76px repeat(3,1fr); align-items:end}
   .g-tab{font:inherit; border:none; background:none; color:var(--muted); cursor:pointer; padding:9px 2px 10px;
-    display:flex; flex-direction:column; align-items:center; gap:3px; font-size:9.5px; font-weight:600;
+    display:flex; flex-direction:column; align-items:center; gap:3px; font-size:9px; font-weight:600;
     white-space:nowrap; overflow:hidden;
     transition:color .15s var(--ease)}
-  .g-tab svg{width:22px; height:22px; transition:transform .2s var(--spring)}
+  .g-tab svg{width:21px; height:21px; transition:transform .2s var(--spring)}
   .g-tab.on{color:var(--brand)}
   .g-tab.on svg{transform:translateY(-1px) scale(1.08)}
   .g-micwrap{display:flex; justify-content:center;
@@ -580,14 +589,52 @@
         <div class="g-note" id="budgetNote" hidden>Poné un tope mensual por categoría y acá ves cómo venís — con alertas al 80% y al pasarte.</div>
       </section>
       <section class="g-card g-evo" aria-label="Evolución de los últimos meses">
-        <div class="g-label">Últimos 6 meses</div>
-        <div class="g-evobars" id="evoBars"></div>
-        <div class="g-note" style="margin-top:8px">Barra verde: ingresos · barra roja: gastos</div>
+        <div class="g-viewtitle" style="margin:0 0 8px"><div class="g-label" style="margin:0">📊 Últimos 6 meses</div>
+          <button class="g-minibtn" id="evoModo">Por categoría</button></div>
+        <canvas id="evoCanvas" width="720" height="420" role="img"
+          aria-label="Gráfico de evolución de los últimos 6 meses"></canvas>
+        <div class="g-legend" id="evoLegend" style="padding:8px 0 0"></div>
+        <div class="g-note" id="evoNota" style="margin-top:6px"></div>
       </section>
       <button class="g-btn primary" id="irAsesor" style="margin-top:14px">🤖 Preguntale a tu asesor financiero</button>
       <div class="g-empty g-card" id="anEmpty" hidden>
         <strong>Nada para analizar todavía</strong>
         <p>Cuando cargues gastos, acá vas a ver la torta por categoría, ingresos vs gastos y la evolución mensual.</p>
+      </div>
+    </section>
+
+    <!-- PLAN: gastos que se repiten + metas -->
+    <section class="view" id="view-plan">
+      <div class="g-viewtitle"><h2>Tu mes, planificado</h2>
+        <button class="g-minibtn" id="addFijoBtn2">+ Gasto fijo</button></div>
+
+      <section class="g-card g-wtotal" aria-label="Compromiso mensual">
+        <div class="g-label">Todos los meses te salen</div>
+        <div class="big" id="planTotal">$ 0</div>
+        <div class="g-note" id="planNota"></div>
+      </section>
+
+      <div class="g-card g-tips" style="margin-top:14px" aria-label="Calendario del mes">
+        <div class="g-label">📅 Qué se paga este mes</div>
+        <div id="planCalendario"></div>
+      </div>
+
+      <div class="g-viewtitle" style="margin-top:10px"><h2>Gastos que se repiten</h2>
+        <span class="g-note" id="planCount"></span></div>
+      <div class="g-card" id="planLista"></div>
+      <div class="g-empty g-card" id="planEmpty" hidden>
+        <strong>Todavía no hay gastos fijos</strong>
+        <p>El alquiler, los servicios, las suscripciones… cargalos una vez y te aviso todos los meses cuándo vencen.</p>
+        <button class="g-btn primary" id="addFijoBtn3" style="flex:none;margin-top:10px">+ Cargar el primero</button>
+      </div>
+
+      <div class="g-viewtitle" style="margin-top:16px"><h2>🎯 Mis metas</h2>
+        <button class="g-minibtn" id="addMetaBtn">+ Nueva</button></div>
+      <div id="metasLista"></div>
+      <div class="g-empty g-card" id="metasEmpty" hidden>
+        <strong>Ponete una meta</strong>
+        <p>Un viaje, un fondo de emergencia, el gimnasio, un curso. Decime cuánto y para cuándo, y te digo cuánto guardar por mes y cómo venís.</p>
+        <button class="g-btn primary" id="addMetaBtn2" style="flex:none;margin-top:10px">🎯 Crear mi primera meta</button>
       </div>
     </section>
 
@@ -675,6 +722,9 @@
       <button class="g-tab" data-view="analisis">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6.4 6.4"/></svg>
         Análisis</button>
+      <button class="g-tab" data-view="plan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M7.5 14h3M13.5 14h3M7.5 17.5h3"/></svg>
+        Plan</button>
       <div class="g-micwrap">
         <button class="g-mic" id="micBtn" aria-label="Mantené apretado para hablar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -877,6 +927,47 @@
           <button class="g-btn primary" id="confirmPay">Pagar</button></div>
       </div>
 
+      <div id="phaseMeta" hidden>
+        <h3 id="metaTitle">Nueva meta</h3>
+        <div class="g-field"><label class="g-label" for="mtNombre">¿Qué querés lograr?</label>
+          <input id="mtNombre" type="text" placeholder="Viaje a Brasil, fondo de emergencia, gimnasio…" autocomplete="off"></div>
+        <div class="g-row2">
+          <div class="g-field"><label class="g-label" for="mtObjetivo">Cuánto necesitás</label>
+            <input id="mtObjetivo" type="text" inputmode="decimal" data-money></div>
+          <div class="g-field"><label class="g-label" for="mtGuardado">Cuánto llevás</label>
+            <input id="mtGuardado" type="text" inputmode="decimal" data-money></div>
+        </div>
+        <div class="g-row2">
+          <div class="g-field"><label class="g-label" for="mtFecha">¿Para cuándo?</label>
+            <input id="mtFecha" type="month"></div>
+          <div class="g-field"><label class="g-label" for="mtIcono">Ícono</label>
+            <select id="mtIcono">
+              <option value="🎯">🎯 Meta</option><option value="✈️">✈️ Viaje</option>
+              <option value="🛟">🛟 Fondo de emergencia</option><option value="🏋️">🏋️ Gimnasio</option>
+              <option value="📚">📚 Curso</option><option value="🏠">🏠 Casa</option>
+              <option value="🚗">🚗 Auto</option><option value="💻">💻 Tecnología</option>
+              <option value="🎁">🎁 Regalo</option><option value="📈">📈 Inversión</option>
+            </select></div>
+        </div>
+        <div class="g-note" id="mtNota"></div>
+        <div class="g-actions"><button class="g-btn danger" id="delMeta" hidden>Eliminar</button>
+          <button class="g-btn" data-close>Cancelar</button>
+          <button class="g-btn primary" id="saveMeta">Guardar</button></div>
+      </div>
+
+      <div id="phaseAporte" hidden>
+        <h3 id="aporteTitle">Guardar para la meta</h3>
+        <div class="g-note" id="aporteNota"></div>
+        <div class="g-field"><label class="g-label" for="apMonto">¿Cuánto guardás?</label>
+          <input id="apMonto" type="text" inputmode="decimal" data-money></div>
+        <label class="g-switch" style="padding:0"><input type="checkbox" id="apDescontar" checked>
+          Descontarlo de una billetera y anotarlo como gasto</label>
+        <div class="g-field" id="apBillRow"><label class="g-label" for="apBill">¿De dónde sale?</label>
+          <select id="apBill"></select></div>
+        <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
+          <button class="g-btn primary" id="saveAporte">Guardar</button></div>
+      </div>
+
       <div id="phaseNotif" hidden>
         <h3 id="notifTitle">Movimientos de tus notificaciones</h3>
         <div class="g-note">Los leí de las notificaciones de tus billeteras. Destildá lo que no quieras y elegí de dónde salió la plata.</div>
@@ -1075,7 +1166,8 @@
 
   const blankConfig = () => ({apiKey:"", modeloIA:"eco", presupuestos:{}, alertaGrande:0,
     recordatorio:{on:false, hora:"21:30"}, notificaciones:false});
-  const blankState = () => ({movs:[], billeteras:[], tarjetas:[], fijos:[], pagosFijos:{}, transf:[], ajustes:[], config:blankConfig(), seq:0});
+  const blankState = () => ({movs:[], billeteras:[], tarjetas:[], fijos:[], pagosFijos:{}, transf:[], ajustes:[],
+    metas:[], config:blankConfig(), seq:0});
 
   function loadState(){
     if(!persistent) return memory || (memory = blankState());
@@ -1868,27 +1960,150 @@
       const d = new Date(view.getFullYear(), view.getMonth()-off, 1);
       const mk = monthKey(d);
       let gi=0, gg=0;
-      const rsum = cardResumenesMes(mk).reduce((s,r)=>s+r.monto,0);
+      const porCat = {};
+      const res = cardResumenesMes(mk);
+      const rsum = res.reduce((s,r)=>s+r.monto,0);
+      const conRes = {};
+      for(const t of S.tarjetas) if((t.resumenes||{})[mk]) conRes[t.id] = true;
       for(const x of S.movs){
         if(x.fecha.slice(0,7)!==mk) continue;
-        if(x.tipo==="ingreso") gi+=x.monto;
-        else if(!(rsum>0 && x.categoria==="Tarjeta")) gg+=x.monto;
+        if(x.tipo==="ingreso"){ gi+=x.monto; continue; }
+        if(rsum>0 && x.categoria==="Tarjeta") continue;         // lo cubre el resumen
+        if(x.tarjetaId && conRes[x.tarjetaId]) continue;        // ídem
+        gg += x.monto;
+        porCat[x.categoria] = (porCat[x.categoria]||0) + x.monto;
+      }
+      // los consumos del resumen entran por su propia categoría
+      for(const r of res){
+        if(r.detalle && r.detalle.length){
+          for(const dd of r.detalle) if(dd.monto>0){
+            porCat[dd.categoria||"Otros"] = (porCat[dd.categoria||"Otros"]||0) + dd.monto;
+          }
+          const suma = r.detalle.reduce((a,dd)=>a+(dd.monto>0?dd.monto:0),0);
+          const resto = Math.max(0, r.monto - suma);
+          if(resto>0) porCat["Tarjeta"] = (porCat["Tarjeta"]||0) + resto;
+        } else {
+          porCat["Tarjeta"] = (porCat["Tarjeta"]||0) + r.monto;
+        }
       }
       gg += rsum;
-      months.push({d, gi, gg});
+      months.push({d, gi, gg, porCat});
     }
     renderTips();
     renderPresupuestos();
 
-    const emax = Math.max(1, ...months.map(m=>Math.max(m.gi,m.gg)));
-    $("evoBars").innerHTML = months.map(m=>{
-      const lbl = new Intl.DateTimeFormat("es-AR",{month:"short"}).format(m.d).replace(".","");
-      return `<div class="g-evomonth"><div class="g-evopair">
-        <span style="height:${Math.round(m.gi/emax*100)}%;background:var(--income)"></span>
-        <span style="height:${Math.round(m.gg/emax*100)}%;background:var(--expense)"></span>
-      </div><span class="lbl">${lbl}</span></div>`;
-    }).join("");
+    dibujarEvo(months);
   }
+
+  /* ---------- gráfico de 6 meses: apilado por categoría o ingresos vs gastos ---------- */
+  let evoModo = "cat";   // "cat" = apilado por categoría · "ivg" = ingresos vs gastos
+  let evoDatos = [];
+  function dibujarEvo(months){
+    evoDatos = months;
+    const cv = $("evoCanvas"), ctx = cv.getContext("2d");
+    const W = cv.width, H = cv.height;
+    const css = getComputedStyle(document.documentElement);
+    const col = n => css.getPropertyValue(n).trim() || "#888";
+    const tinta = col("--ink"), suave = col("--muted"), linea = col("--line");
+    ctx.clearRect(0,0,W,H);
+
+    const padL = 8, padR = 8, padT = 14, padB = 40;
+    const gw = W - padL - padR, gh = H - padT - padB;
+    const n = months.length || 1;
+    const paso = gw / n;
+    const bw = Math.min(58, paso * 0.52);
+
+    // categorías presentes en los 6 meses, ordenadas por peso
+    const totalCat = {};
+    for(const m of months) for(const c in m.porCat) totalCat[c] = (totalCat[c]||0) + m.porCat[c];
+    const cats = Object.keys(totalCat).sort((a,b)=>totalCat[b]-totalCat[a]).slice(0,6);
+    const otras = Object.keys(totalCat).filter(c=>!cats.includes(c));
+
+    const maxV = evoModo==="cat"
+      ? Math.max(1, ...months.map(m=>m.gg))
+      : Math.max(1, ...months.map(m=>Math.max(m.gi, m.gg)));
+
+    // grilla y montos de referencia
+    ctx.strokeStyle = linea; ctx.lineWidth = 1;
+    ctx.font = "500 15px system-ui, sans-serif"; ctx.fillStyle = suave; ctx.textBaseline = "middle";
+    for(let i=0;i<=3;i++){
+      const y = Math.round(padT + gh - gh*i/3) + .5;
+      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W-padR, y); ctx.stroke();
+      if(i>0){
+        const v = maxV*i/3;
+        ctx.textAlign = "left";
+        ctx.fillText(v>=1e6 ? (v/1e6).toFixed(1).replace(".",",")+"M" : Math.round(v/1000)+"k", padL+2, y-11);
+      }
+    }
+
+    months.forEach((m,i)=>{
+      const cx = padL + paso*i + paso/2;
+      if(evoModo==="cat"){
+        // una barra apilada por mes: se ve en qué se fue la plata
+        let acum = 0;
+        const trozos = cats.map(c=>({c, v:m.porCat[c]||0}))
+          .concat(otras.length ? [{c:"Otras", v: otras.reduce((s,c)=>s+(m.porCat[c]||0),0)}] : [])
+          .filter(t=>t.v>0);
+        for(const t of trozos){
+          const alto = t.v/maxV*gh;
+          const y = padT + gh - acum - alto;
+          ctx.fillStyle = t.c==="Otras" ? suave : catColor(t.c);
+          ctx.beginPath();
+          if(ctx.roundRect && acum===0) ctx.roundRect(cx-bw/2, y, bw, alto, [0,0,4,4]);
+          else ctx.rect(cx-bw/2, y, bw, alto);
+          ctx.fill();
+          acum += alto;
+        }
+        if(!trozos.length){
+          ctx.fillStyle = linea;
+          ctx.fillRect(cx-bw/2, padT+gh-3, bw, 3);
+        }
+      } else {
+        // dos barras: lo que entró y lo que salió
+        const w2 = bw*0.44;
+        const hi = m.gi/maxV*gh, hg = m.gg/maxV*gh;
+        ctx.fillStyle = col("--income");
+        ctx.beginPath();
+        if(ctx.roundRect) ctx.roundRect(cx-w2-3, padT+gh-hi, w2, hi, [4,4,0,0]); else ctx.rect(cx-w2-3, padT+gh-hi, w2, hi);
+        ctx.fill();
+        ctx.fillStyle = col("--expense");
+        ctx.beginPath();
+        if(ctx.roundRect) ctx.roundRect(cx+3, padT+gh-hg, w2, hg, [4,4,0,0]); else ctx.rect(cx+3, padT+gh-hg, w2, hg);
+        ctx.fill();
+      }
+      // mes
+      ctx.fillStyle = suave; ctx.textAlign = "center";
+      ctx.font = "600 15px system-ui, sans-serif";
+      const lbl = new Intl.DateTimeFormat("es-AR",{month:"short"}).format(m.d).replace(".","");
+      ctx.fillText(lbl, cx, padT+gh+16);
+      // total del mes, chiquito
+      const tot = evoModo==="cat" ? m.gg : m.gi-m.gg;
+      ctx.fillStyle = evoModo==="cat" ? tinta : (tot>=0 ? col("--income") : col("--expense"));
+      ctx.font = "700 14px system-ui, sans-serif";
+      const txt = Math.abs(tot)>=1e6 ? (tot/1e6).toFixed(1).replace(".",",")+"M"
+                : Math.abs(tot)>=1000 ? Math.round(tot/1000)+"k" : String(Math.round(tot));
+      ctx.fillText((evoModo==="ivg" && tot>0 ? "+" : "")+txt, cx, padT+gh+33);
+    });
+
+    // leyenda
+    $("evoLegend").innerHTML = evoModo==="cat"
+      ? cats.map(c=>`<div class="g-legrow"><span class="dot" style="background:${catColor(c)}"></span><span>${esc(c)}</span></div>`).join("")
+        + (otras.length?`<div class="g-legrow"><span class="dot" style="background:${suave}"></span><span>Otras</span></div>`:"")
+      : `<div class="g-legrow"><span class="dot" style="background:${col("--income")}"></span><span>Ingresos</span></div>
+         <div class="g-legrow"><span class="dot" style="background:${col("--expense")}"></span><span>Gastos</span></div>`;
+    const ult = months[months.length-1], prev = months[months.length-2];
+    $("evoNota").innerHTML = evoModo==="cat"
+      ? (prev && prev.gg>0 && ult
+          ? `Este mes gastaste ${ult.gg>=prev.gg?"<strong>"+fmtMoney(ult.gg-prev.gg)+" más</strong>":"<strong>"+fmtMoney(prev.gg-ult.gg)+" menos</strong>"} que el anterior.`
+          : "Cada barra es un mes, partida por categoría.")
+      : "Barra verde: lo que entró · barra roja: lo que salió. Abajo, el balance del mes.";
+  }
+  $("evoModo").onclick = ()=>{
+    evoModo = evoModo==="cat" ? "ivg" : "cat";
+    $("evoModo").textContent = evoModo==="cat" ? "Por categoría" : "Ingresos vs gastos";
+    dibujarEvo(evoDatos);
+  };
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ()=>{ if(evoDatos.length) dibujarEvo(evoDatos); });
 
   /* ---------- recomendaciones locales (gratis, sin IA) ---------- */
   function renderTips(){
@@ -2279,6 +2494,197 @@
     save(); openProy(proyTarjeta); renderTarjetas();
   });
 
+  /* ---------- alta y edición de metas ---------- */
+  let metaEdit = null, aporteMeta = null;
+  function abrirMeta(g){
+    metaEdit = g || null;
+    $("metaTitle").textContent = g ? "Editar meta" : "Nueva meta";
+    $("delMeta").hidden = !g;
+    $("mtNombre").value = g ? g.nombre : "";
+    $("mtObjetivo").value = g && g.objetivo ? fmtNum(g.objetivo) : "";
+    $("mtGuardado").value = g && g.guardado ? fmtNum(g.guardado) : "";
+    $("mtFecha").value = g && g.fecha ? g.fecha : "";
+    $("mtIcono").value = g && g.icono ? g.icono : "🎯";
+    $("mtNota").textContent = "Si le ponés fecha, te digo cuánto guardar por mes para llegar.";
+    openSheet("meta");
+  }
+  $("addFijoBtn2").onclick = ()=>$("addFijoBtn").click();
+  $("addFijoBtn3").onclick = ()=>$("addFijoBtn").click();
+  $("addMetaBtn").onclick = ()=>abrirMeta(null);
+  $("addMetaBtn2").onclick = ()=>abrirMeta(null);
+  $("saveMeta").onclick = ()=>{
+    const nombre = $("mtNombre").value.trim();
+    if(!nombre){ $("mtNombre").focus(); toast("¿Cómo se llama la meta?"); return; }
+    const objetivo = numVal($("mtObjetivo").value)||0;
+    if(!(objetivo>0)){ $("mtObjetivo").focus(); toast("¿Cuánta plata necesitás?"); return; }
+    const datos = {nombre, objetivo, guardado: Math.max(0, numVal($("mtGuardado").value)||0),
+      fecha: $("mtFecha").value||"", icono: $("mtIcono").value||"🎯"};
+    S.metas = S.metas || [];
+    if(metaEdit) Object.assign(metaEdit, datos);
+    else S.metas.push(Object.assign({id:nid()}, datos));
+    save(); closeSheet(); renderPlan();
+    toast(metaEdit ? "Meta actualizada ✔" : "Meta creada 🎯");
+  };
+  $("delMeta").onclick = ()=>{
+    if(!metaEdit) return;
+    const ref = metaEdit, nombre = metaEdit.nombre;
+    closeSheet();
+    borrarConUndo(`"${nombre}" eliminada`, ()=>{ S.metas = (S.metas||[]).filter(g=>g!==ref); });
+  };
+  $("metasLista").addEventListener("click", e=>{
+    const ed = e.target.closest("[data-editmeta]");
+    if(ed){ abrirMeta((S.metas||[]).find(g=>g.id===Number(ed.dataset.editmeta))); return; }
+    const ap = e.target.closest("[data-aporte]");
+    if(ap){
+      aporteMeta = (S.metas||[]).find(g=>g.id===Number(ap.dataset.aporte));
+      if(!aporteMeta) return;
+      const falta = Math.max(0, (aporteMeta.objetivo||0)-(aporteMeta.guardado||0));
+      $("aporteTitle").textContent = (aporteMeta.icono||"🎯")+" "+aporteMeta.nombre;
+      $("aporteNota").innerHTML = `Te faltan <strong>${fmtMoney(falta)}</strong> para llegar.`;
+      $("apMonto").value = "";
+      $("apDescontar").checked = true;
+      fillWalletSelect($("apBill"), false, false);
+      $("apBillRow").hidden = false;
+      openSheet("aporte");
+    }
+  });
+  $("apDescontar").addEventListener("change", ()=>{ $("apBillRow").hidden = !$("apDescontar").checked; });
+  $("saveAporte").onclick = ()=>{
+    if(!aporteMeta) return;
+    const monto = numVal($("apMonto").value)||0;
+    if(!(monto>0)){ $("apMonto").focus(); toast("¿Cuánto guardás?"); return; }
+    aporteMeta.guardado = (aporteMeta.guardado||0) + monto;
+    // guardar plata para una meta es un gasto real: sale de una billetera
+    if($("apDescontar").checked){
+      const bsel = parseBillSel($("apBill").value);
+      S.movs.push({id:nid(), fecha:todayISO(), tipo:"gasto", monto, categoria:"Otros",
+        billetera:bsel.billetera, descripcion:"Ahorro: "+aporteMeta.nombre, origen:"manual", meta:aporteMeta.id});
+    }
+    const listo = aporteMeta.guardado >= aporteMeta.objetivo;
+    save(); closeSheet(); renderAll(); renderPlan();
+    toast(listo ? `🎉 ¡Llegaste a "${aporteMeta.nombre}"!` : `Guardaste ${fmtMoney(monto)} ✔`);
+  };
+  $("planLista").addEventListener("click", e=>{
+    const f = e.target.closest("[data-planfijo]");
+    if(f) abrirFijo(S.fijos.find(x=>x.id===Number(f.dataset.planfijo)));
+  });
+
+  /* ---------- Plan: todo lo que se repite todos los meses ---------- */
+  /** Junta en un solo lugar los fijos, las suscripciones y los servicios de tarjeta. */
+  function recurrentesDelMes(){
+    const out = [];
+    for(const f of S.fijos){
+      if(f.activo===false) continue;
+      const t = f.viaTarjeta ? S.tarjetas.find(x=>x.id===f.tarjetaId) : null;
+      out.push({tipo:"fijo", ref:f, id:"f"+f.id, nombre:f.nombre, monto:f.monto,
+        categoria:f.categoria, dia:f.dia, via: t ? "💳 "+t.nombre : "👛 de tu plata",
+        editable:true});
+    }
+    // servicios y suscripciones que vienen dentro del resumen de cada tarjeta
+    for(const t of S.tarjetas){
+      const ks = Object.keys(t.resumenes||{}).sort();
+      const r = ks.length ? t.resumenes[ks[ks.length-1]] : null;
+      if(!r || !r.detalle) continue;
+      for(const d of r.detalle){
+        if(!(d.monto>0) || cuotaDe(d.desc) || !esRecurrente(d)) continue;
+        // no repetir lo que ya está cargado como fijo
+        if(S.fijos.some(f=>norm(f.nombre)===norm(d.desc))) continue;
+        out.push({tipo:"tarjeta", ref:d, id:"t"+t.id+norm(d.desc), nombre:d.desc, monto:d.monto,
+          categoria:d.categoria, dia:t.vto, via:"💳 "+t.nombre, editable:false});
+      }
+    }
+    return out.sort((a,b)=>a.dia-b.dia || b.monto-a.monto);
+  }
+
+  function renderPlan(){
+    const recs = recurrentesDelMes();
+    const total = recs.reduce((s,r)=>s+r.monto,0);
+    animMoney($("planTotal"), total);
+    const mk = monthKey(new Date());
+    const ing = S.movs.filter(m=>m.tipo==="ingreso" && m.fecha.slice(0,7)===mk)
+      .reduce((s,m)=>s+m.monto,0);
+    $("planNota").innerHTML = recs.length
+      ? `${recs.length} gasto${recs.length===1?"":"s"} que se repiten` +
+        (ing>0 ? ` · se llevan el <strong>${Math.round(total/ing*100)}%</strong> de lo que entra` : "")
+      : "";
+    $("planCount").textContent = recs.length ? fmtMoney(total)+" por mes" : "";
+
+    // calendario: qué falta pagar y qué ya pagaste, ordenado por día
+    const hoy = new Date().getDate();
+    const pagos = S.pagosFijos[mk]||{};
+    $("planCalendario").innerHTML = recs.length ? recs.map((r,i)=>{
+      const pagado = r.tipo==="fijo" && pagos[r.ref.id];
+      const vencido = !pagado && r.dia < hoy;
+      const hoyEs = !pagado && r.dia === hoy;
+      const est = pagado ? '<span class="ok">pagado ✔</span>'
+        : vencido ? '<span style="color:var(--danger); font-weight:600">venció el '+r.dia+'</span>'
+        : hoyEs ? '<span style="color:var(--danger); font-weight:600">¡es hoy!</span>'
+        : "el "+r.dia;
+      return `<div class="g-tip" style="--d:${Math.min(i,10)*0.03}s">
+        <span class="ic">${iconFor(r.nombre, r.categoria)}</span>
+        <div style="flex:1; min-width:0">
+          <div style="display:flex; gap:8px; justify-content:space-between">
+            <span style="font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${esc(r.nombre)}</span>
+            <strong style="flex:none">${fmtMoney(r.monto)}</strong>
+          </div>
+          <div class="g-note" style="margin:0">${est} · ${esc(r.via)}</div>
+        </div>
+      </div>`;
+    }).join("") : `<div class="g-note">Cargá tus gastos fijos y acá vas a ver el calendario del mes.</div>`;
+
+    $("planEmpty").hidden = recs.length>0;
+    $("planLista").hidden = recs.length===0;
+    $("planLista").innerHTML = recs.map((r,i)=>`
+      <div class="g-fijo" ${r.editable?`data-planfijo="${r.ref.id}"`:""} style="--d:${Math.min(i,10)*0.03}s">
+        <span class="g-dot" style="background:${catColor(r.categoria)}"></span>
+        <span class="g-info"><span class="g-desc">${esc(r.nombre)}${r.editable?"":" 🔁"}</span><br>
+          <span class="st">${fmtMoney(r.monto)} · ${esc(r.via)} · vence el ${r.dia}${
+            r.editable?"":" — sale en el resumen"}</span></span>
+      </div>`).join("");
+    renderMetas();
+  }
+
+  /* ---------- metas: viajes, fondo de emergencia, cursos… ---------- */
+  function mesesHasta(ym){
+    if(!/^\d{4}-\d{2}$/.test(ym||"")) return null;
+    const hoy = new Date();
+    const [y,m] = ym.split("-").map(Number);
+    return Math.max(0, (y-hoy.getFullYear())*12 + (m-1-hoy.getMonth()));
+  }
+  function renderMetas(){
+    const metas = S.metas||[];
+    $("metasEmpty").hidden = metas.length>0;
+    $("metasLista").innerHTML = metas.map((g,i)=>{
+      const obj = g.objetivo||0, guard = g.guardado||0;
+      const pct = obj>0 ? Math.min(100, Math.round(guard/obj*100)) : 0;
+      const falta = Math.max(0, obj-guard);
+      const meses = mesesHasta(g.fecha);
+      const porMes = (meses!=null && meses>0) ? falta/meses : falta;
+      const listo = falta<=0.5;
+      return `<div class="g-card" style="padding:14px 16px; margin-top:10px; animation:itemIn .3s var(--ease) both; animation-delay:${Math.min(i,8)*0.04}s">
+        <div style="display:flex; align-items:center; gap:10px">
+          <span style="font-size:22px">${esc(g.icono||"🎯")}</span>
+          <div style="flex:1; min-width:0">
+            <div style="font-weight:700; font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${esc(g.nombre)}</div>
+            <div class="g-note" style="margin:0">${fmtMoney(guard)} de ${fmtMoney(obj)}${
+              g.fecha ? " · para "+monthKeyLabel(g.fecha) : ""}</div>
+          </div>
+          <button class="g-minibtn" data-editmeta="${g.id}" aria-label="Editar meta">✏️</button>
+        </div>
+        <div class="g-bar" style="grid-template-columns:1fr 52px; margin-top:10px">
+          <span class="track"><span class="fill" style="width:100%;transform:scaleX(${(Math.max(2,pct)/100).toFixed(3)});background:${listo?"var(--income)":"var(--brand)"}"></span></span>
+          <span class="amt">${pct}%</span>
+        </div>
+        <div class="g-note" style="margin-top:8px">${
+          listo ? "🎉 ¡Llegaste! Ya tenés lo que necesitabas."
+          : meses===0 ? `Te faltan <strong>${fmtMoney(falta)}</strong> y el plazo es este mes.`
+          : meses!=null ? `Te faltan <strong>${fmtMoney(falta)}</strong> — guardá <strong>${fmtMoney(porMes)}</strong> por mes durante ${meses} ${meses===1?"mes":"meses"}.`
+          : `Te faltan <strong>${fmtMoney(falta)}</strong>. Poné una fecha y te digo cuánto guardar por mes.`}</div>
+        ${listo?"":`<button class="g-btn primary" data-aporte="${g.id}" style="margin-top:10px">💰 Guardar plata para esto</button>`}
+      </div>`;
+    }).join("");
+  }
+
   /* ---------- render: fijos ---------- */
   function renderFijos(){
     const hoy = new Date(); const mk = monthKey(hoy);
@@ -2337,24 +2743,84 @@
     };
   }
 
-  function renderAll(){ renderHome(); renderAnalisis(); renderTarjetas(); renderFijos(); renderBilleteras(); }
+  function renderAll(){ renderHome(); renderAnalisis(); renderTarjetas(); renderFijos(); renderBilleteras(); renderPlan(); }
 
   /* ---------- navegación ---------- */
   const tabs = document.querySelectorAll(".g-tab");
-  function switchView(name){
+  // orden de las pantallas: es el que recorre el deslizamiento
+  const VIEWS = ["home","analisis","plan","asesor","tarjetas","plata"];
+  let vistaActual = "home";
+  function switchView(name, dir){
+    if(!VIEWS.includes(name)) return;
     tabs.forEach(t=>t.classList.toggle("on", t.dataset.view===name));
     document.querySelectorAll(".view").forEach(v=>{
       const on = v.id === "view-"+name;
+      v.classList.remove("from-left","from-right");
       if(on && !v.classList.contains("active")){ v.classList.remove("active"); void v.offsetWidth; }
       v.classList.toggle("active", on);
+      if(on && dir) v.classList.add(dir>0 ? "from-right" : "from-left");
     });
+    vistaActual = name;
     if(name==="analisis") renderAnalisis();
+    if(name==="plan") renderPlan();
     if(name==="asesor"){
       $("advisorNote").hidden = !!(S.config.apiKey||"").trim();
       $("chatLog").scrollTop = $("chatLog").scrollHeight;
     }
+    window.scrollTo({top:0, behavior: reduced ? "auto" : "smooth"});
   }
-  tabs.forEach(t=>t.onclick = ()=>switchView(t.dataset.view));
+  tabs.forEach(t=>t.onclick = ()=>{
+    const de = VIEWS.indexOf(vistaActual), a = VIEWS.indexOf(t.dataset.view);
+    switchView(t.dataset.view, a>de ? 1 : a<de ? -1 : 0);
+  });
+  const vecina = paso => VIEWS[VIEWS.indexOf(vistaActual)+paso] || null;
+
+  /* ---------- deslizar entre pantallas ---------- */
+  (function(){
+    const app = $("guita");
+    let x0=0, y0=0, activo=false, arrastrando=false, ancho=1;
+    const LIMITE = 60;          // px para que cuente como deslizamiento
+    const start = e=>{
+      if(e.pointerType==="mouse" && e.buttons!==1) return;
+      // no robarle el gesto al micrófono, al chat, a los sheets ni a nada que scrollee al costado
+      if(e.target.closest("#micBtn, .g-sheet, .g-listenpop, input, select, textarea, canvas")) return;
+      if(sheet.classList.contains("open")) return;
+      x0 = e.clientX; y0 = e.clientY; activo = true; arrastrando = false;
+      ancho = app.clientWidth || 1;
+    };
+    const move = e=>{
+      if(!activo) return;
+      const dx = e.clientX-x0, dy = e.clientY-y0;
+      if(!arrastrando){
+        if(Math.abs(dx) < 12) return;
+        // si va más vertical que horizontal, es scroll: soltamos el gesto
+        if(Math.abs(dy) > Math.abs(dx)*0.8){ activo=false; return; }
+        arrastrando = true;
+        app.classList.add("swiping");
+      }
+      // resistencia en los extremos
+      const hayDestino = dx<0 ? vecina(1) : vecina(-1);
+      const d = hayDestino ? dx : dx*0.22;
+      if(!reduced) app.style.transform = `translateX(${Math.max(-ancho*.5, Math.min(ancho*.5, d*0.5))}px)`;
+    };
+    const end = e=>{
+      if(!activo) return;
+      const dx = (e ? e.clientX : x0) - x0;
+      activo = false;
+      app.classList.remove("swiping");
+      app.style.transition = reduced ? "" : "transform .2s var(--ease)";
+      app.style.transform = "";
+      setTimeout(()=>{ app.style.transition = ""; }, 220);
+      if(!arrastrando || Math.abs(dx) < LIMITE) return;
+      const destino = dx<0 ? vecina(1) : vecina(-1);
+      if(destino) switchView(destino, dx<0 ? 1 : -1);
+    };
+    app.addEventListener("pointerdown", start, {passive:true});
+    app.addEventListener("pointermove", move, {passive:true});
+    app.addEventListener("pointerup", end);
+    app.addEventListener("pointercancel", ()=>{ activo=false; arrastrando=false;
+      app.classList.remove("swiping"); app.style.transform=""; });
+  })();
   $("dueList").addEventListener("click", e=>{
     const p = e.target.closest("[data-goto]");
     if(p) switchView(p.dataset.goto);
@@ -2362,7 +2828,7 @@
 
   /* ---------- sheet ---------- */
   const sheet=$("sheet"), scrim=$("scrim");
-  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif"];
+  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte"];
   const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]),' +
     ' textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
   const focoVisibles = () => Array.from(sheet.querySelectorAll(FOCUSABLE))
@@ -2628,18 +3094,18 @@
       return;
     }
     const row = e.target.closest("[data-fijo]");
-    if(row){
-      const f = S.fijos.find(x=>x.id===Number(row.dataset.fijo));
-      if(!f) return;
-      fijoEdit = f;
-      $("fijoTitle").textContent = "Editar gasto fijo";
-      $("delFijo").hidden = false;
-      $("fjViaNote").hidden = !f.viaTarjeta;
-      $("fjNombre").value=f.nombre; $("fjMonto").value=fmtNum(f.monto); $("fjDia").value=f.dia;
-      fillCats($("fjCat"), false); $("fjCat").value=f.categoria;
-      openSheet("fijo");
-    }
+    if(row) abrirFijo(S.fijos.find(x=>x.id===Number(row.dataset.fijo)));
   });
+  function abrirFijo(f){
+    if(!f) return;
+    fijoEdit = f;
+    $("fijoTitle").textContent = "Editar gasto fijo";
+    $("delFijo").hidden = false;
+    $("fjViaNote").hidden = !f.viaTarjeta;
+    $("fjNombre").value=f.nombre; $("fjMonto").value=fmtNum(f.monto); $("fjDia").value=f.dia;
+    fillCats($("fjCat"), false); $("fjCat").value=f.categoria;
+    openSheet("fijo");
+  }
 
   /* ---------- tarjetas ---------- */
   let cardEdit = null, resumenCard = null;
