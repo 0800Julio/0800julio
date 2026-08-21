@@ -132,6 +132,11 @@
     transition:transform .4s var(--ease)}
   .g-bar .amt{text-align:right; font-variant-numeric:tabular-nums; font-weight:600}
 
+  .g-diario{margin-top:14px; padding:15px 17px}
+  .g-diario-top{display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
+  .g-diario .big{font-size:clamp(26px,7.5vw,32px); font-weight:800; letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums; color:var(--brand); margin-top:2px}
+  .g-diario .big.apretado{color:var(--expense)}
   .g-due{display:flex; flex-direction:column; gap:6px; margin-top:14px}
   .g-duepill{display:flex; align-items:center; gap:9px; background:var(--card); border:1px solid var(--line);
     border-radius:12px; padding:9px 12px; font-size:13px; cursor:pointer; animation:itemIn .28s var(--ease) both}
@@ -383,6 +388,7 @@
   .g-prow .ic{width:22px; text-align:center; flex:none}
   .g-prow .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
   .g-prow .m{font-variant-numeric:tabular-nums; font-weight:600; flex:none}
+  .g-prow.simu{align-items:flex-start; padding:8px 0}
   .g-tips{margin-top:14px}
   .g-tip{display:flex; gap:10px; padding:8px 0; font-size:13.5px; line-height:1.45;
     border-bottom:1px solid var(--line); animation:itemIn .3s var(--ease) both; animation-delay:var(--d,0s)}
@@ -446,6 +452,8 @@
   .g-toast .undo:focus-visible{outline:2px solid var(--brand); outline-offset:2px}
   .g-sheetin h3:focus-visible, .g-sheetin h3:focus{outline:none}
   .g-note{font-size:12.5px; color:var(--muted); line-height:1.45}
+  .g-linkbtn{font:inherit; font-size:inherit; font-weight:700; color:var(--brand); background:none;
+    border:none; padding:0; cursor:pointer; text-decoration:underline}
 
   /* multi-gastos */
   .g-multirow{display:grid; grid-template-columns:1fr 88px 34px; gap:8px; align-items:start; padding:8px 0; border-bottom:1px solid var(--line);
@@ -543,6 +551,20 @@
         </div>
         <div class="g-bars" id="catBars"></div>
       </section>
+      <section class="g-card g-diario" id="diarioCard" aria-label="Cuánto te queda por día" hidden>
+        <div class="g-diario-top">
+          <div>
+            <div class="g-label" id="diarioLbl">Podés gastar por día</div>
+            <div class="big" id="diarioMonto">$ 0</div>
+          </div>
+          <button class="g-minibtn" id="alcanzaBtn">¿Me alcanza?</button>
+        </div>
+        <div class="g-bar" style="grid-template-columns:1fr auto; margin-top:10px">
+          <span class="track"><span class="fill" id="diarioFill" style="width:100%;background:var(--brand)"></span></span>
+          <span class="amt" id="diarioDias"></span>
+        </div>
+        <div class="g-note" id="diarioNota"></div>
+      </section>
       <div class="g-due" id="dueList"></div>
       <div id="list"></div>
       <div class="g-empty g-card" id="empty" hidden>
@@ -628,6 +650,15 @@
         <button class="g-btn primary" id="addFijoBtn3" style="flex:none;margin-top:10px">+ Cargar el primero</button>
       </div>
 
+      <div class="g-card g-tips" id="aumentosCard" style="margin-top:14px" hidden aria-label="Aumentos detectados">
+        <div class="g-label">📈 Aumentos que detecté</div>
+        <div id="aumentosList"></div>
+      </div>
+
+      <div class="g-viewtitle" style="margin-top:10px"><h2>🔁 Tus suscripciones</h2>
+        <span class="g-note" id="subsTotal"></span></div>
+      <div class="g-card" id="subsCard" hidden><div id="subsList"></div></div>
+
       <div class="g-viewtitle" style="margin-top:16px"><h2>🎯 Mis metas</h2>
         <button class="g-minibtn" id="addMetaBtn">+ Nueva</button></div>
       <div id="metasLista"></div>
@@ -678,6 +709,12 @@
         <div class="g-label">📊 Resúmenes mes a mes</div>
         <div id="histList"></div>
       </section>
+      <section class="g-card g-tips" id="liberaCard" style="margin-top:14px" hidden aria-label="Cuándo se libera plata">
+        <div class="g-label">🎉 Cuándo se te libera plata</div>
+        <div id="liberaList"></div>
+        <div class="g-note" style="margin-top:6px">Cuando termina una cuota, ese monto deja de venir en el resumen. Buen momento para pagar más de la deuda, no para gastarlo.</div>
+      </section>
+      <button class="g-btn primary" id="simuBtn" style="margin-top:14px" hidden>🧮 ¿Cómo salgo de la deuda?</button>
       <div class="g-empty g-card" id="cardEmpty" hidden>
         <strong>Empezá subiendo tu resumen</strong>
         <p>Tocá <strong>"Subí tu resumen"</strong> acá arriba y elegí el PDF que te manda el banco. La tarjeta se crea sola con sus fechas. Con la IA activada (⚙ Ajustes) también lee fotos y resúmenes escaneados.</p>
@@ -927,6 +964,29 @@
           <button class="g-btn primary" id="confirmPay">Pagar</button></div>
       </div>
 
+      <div id="phaseSimu" hidden>
+        <h3>🧮 ¿Cómo salgo de la deuda?</h3>
+        <div class="g-stsum" id="simuHead"></div>
+        <div class="g-field"><label class="g-label" for="simuPago">¿Cuánto podés pagar por mes?</label>
+          <input id="simuPago" type="text" inputmode="decimal" data-money></div>
+        <div class="g-field"><label class="g-label" for="simuTasa">Interés mensual que te cobran</label>
+          <input id="simuTasa" type="number" step="0.1" min="0" max="30"></div>
+        <div class="g-note" id="simuTasaNota"></div>
+        <div class="g-stsum" id="simuResultado" hidden></div>
+        <div id="simuComparar"></div>
+        <div class="g-actions"><button class="g-btn" data-close>Cerrar</button>
+          <button class="g-btn primary" id="simuCalcular">Calcular</button></div>
+      </div>
+
+      <div id="phaseAlcanza" hidden>
+        <h3>¿Me alcanza para…?</h3>
+        <div class="g-field"><label class="g-label" for="alMonto">¿Cuánto querés gastar?</label>
+          <input id="alMonto" type="text" inputmode="decimal" data-money placeholder="50.000"></div>
+        <div class="g-stsum" id="alResultado" hidden></div>
+        <div class="g-actions"><button class="g-btn" data-close>Cerrar</button>
+          <button class="g-btn primary" id="alCalcular">Fijate</button></div>
+      </div>
+
       <div id="phaseMeta" hidden>
         <h3 id="metaTitle">Nueva meta</h3>
         <div class="g-field"><label class="g-label" for="mtNombre">¿Qué querés lograr?</label>
@@ -1056,10 +1116,19 @@
           <input id="cfgAlerta" type="text" inputmode="decimal" data-money placeholder="Ej: 50000 — vacío para no avisar"></div>
         <label class="g-switch" style="padding:0"><input type="checkbox" id="cfgRemOn">
           Recordatorio diario para anotar los gastos</label>
+        <div class="g-field"><label class="g-label" for="cfgCobro">¿Qué día del mes cobrás?</label>
+          <input id="cfgCobro" type="number" min="0" max="28" step="1" placeholder="Ej: 5 — 0 si no tenés fecha fija"></div>
+        <div class="g-note">Con esto te digo cuánto podés gastar por día hasta el próximo sueldo, ya descontando los fijos y resúmenes que faltan pagar.</div>
         <label class="g-switch" style="padding:0"><input type="checkbox" id="cfgNotif">
           Leer las notificaciones de mis billeteras</label>
         <div class="g-note" id="notifNota">Con esto, cuando Lemon, Mercado Pago o tu banco te avisan de un pago o una transferencia, Guita lo detecta y te lo propone para cargar (siempre te pregunta antes). Anda solo en la app instalada y tenés que darle permiso una vez en los ajustes del celu. Nada sale de tu teléfono.</div>
         <button class="g-btn" id="notifRevisar" style="flex:none" hidden>🔔 Revisar notificaciones ahora</button>
+        <div class="g-row2" style="margin-top:2px">
+          <button class="g-btn" id="backupBtn">💾 Guardar respaldo</button>
+          <button class="g-btn" id="restoreBtn">📥 Restaurar</button>
+        </div>
+        <input type="file" id="restoreInput" accept="application/json,.json,.guita" hidden>
+        <div class="g-note">El respaldo trae TODO: movimientos, tarjetas con sus resúmenes, billeteras, fijos, metas y ajustes. Guardalo en Drive o mandátelo por WhatsApp — si cambiás de celu, lo restaurás y seguís donde estabas. La API key no se incluye.</div>
         <div class="g-field" id="remHoraRow" hidden><label class="g-label" for="cfgRemHora">Hora del recordatorio</label>
           <input id="cfgRemHora" type="time" value="21:30"></div>
         <div class="g-note" id="remNote" hidden>La notificación diaria funciona en la app instalada (APK). En esta vista web te muestro el aviso al abrir la app si todavía no anotaste nada ese día.</div>
@@ -1165,7 +1234,7 @@
   if(!persistent) document.getElementById("storageNotice").classList.add("show");
 
   const blankConfig = () => ({apiKey:"", modeloIA:"eco", presupuestos:{}, alertaGrande:0,
-    recordatorio:{on:false, hora:"21:30"}, notificaciones:false});
+    recordatorio:{on:false, hora:"21:30"}, notificaciones:false, diaCobro:0});
   const blankState = () => ({movs:[], billeteras:[], tarjetas:[], fijos:[], pagosFijos:{}, transf:[], ajustes:[],
     metas:[], config:blankConfig(), seq:0});
 
@@ -2289,6 +2358,7 @@
       pendiente>0 ? fmtMoney(pendiente)+" del último resumen de cada tarjeta" : null
     ].filter(Boolean).join(" · ");
     renderHistorial();
+    renderLiberacion();
     $("cardList").innerHTML = S.tarjetas.map(t=>{
       // mostrar el resumen del mes actual, o si no hay, el último cargado
       const keys = Object.keys(t.resumenes||{}).sort();
@@ -2494,6 +2564,372 @@
     save(); openProy(proyTarjeta); renderTarjetas();
   });
 
+  /* ---------- historial de precios: detectar aumentos y auditar suscripciones ---------- */
+  /** Junta cada servicio/suscripción con lo que pagaste mes a mes. */
+  function historialServicios(){
+    const mapa = {};   // clave normalizada → {nombre, puntos:[{mk, monto}], via}
+    const sumar = (nombre, mk, monto, via) => {
+      const k = norm(nombre).replace(/[^a-z0-9]/g,"").slice(0,18);
+      if(!k) return;
+      const e = mapa[k] || (mapa[k] = {nombre, puntos:[], via});
+      const ya = e.puntos.find(p=>p.mk===mk);
+      if(ya) ya.monto += monto; else e.puntos.push({mk, monto});
+    };
+    // lo que vino en los resúmenes de cada tarjeta
+    for(const t of S.tarjetas){
+      for(const mk of Object.keys(t.resumenes||{})){
+        for(const d of (t.resumenes[mk].detalle||[])){
+          if(!(d.monto>0) || cuotaDe(d.desc) || !esRecurrente(d)) continue;
+          sumar(d.desc, mk, d.monto, "💳 "+t.nombre);
+        }
+      }
+    }
+    // lo que pagaste desde una billetera y quedó anotado
+    for(const m of S.movs){
+      if(m.tipo!=="gasto") continue;
+      const esFijo = S.fijos.some(f=>norm(f.nombre)===norm(m.descripcion||""));
+      if(!esFijo && !esRecurrente({desc:m.descripcion||"", categoria:m.categoria})) continue;
+      sumar(m.descripcion||m.categoria, m.fecha.slice(0,7), m.monto, "👛 de tu plata");
+    }
+    for(const k in mapa) mapa[k].puntos.sort((a,b)=>a.mk.localeCompare(b.mk));
+    return mapa;
+  }
+
+  /** Servicios que subieron de precio contra el promedio de los meses anteriores. */
+  function aumentosDetectados(){
+    const mapa = historialServicios();
+    const out = [];
+    for(const k in mapa){
+      const e = mapa[k];
+      if(e.puntos.length < 2) continue;
+      const ult = e.puntos[e.puntos.length-1];
+      const previos = e.puntos.slice(0, -1);
+      const base = previos.reduce((s,p)=>s+p.monto,0)/previos.length;
+      if(!(base>0)) continue;
+      const pct = (ult.monto-base)/base*100;
+      if(pct >= 8 && ult.monto-base > 300){
+        out.push({nombre:e.nombre, via:e.via, antes:base, ahora:ult.monto,
+          pct:Math.round(pct), delta:ult.monto-base, mk:ult.mk, meses:e.puntos.length});
+      }
+    }
+    return out.sort((a,b)=>b.delta-a.delta);
+  }
+
+  /** Todo lo que pagás de suscripciones, con lo que llevás gastado en cada una. */
+  function auditoriaSubs(){
+    const mapa = historialServicios();
+    const out = [];
+    for(const k in mapa){
+      const e = mapa[k];
+      const ult = e.puntos[e.puntos.length-1];
+      const total = e.puntos.reduce((s,p)=>s+p.monto,0);
+      // solo lo que parece suscripción de entretenimiento/servicio, no impuestos
+      const esSub = SUBS_KW.some(w=>norm(e.nombre).includes(norm(w)));
+      out.push({nombre:e.nombre, via:e.via, ultimo:ult.monto, total, meses:e.puntos.length,
+        anual: ult.monto*12, esSub});
+    }
+    return out.sort((a,b)=>b.ultimo-a.ultimo);
+  }
+
+  /** Mes a mes, cuánta plata se libera cuando terminan las cuotas. */
+  function liberacionCuotas(){
+    const meses = {};   // "YYYY-MM" → {libera, items:[]}
+    const hoy = new Date();
+    for(const t of S.tarjetas){
+      const ks = Object.keys(t.resumenes||{}).sort();
+      if(!ks.length) continue;
+      const r = t.resumenes[ks[ks.length-1]];
+      const baseMk = ks[ks.length-1];
+      for(const d of (r.detalle||[])){
+        if(!(d.monto>0)) continue;
+        const c = cuotaDe(d.desc);
+        if(!c || c.a>=c.b) continue;
+        // la última cuota cae N meses después del resumen actual
+        const faltan = c.b - c.a;
+        const [y,m] = baseMk.split("-").map(Number);
+        const fin = new Date(y, m-1+faltan, 1);
+        const mk = monthKey(fin);
+        const e = meses[mk] || (meses[mk] = {libera:0, items:[]});
+        e.libera += d.monto;
+        e.items.push({desc:c.limpio, monto:d.monto, tarjeta:t.nombre, cuotas:c.b});
+      }
+    }
+    return Object.keys(meses).sort().map(mk=>({mk, ...meses[mk]}));
+  }
+
+  /* ---------- cuánto podés gastar por día hasta el próximo sueldo ---------- */
+  /** Días que faltan para el próximo cobro (según el día que configuraste). */
+  function diasHastaCobro(){
+    const dia = S.config.diaCobro|0;
+    if(!(dia>=1 && dia<=28)) return null;
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    let prox = new Date(hoy.getFullYear(), hoy.getMonth(), dia);
+    if(prox <= hoy) prox = new Date(hoy.getFullYear(), hoy.getMonth()+1, dia);
+    return Math.max(1, Math.round((prox-hoy)/86400000));
+  }
+
+  /** Lo que realmente podés gastar: plata disponible menos lo que ya está comprometido. */
+  function plataDisponible(){
+    const dias = diasHastaCobro();
+    const hoy = new Date(); const mk = monthKey(hoy); const diaHoy = hoy.getDate();
+    // plata a mano (sin las cuentas de inversión)
+    const enMano = S.billeteras.filter(b=>!b.inversion).reduce((s,b)=>s+saldoBilletera(b.id),0);
+    // fijos del mes que todavía no pagaste
+    const pagos = S.pagosFijos[mk]||{};
+    let comprometido = 0;
+    const pendientes = [];
+    for(const f of S.fijos){
+      if(f.activo===false || f.viaTarjeta || pagos[f.id]) continue;
+      comprometido += f.monto;
+      pendientes.push({nombre:f.nombre, monto:f.monto, dia:f.dia});
+    }
+    // resúmenes de tarjeta que vencen y no están pagados
+    for(const t of S.tarjetas){
+      const ks = Object.keys(t.resumenes||{}).sort();
+      if(!ks.length) continue;
+      const r = t.resumenes[ks[ks.length-1]];
+      const falta = resFinanciado(r);
+      if(falta>0.5){
+        comprometido += falta;
+        pendientes.push({nombre:"Resumen "+t.nombre, monto:falta, dia:t.vto});
+      }
+    }
+    const libre = enMano - comprometido;
+    return {dias, enMano, comprometido, libre, pendientes,
+      porDia: dias ? libre/dias : null};
+  }
+
+  function renderDiario(){
+    const d = plataDisponible();
+    const card = $("diarioCard");
+    // sin billeteras no hay nada que repartir
+    if(!S.billeteras.length){ card.hidden = true; return; }
+    card.hidden = false;
+    if(d.dias==null){
+      $("diarioLbl").textContent = "Te queda libre";
+      animMoney($("diarioMonto"), Math.max(0, d.libre));
+      $("diarioDias").textContent = "";
+      $("diarioFill").style.transform = "scaleX(1)";
+      $("diarioNota").innerHTML = `Tenés ${fmtMoney(d.enMano)} y ${fmtMoney(d.comprometido)} comprometidos. ` +
+        `<button class="g-linkbtn" id="setCobro">Decime qué día cobrás</button> y te digo cuánto podés gastar por día.`;
+      const b = $("setCobro"); if(b) b.onclick = ()=>{ $("cfgBtn").click(); setTimeout(()=>$("cfgCobro").focus(), 400); };
+      return;
+    }
+    const apretado = d.porDia <= 0;
+    $("diarioLbl").textContent = apretado ? "No te queda para gastar" : "Podés gastar por día";
+    animMoney($("diarioMonto"), Math.max(0, d.porDia));
+    $("diarioMonto").classList.toggle("apretado", apretado);
+    $("diarioDias").textContent = d.dias + (d.dias===1?" día":" días");
+    // la barra muestra cuánto del mes ya recorriste
+    const ciclo = 30;
+    $("diarioFill").style.transform = `scaleX(${Math.max(.04, Math.min(1,(ciclo-d.dias)/ciclo)).toFixed(3)})`;
+    $("diarioFill").style.background = apretado ? "var(--expense)" : "var(--brand)";
+    $("diarioNota").innerHTML = apretado
+      ? `Tenés ${fmtMoney(d.enMano)} y ${fmtMoney(d.comprometido)} ya comprometidos (fijos y resúmenes sin pagar). Ojo con lo que gastes hasta cobrar.`
+      : `${fmtMoney(d.libre)} libres para los próximos ${d.dias} días, después de cubrir ${fmtMoney(d.comprometido)} de fijos y resúmenes.`;
+  }
+
+  /* ---------- respaldo completo: llevarte tus datos a otro celu ---------- */
+  const BACKUP_VER = 1;
+  function armarBackup(){
+    const copia = JSON.parse(JSON.stringify(S));
+    if(copia.config) copia.config.apiKey = "";     // la key no viaja
+    return JSON.stringify({app:"guita", version:BACKUP_VER,
+      fecha:new Date().toISOString(), datos:copia}, null, 1);
+  }
+  $("backupBtn").onclick = async ()=>{
+    const txt = armarBackup();
+    const nombre = "guita-respaldo-"+todayISO()+".json";
+    const resumen = `${S.movs.length} movimientos · ${S.tarjetas.length} tarjetas · ${S.billeteras.length} billeteras`;
+    if(window.AndroidVoz && window.AndroidVoz.saveCsv){
+      try{ window.AndroidVoz.saveCsv(txt, nombre); toast("Elegí dónde guardarlo ("+resumen+")"); return; }catch(e){}
+    }
+    if(window.claude && window.claude.downloads && window.claude.downloads.save){
+      try{ await window.claude.downloads.save({filename:nombre, data:txt}); toast("Respaldo guardado ✔"); return; }
+      catch(err){ if(err && err.code==="declined") return; }
+    }
+    try{
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([txt], {type:"application/json"}));
+      a.download = nombre;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+      toast("Respaldo descargado ✔ ("+resumen+")");
+    }catch(e){
+      try{ await navigator.clipboard.writeText(txt); toast("Respaldo copiado al portapapeles"); }
+      catch(e2){ toast("No pude guardar el respaldo acá"); }
+    }
+  };
+  $("restoreBtn").onclick = ()=>{ $("restoreInput").value=""; $("restoreInput").click(); };
+  $("restoreInput").addEventListener("change", async e=>{
+    const f = e.target.files && e.target.files[0];
+    if(!f) return;
+    let datos = null;
+    try{
+      const j = JSON.parse(await f.text());
+      datos = (j && j.app==="guita" && j.datos) ? j.datos : (j && j.movs ? j : null);
+    }catch(err){}
+    if(!datos || !Array.isArray(datos.movs)){ toast("Ese archivo no es un respaldo de Guita"); return; }
+    const resumen = `${(datos.movs||[]).length} movimientos, ${(datos.tarjetas||[]).length} tarjetas y ${(datos.billeteras||[]).length} billeteras`;
+    // restaurar pisa todo: primero guardamos lo actual para poder volver atrás
+    const antes = JSON.stringify(S);
+    const key = S.config.apiKey||"";
+    S = Object.assign(blankState(), datos);
+    S.config = Object.assign(blankConfig(), datos.config||{});
+    S.config.apiKey = key;                          // la key del celu actual se conserva
+    save(); closeSheet(); renderAll();
+    toast("Restauré "+resumen+" ✔", ()=>{
+      try{ S = JSON.parse(antes); }catch(err){ return; }
+      save(); renderAll(); toast("Volví a tus datos anteriores");
+    });
+  });
+
+  /* ---------- simulador: cómo salir de la deuda de tarjeta ---------- */
+  /** Deuda total y la tasa mensual real que se desprende de tus propios resúmenes. */
+  function panoramaDeuda(){
+    let deuda = 0, minimo = 0;
+    let intereses = 0, baseInteres = 0;
+    for(const t of S.tarjetas){
+      const ks = Object.keys(t.resumenes||{}).sort();
+      if(!ks.length) continue;
+      const r = t.resumenes[ks[ks.length-1]];
+      const fin = resFinanciado(r);
+      deuda += fin;
+      minimo += r.pagoMinimo||0;
+      // interés del último resumen contra lo que venías arrastrando
+      if(ks.length>=2){
+        const prev = t.resumenes[ks[ks.length-2]];
+        const arrastre = Math.max(0, resFinanciado(prev));
+        const cargos = cargosMes(t, ks[ks.length-1]);
+        if(arrastre>0 && cargos!=null && cargos>0){ intereses += cargos; baseInteres += arrastre; }
+      }
+      deuda += t.deuda||0;
+    }
+    // tasa mensual: la que surge de tus números, con tope sensato
+    let tasa = baseInteres>0 ? (intereses/baseInteres*100) : 6.5;
+    tasa = Math.min(25, Math.max(0.5, tasa));
+    return {deuda, minimo, tasa: Math.round(tasa*10)/10};
+  }
+
+  /** Cuántos meses y cuántos intereses pagando `cuota` por mes al `tasa`% mensual. */
+  function simularDeuda(deuda, cuota, tasaPct){
+    const i = tasaPct/100;
+    const interesMes1 = deuda*i;
+    if(cuota <= interesMes1 + 0.01) return {imposible:true, interesMes: interesMes1};
+    let saldo = deuda, meses = 0, pagado = 0;
+    while(saldo > 0.01 && meses < 600){
+      saldo = saldo*(1+i) - cuota;
+      pagado += cuota;
+      meses++;
+      if(saldo < 0){ pagado += saldo; saldo = 0; }
+    }
+    return {meses, pagado, intereses: pagado-deuda, interesMes: interesMes1};
+  }
+
+  $("simuBtn").onclick = ()=>{
+    const p = panoramaDeuda();
+    const sugerido = Math.max(p.minimo, Math.round(p.deuda*0.25));
+    $("simuHead").innerHTML =
+      `<div class="r"><span>Lo que debés hoy</span><span>${fmtMoney(p.deuda)}</span></div>` +
+      (p.minimo>0 ? `<div class="r"><span>Pago mínimo de este mes</span><span>${fmtMoney(p.minimo)}</span></div>` : "") +
+      `<div class="r neg"><span>Intereses si no pagás nada</span><span>${fmtMoney(p.deuda*p.tasa/100)}/mes</span></div>`;
+    $("simuPago").value = fmtNum(sugerido);
+    $("simuTasa").value = String(p.tasa);
+    $("simuTasaNota").textContent = `Saqué ${p.tasa}% mensual de tus propios resúmenes (lo que te cobraron sobre lo que arrastrabas). Si sabés la tasa exacta, cambiala.`;
+    $("simuResultado").hidden = true;
+    $("simuComparar").innerHTML = "";
+    openSheet("simu");
+  };
+  $("simuCalcular").onclick = ()=>{
+    const p = panoramaDeuda();
+    const cuota = numVal($("simuPago").value)||0;
+    const tasa = Math.max(0, parseFloat($("simuTasa").value)||0);
+    if(!(cuota>0)){ $("simuPago").focus(); toast("¿Cuánto podés pagar por mes?"); return; }
+    const r = simularDeuda(p.deuda, cuota, tasa);
+    const el = $("simuResultado");
+    el.hidden = false;
+    if(r.imposible){
+      el.innerHTML = `<div class="r neg"><span style="color:var(--expense); font-weight:800">Con eso no bajás nunca</span><span></span></div>` +
+        `<div class="g-note" style="margin-top:6px">Solo los intereses son ${fmtMoney(r.interesMes)} por mes. Pagando ${fmtMoney(cuota)} la deuda crece igual. Tenés que pagar más que eso para empezar a bajarla.</div>`;
+      $("simuComparar").innerHTML = "";
+      return;
+    }
+    const años = r.meses>=12 ? ` (${Math.floor(r.meses/12)} año${Math.floor(r.meses/12)===1?"":"s"}${r.meses%12?" y "+(r.meses%12)+" meses":""})` : "";
+    el.innerHTML =
+      `<div class="r tot"><span>Salís en</span><span>${r.meses} mes${r.meses===1?"":"es"}${años}</span></div>` +
+      `<div class="r"><span>Vas a pagar en total</span><span>${fmtMoney(r.pagado)}</span></div>` +
+      `<div class="r neg"><span>De eso, intereses</span><span>${fmtMoney(r.intereses)}</span></div>`;
+    // comparar contra pagar el mínimo y contra pagar un poco más
+    const escenarios = [
+      {lbl:"Pagando el mínimo", cuota:p.minimo},
+      {lbl:"Con 20% más por mes", cuota:cuota*1.2},
+      {lbl:"Con el doble", cuota:cuota*2}
+    ].filter(e=>e.cuota>0 && Math.abs(e.cuota-cuota)>1);
+    $("simuComparar").innerHTML = `<div class="g-label" style="margin-top:12px">Comparado con…</div>` +
+      escenarios.map(e=>{
+        const x = simularDeuda(p.deuda, e.cuota, tasa);
+        if(x.imposible) return `<div class="g-prow simu"><span class="ic">🚫</span>
+          <div style="flex:1; min-width:0"><div style="font-size:13px">${e.lbl} <span style="color:var(--muted)">(${fmtMoney(e.cuota)})</span></div>
+          <div style="font-size:12.5px; font-weight:600; color:var(--expense)">no cubre ni los intereses</div></div></div>`;
+        const dif = x.intereses - r.intereses;
+        return `<div class="g-prow simu"><span class="ic">${dif<0?"✅":"⏳"}</span>
+          <div style="flex:1; min-width:0">
+            <div style="font-size:13px">${e.lbl} <span style="color:var(--muted)">(${fmtMoney(e.cuota)})</span></div>
+            <div style="font-size:12.5px; font-weight:600; color:${dif<0?"var(--income)":"var(--expense)"}">
+              ${x.meses} meses · ${dif<0?"ahorrás ":"pagás "}${fmtMoney(Math.abs(dif))} ${dif<0?"de intereses":"más de intereses"}</div>
+          </div></div>`;
+      }).join("");
+  };
+
+  /* ---------- ¿me alcanza para…? ---------- */
+  $("alcanzaBtn").onclick = ()=>{
+    $("alMonto").value = "";
+    $("alResultado").innerHTML = "";
+    $("alResultado").hidden = true;
+    openSheet("alcanza");
+    setTimeout(()=>$("alMonto").focus(), 200);
+  };
+  $("alCalcular").onclick = ()=>{
+    const monto = numVal($("alMonto").value)||0;
+    if(!(monto>0)){ $("alMonto").focus(); toast("¿Cuánto querés gastar?"); return; }
+    const d = plataDisponible();
+    const el = $("alResultado");
+    el.hidden = false;
+    const quedaria = d.libre - monto;
+    const porDiaDespues = d.dias ? quedaria/d.dias : null;
+    const metas = (S.metas||[]).filter(g=>(g.guardado||0) < (g.objetivo||0));
+    let veredicto, color, detalle = [];
+    if(quedaria < 0){
+      veredicto = "No te alcanza";
+      color = "var(--expense)";
+      detalle.push(`Te faltarían <strong>${fmtMoney(-quedaria)}</strong> para cubrir lo que ya tenés comprometido.`);
+    } else if(d.dias && porDiaDespues < d.porDia*0.4){
+      veredicto = "Te alcanza, pero justo";
+      color = "var(--c-salidas)";
+      detalle.push(`Te quedarían <strong>${fmtMoney(porDiaDespues)}</strong> por día para los próximos ${d.dias} días (hoy tenés ${fmtMoney(d.porDia)}).`);
+    } else {
+      veredicto = "Sí, te alcanza";
+      color = "var(--income)";
+      detalle.push(d.dias
+        ? `Te quedarían <strong>${fmtMoney(quedaria)}</strong> — ${fmtMoney(porDiaDespues)} por día hasta cobrar.`
+        : `Te quedarían <strong>${fmtMoney(quedaria)}</strong> libres.`);
+    }
+    if(d.comprometido>0.5) detalle.push(`Ya tenés ${fmtMoney(d.comprometido)} comprometidos: ${
+      d.pendientes.slice(0,3).map(p=>esc(p.nombre)+" el "+p.dia).join(", ")}${d.pendientes.length>3?" y más":""}.`);
+    // la deuda de tarjeta manda: si estás financiando, gastar sale más caro
+    let finTotal = 0;
+    for(const t of S.tarjetas){
+      const ks = Object.keys(t.resumenes||{}).sort();
+      if(ks.length) finTotal += resFinanciado(t.resumenes[ks[ks.length-1]]);
+    }
+    if(finTotal>0.5 && quedaria>=0)
+      detalle.push(`💣 Ojo: estás financiando ${fmtMoney(finTotal)} de tarjeta. Cada peso que no gastes ahí te ahorra intereses.`);
+    if(metas.length && quedaria>=0)
+      detalle.push(`🎯 Te faltan ${fmtMoney(metas.reduce((s,g)=>s+(g.objetivo-g.guardado),0))} para tus metas.`);
+    el.innerHTML = `<div style="font-size:19px; font-weight:800; color:${color}; margin-bottom:6px">${veredicto}</div>` +
+      detalle.map(t=>`<div class="g-note" style="margin-top:5px">${t}</div>`).join("");
+  };
+
   /* ---------- alta y edición de metas ---------- */
   let metaEdit = null, aporteMeta = null;
   function abrirMeta(g){
@@ -2641,7 +3077,70 @@
           <span class="st">${fmtMoney(r.monto)} · ${esc(r.via)} · vence el ${r.dia}${
             r.editable?"":" — sale en el resumen"}</span></span>
       </div>`).join("");
+    renderAumentos();
+    renderSubs();
     renderMetas();
+  }
+
+  function renderAumentos(){
+    const aum = aumentosDetectados();
+    $("aumentosCard").hidden = !aum.length;
+    if(!aum.length) return;
+    const totalMes = aum.reduce((s,a)=>s+a.delta,0);
+    $("aumentosList").innerHTML = aum.slice(0,6).map((a,i)=>`
+      <div class="g-tip" style="--d:${Math.min(i,8)*0.04}s">
+        <span class="ic">${iconFor(a.nombre,"Servicios")}</span>
+        <div style="flex:1; min-width:0">
+          <div style="display:flex; gap:8px; justify-content:space-between">
+            <span style="font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${esc(a.nombre)}</span>
+            <strong style="flex:none; color:var(--expense)">+${a.pct}%</strong>
+          </div>
+          <div class="g-note" style="margin:0">De ${fmtMoney(a.antes)} a <strong>${fmtMoney(a.ahora)}</strong> · ${esc(a.via)}</div>
+        </div>
+      </div>`).join("")
+      + `<div class="g-note" style="margin-top:8px">Entre todos te suman <strong>${fmtMoney(totalMes)}</strong> más por mes que antes — ${fmtMoney(totalMes*12)} al año.</div>`;
+  }
+
+  function renderSubs(){
+    const subs = auditoriaSubs().filter(x=>x.ultimo>0);
+    $("subsCard").hidden = !subs.length;
+    $("subsTotal").textContent = subs.length ? fmtMoney(subs.reduce((s,x)=>s+x.ultimo,0))+" por mes" : "";
+    if(!subs.length) return;
+    $("subsList").innerHTML = subs.map((x,i)=>`
+      <div class="g-fijo" style="--d:${Math.min(i,10)*0.03}s">
+        <span style="font-size:19px; width:26px; text-align:center; flex:none">${iconFor(x.nombre, "Servicios")}</span>
+        <span class="g-info"><span class="g-desc">${esc(x.nombre)}</span><br>
+          <span class="st">${fmtMoney(x.ultimo)}/mes · ${fmtMoney(x.anual)} al año${
+            x.meses>1 ? ` · llevás ${fmtMoney(x.total)} en ${x.meses} meses` : ""}</span></span>
+        <span style="font-variant-numeric:tabular-nums; font-weight:700; flex:none">${fmtMoney(x.ultimo)}</span>
+      </div>`).join("")
+      + `<div class="g-note" style="padding:12px 14px; border-top:1px solid var(--line)">Si das de baja lo que no usás, cada ${fmtMoney(1000)} que cortás son ${fmtMoney(12000)} al año que te quedan.</div>`;
+  }
+
+  function renderLiberacion(){
+    const libs = liberacionCuotas();
+    $("liberaCard").hidden = !libs.length;
+    $("simuBtn").hidden = !S.tarjetas.some(t=>{
+      const ks = Object.keys(t.resumenes||{}).sort();
+      return ks.length && resFinanciado(t.resumenes[ks[ks.length-1]])>0.5;
+    });
+    if(!libs.length) return;
+    const max = Math.max(...libs.map(l=>l.libera));
+    $("liberaList").innerHTML = libs.slice(0,6).map((l,i)=>`
+      <div class="g-tip" style="--d:${Math.min(i,8)*0.04}s">
+        <span class="ic">📅</span>
+        <div style="flex:1; min-width:0">
+          <div style="display:flex; gap:8px; justify-content:space-between">
+            <span style="font-weight:600">${monthKeyLabel(l.mk)}</span>
+            <strong style="flex:none; color:var(--income)">+${fmtMoney(l.libera)}</strong>
+          </div>
+          <div class="g-bar" style="grid-template-columns:1fr; margin:5px 0 3px">
+            <span class="track"><span class="fill" style="width:100%;transform:scaleX(${(l.libera/max).toFixed(3)});background:var(--income)"></span></span>
+          </div>
+          <div class="g-note" style="margin:0">${l.items.slice(0,3).map(it=>esc(it.desc)+" ("+it.cuotas+" cuotas)").join(" · ")}${
+            l.items.length>3?` y ${l.items.length-3} más`:""}</div>
+        </div>
+      </div>`).join("");
   }
 
   /* ---------- metas: viajes, fondo de emergencia, cursos… ---------- */
@@ -2743,7 +3242,7 @@
     };
   }
 
-  function renderAll(){ renderHome(); renderAnalisis(); renderTarjetas(); renderFijos(); renderBilleteras(); renderPlan(); }
+  function renderAll(){ renderHome(); renderDiario(); renderAnalisis(); renderTarjetas(); renderFijos(); renderBilleteras(); renderPlan(); }
 
   /* ---------- navegación ---------- */
   const tabs = document.querySelectorAll(".g-tab");
@@ -2828,7 +3327,7 @@
 
   /* ---------- sheet ---------- */
   const sheet=$("sheet"), scrim=$("scrim");
-  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte"];
+  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte","Alcanza","Simu"];
   const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]),' +
     ' textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
   const focoVisibles = () => Array.from(sheet.querySelectorAll(FOCUSABLE))
@@ -4063,6 +4562,7 @@
     $("cfgKey").value = S.config.apiKey||"";
     $("cfgModelo").value = S.config.modeloIA||"eco";
     $("cfgAlerta").value = S.config.alertaGrande ? fmtNum(S.config.alertaGrande) : "";
+    $("cfgCobro").value = S.config.diaCobro ? String(S.config.diaCobro) : "";
     $("cfgRemOn").checked = !!(S.config.recordatorio&&S.config.recordatorio.on);
     $("cfgRemHora").value = (S.config.recordatorio&&S.config.recordatorio.hora)||"21:30";
     $("remNote").hidden = !!(window.AndroidVoz && window.AndroidVoz.setReminder);
@@ -4101,6 +4601,7 @@
     S.config.modeloIA = $("cfgModelo").value==="max" ? "max" : "eco";
     S.config.alertaGrande = Math.max(0, numVal($("cfgAlerta").value)||0);
     S.config.recordatorio = {on: $("cfgRemOn").checked, hora: $("cfgRemHora").value||"21:30"};
+    S.config.diaCobro = Math.min(28, Math.max(0, parseInt($("cfgCobro").value)||0));
     S.config.notificaciones = notifOn() && $("cfgNotif").checked;
     try{ if(notifOn()) window.AndroidVoz.notifActivar(!!S.config.notificaciones); }catch(e){}
     save(); closeSheet(); renderAll();
@@ -4560,6 +5061,8 @@
   window.__guitaState = () => JSON.parse(JSON.stringify(S));
   window.__guitaToast = () => ({busy: toastBusy, pend: toastQ.length, txt: toastEl.textContent});
   window.__guitaNotif = n => parseNotif(n);
+  window.__guitaBackup = () => armarBackup();
+  window.__guitaDeuda = () => panoramaDeuda();
   window.__guitaRevisarNotif = () => revisarNotificaciones(false);
   window.__guitaVoz = () => ({holding, cancelado: micCancelled, escuchando: isListening(), x0: pressX0});
   renderAll();

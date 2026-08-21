@@ -136,6 +136,26 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
 - 👆 **Deslizar entre pantallas** (v2.3): pasás de Inicio a Análisis a Plan y
   así, arrastrando el dedo, con animación en la dirección del gesto. El
   micrófono quedó centrado en la barra (3 pestañas de cada lado).
+- 📆 **Cuánto podés gastar por día** (v2.4): decile qué día cobrás y en el
+  inicio ves cuánto te queda por día hasta el próximo sueldo — ya descontados
+  los fijos y los resúmenes que faltan pagar.
+- 🤔 **"¿Me alcanza?"** (v2.4): decile cuánto querés gastar y te contesta
+  mirando lo que tenés, lo comprometido, los días hasta cobrar, la deuda de
+  tarjeta y tus metas.
+- 📈 **Detección de aumentos** (v2.4): compara cada servicio y suscripción
+  contra los meses anteriores y te avisa qué subió, cuánto por mes y cuánto
+  al año.
+- 🎉 **Cuándo se te libera plata** (v2.4): mes por mes, cuánto deja de venir
+  en el resumen cuando terminan tus cuotas.
+- 🔁 **Auditoría de suscripciones** (v2.4): todas juntas con lo que sale cada
+  una por mes, al año y lo que llevás gastado desde que la pagás.
+- 🧮 **Simulador de salida de deuda** (v2.4): con la tasa real sacada de tus
+  propios resúmenes, te dice en cuántos meses salís pagando X por mes, cuánto
+  vas a pagar de intereses, y lo compara contra pagar el mínimo o pagar más.
+  Avisa si la cuota no cubre ni los intereses.
+- 💾 **Respaldo completo** (v2.4): exportás todos tus datos a un archivo y los
+  restaurás en otro celular (con Deshacer por si te arrepentís). La API key no
+  viaja en el respaldo.
 - 🏷 **Categorías automáticas** por palabras clave (súper → Comida, nafta → Transporte,
   luz → Servicios, etc.). Siempre podés corregir antes de guardar.
 - ➕ **Carga manual** para cuando no querés hablar.

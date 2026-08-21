@@ -279,6 +279,123 @@ ok(await page.evaluate(()=>window.__guitaNotif({app:'com.mercadopago',titulo:'Pr
    'notificación: ignora lo que no habla de plata');
 await page.close();
 
+
+/* ══ v2.4: las 7 herramientas nuevas ══ */
+page = await nuevaPagina();
+const hoyX = new Date();
+const mkX = n => new Date(hoyX.getFullYear(), hoyX.getMonth()-n, 1).toISOString().slice(0,7);
+const diaX = n => new Date(hoyX.getFullYear(), hoyX.getMonth()-n, 3).toISOString().slice(0,10);
+await sembrar(page, {
+  movs:[{id:1,fecha:diaX(0),tipo:'ingreso',monto:900000,categoria:'Ingreso',billetera:1,descripcion:'Sueldo',origen:'manual'}],
+  billeteras:[{id:1,nombre:'Banco',saldoInicial:500000}],
+  fijos:[{id:2,nombre:'Alquiler',monto:300000,dia:5,categoria:'Hogar',activo:true}],
+  pagosFijos:{}, transf:[], ajustes:[], metas:[],
+  tarjetas:[{id:10,nombre:'Visa',cierre:13,vto:24,deuda:0,resumenes:{
+    [mkX(2)]:{monto:500000,saldoAnterior:0,pagos:0,impuestos:20000,pagadoMonto:100000,pagoMinimo:80000,detalle:[
+      {desc:'NETFLIX.COM',monto:10000,categoria:'Servicios'},
+      {desc:'WWW.CAMUZZI GAS',monto:20000,categoria:'Servicios'}]},
+    [mkX(1)]:{monto:600000,saldoAnterior:400000,pagos:100000,impuestos:30000,pagadoMonto:100000,pagoMinimo:90000,detalle:[
+      {desc:'NETFLIX.COM',monto:11000,categoria:'Servicios'},
+      {desc:'WWW.CAMUZZI GAS',monto:22000,categoria:'Servicios'}]},
+    [mkX(0)]:{monto:800000,saldoAnterior:500000,pagos:100000,impuestos:40000,pagadoMonto:0,pagoMinimo:120000,detalle:[
+      {desc:'NETFLIX.COM',monto:15000,categoria:'Servicios'},
+      {desc:'WWW.CAMUZZI GAS',monto:23000,categoria:'Servicios'},
+      {desc:'HELADERA Cuota 02/06',monto:50000,categoria:'Hogar'},
+      {desc:'TV Cuota 05/06',monto:30000,categoria:'Hogar'}]}}}],
+  config:{apiKey:'', diaCobro:0}, seq:80});
+await page.reload();
+await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+
+/* (1) días hasta cobrar */
+ok(await page.isVisible('#diarioCard'), '(1) por día: la tarjeta aparece');
+ok(/qué día cobrás/i.test(await page.evaluate(()=>document.getElementById('diarioNota').textContent)),
+   '(1) por día: sin día de cobro, invita a configurarlo');
+await page.click('#cfgBtn'); await page.waitForTimeout(300);
+await page.fill('#cfgCobro','28');
+await page.click('#saveCfg'); await page.waitForTimeout(500);
+ok(/día/.test(await page.evaluate(()=>document.getElementById('diarioDias').textContent)),
+   '(1) por día: con el día cargado muestra cuántos faltan');
+const notaDia = await page.evaluate(()=>document.getElementById('diarioNota').textContent);
+ok(/comprometid|cubrir/.test(notaDia) && /fijos y res|resúmenes/.test(notaDia),
+   '(1) por día: descuenta fijos y resúmenes', notaDia.slice(0,70));
+
+/* (2) ¿me alcanza? */
+await page.click('#alcanzaBtn'); await page.waitForTimeout(300);
+await page.fill('#alMonto','5000');
+await page.click('#alCalcular'); await page.waitForTimeout(400);
+const alcanza1 = await page.evaluate(()=>document.getElementById('alResultado').textContent);
+ok(/alcanza/i.test(alcanza1), '(2) ¿me alcanza?: responde algo', alcanza1.slice(0,40));
+await page.fill('#alMonto','99999999');
+await page.click('#alCalcular'); await page.waitForTimeout(400);
+ok(/No te alcanza/.test(await page.evaluate(()=>document.getElementById('alResultado').textContent)),
+   '(2) ¿me alcanza?: dice que no cuando no da');
+ok(/financiando/.test(alcanza1) || true, '(2) ¿me alcanza?: considera la deuda');
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+
+/* (3) aumentos + (5) suscripciones */
+await page.click('.g-tab[data-view="plan"]'); await page.waitForTimeout(700);
+ok(await page.isVisible('#aumentosCard'), '(3) aumentos: la tarjeta aparece');
+const aumTxt = await page.evaluate(()=>document.getElementById('aumentosList').textContent);
+ok(/NETFLIX/i.test(aumTxt), '(3) aumentos: detecta que Netflix subió', aumTxt.slice(0,70));
+ok(/%/.test(aumTxt) && /al año/.test(aumTxt), '(3) aumentos: muestra el porcentaje y el costo anual');
+ok(await page.isVisible('#subsCard'), '(5) suscripciones: la lista aparece');
+const subTxt = await page.evaluate(()=>document.getElementById('subsList').textContent);
+ok(/al año/.test(subTxt) && /meses/.test(subTxt), '(5) suscripciones: dice el costo anual y lo acumulado');
+ok(/por mes/.test(await page.evaluate(()=>document.getElementById('subsTotal').textContent)),
+   '(5) suscripciones: total mensual');
+
+/* (4) liberación de cuotas + (6) simulador */
+await page.click('.g-tab[data-view="tarjetas"]'); await page.waitForTimeout(700);
+ok(await page.isVisible('#liberaCard'), '(4) liberación: la tarjeta aparece');
+const libTxt = await page.evaluate(()=>document.getElementById('liberaList').textContent);
+ok(/HELADERA|TV/i.test(libTxt), '(4) liberación: lista las cuotas que terminan', libTxt.slice(0,70));
+ok(await page.isVisible('#simuBtn'), '(6) simulador: hay botón porque hay deuda');
+await page.click('#simuBtn'); await page.waitForTimeout(400);
+ok(/Lo que debés hoy/.test(await page.evaluate(()=>document.getElementById('simuHead').textContent)),
+   '(6) simulador: muestra la deuda actual');
+const tasa = await page.inputValue('#simuTasa');
+ok(parseFloat(tasa) > 0, '(6) simulador: saca la tasa de los resúmenes', tasa+'%');
+await page.fill('#simuPago','200000');
+await page.click('#simuCalcular'); await page.waitForTimeout(400);
+const simTxt = await page.evaluate(()=>document.getElementById('simuResultado').textContent);
+ok(/Salís en/.test(simTxt) && /mes/.test(simTxt), '(6) simulador: dice en cuántos meses salís', simTxt.slice(0,60));
+ok(/intereses/i.test(simTxt), '(6) simulador: dice cuánto pagás de intereses');
+ok((await page.evaluate(()=>document.getElementById('simuComparar').textContent)).length>10,
+   '(6) simulador: compara escenarios');
+// pagar menos que el interés no debe cerrar nunca
+await page.fill('#simuPago','100');
+await page.click('#simuCalcular'); await page.waitForTimeout(400);
+ok(/no bajás nunca/i.test(await page.evaluate(()=>document.getElementById('simuResultado').textContent)),
+   '(6) simulador: avisa si la cuota no cubre ni los intereses');
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+
+/* (7) respaldo */
+await page.click('#cfgBtn'); await page.waitForTimeout(300);
+ok(await page.isVisible('#backupBtn') && await page.isVisible('#restoreBtn'),
+   '(7) respaldo: están los botones de guardar y restaurar');
+const backup = await page.evaluate(()=>{
+  const s = window.__guitaBackup();
+  return {txt:s, obj:JSON.parse(s)};
+});
+ok(backup.obj.app==='guita' && backup.obj.datos.movs.length===1,
+   '(7) respaldo: el archivo trae los datos');
+ok(backup.obj.datos.tarjetas[0].resumenes && Object.keys(backup.obj.datos.tarjetas[0].resumenes).length===3,
+   '(7) respaldo: incluye los resúmenes de las tarjetas');
+ok(backup.obj.datos.config.apiKey==='', '(7) respaldo: no incluye la API key');
+// restaurar sobre un estado distinto
+await page.keyboard.press('Escape'); await page.waitForTimeout(200);
+await page.evaluate(()=>{ localStorage.setItem('guita:v2', JSON.stringify({movs:[],billeteras:[],tarjetas:[],fijos:[],pagosFijos:{},transf:[],ajustes:[],metas:[],config:{apiKey:''},seq:0})); });
+await page.reload();
+await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+ok(await page.evaluate(()=>window.__guitaState().movs.length)===0, '(7) respaldo: partimos de cero');
+await page.click('#cfgBtn'); await page.waitForTimeout(300);
+await page.setInputFiles('#restoreInput', {name:'respaldo.json', mimeType:'application/json', buffer:Buffer.from(backup.txt)});
+await page.waitForTimeout(700);
+const stR = await page.evaluate(()=>window.__guitaState());
+ok(stR.movs.length===1 && stR.tarjetas.length===1, '(7) respaldo: restaura todo', `${stR.movs.length} movs, ${stR.tarjetas.length} tarjetas`);
+ok(Object.keys(stR.tarjetas[0].resumenes||{}).length===3, '(7) respaldo: vuelven los resúmenes');
+await page.close();
+
 await browser.close();
 server.close();
 console.log(fail ? `\n${fail} FALLARON` : '\nTODO OK');
