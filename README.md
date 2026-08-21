@@ -30,10 +30,6 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
   con la lista completa editable (descripción, monto, categoría) y opción de
   recalcular el total. La torta del mes incluye el resumen aunque todavía no
   esté pagado.
-- 🤝 **Asesor financiero con IA** (con API key): un chat en Análisis que conoce
-  tus números — gastos, ingresos, tarjetas, fijos, billeteras, deudas,
-  inversiones y presupuestos — con prioridades sanas: primero cortar la deuda
-  de tarjeta, después fondo de emergencia, recién después invertir.
 - ⚡ **Carga rápida**: un toque crea tus billeteras (Lemon, Mercado Pago,
   Cuenta DNI, Santander, Astropay, Balanz) y tarjetas (Visa, Mastercard,
   Tarjeta Mercado Pago) — editable y sin duplicar lo que ya está.
@@ -105,7 +101,6 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
   marcar 🔁 a mano cualquier consumo. Elegís cuánto vas a pagar del resumen
   actual (todo, el mínimo, un monto o lo que venís pagando) y el arrastre se
   recalcula solo.
-- 🤖 **Asesor en su propia pestaña** (v2.1), con chat a pantalla completa.
 - 💡 **Recomendaciones recalculables** (v2.1): se actualizan al cargar gastos y
   tenés un botón para recalcularlas cuando quieras.
 - ⌨️ **"…o escribilo"** (v2.1): la carga por texto ya no depende de que falle la voz.
@@ -156,6 +151,17 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
 - 💾 **Respaldo completo** (v2.4): exportás todos tus datos a un archivo y los
   restaurás en otro celular (con Deshacer por si te arrepentís). La API key no
   viaja en el respaldo.
+- 🏦 **Préstamos** (v2.5): cargás la cuota, cuántas son y cuántas llevás
+  pagadas, y registrás cada pago. Te dice cuántas quedan y cuánto falta en
+  total. Suman a la deuda, al calendario del mes y al simulador.
+- 🏠 **Inicio como panel** (v2.5): de un vistazo, cuánto debés (tarjetas +
+  préstamos), cuánto tenés, los compromisos del mes y el gasto total, más el
+  avance de tus metas. Cada dato te lleva a su pantalla.
+- 🧭 **Cuatro pestañas** (v2.5): Inicio · Análisis | 🎙 | Deudas · Plata, con
+  el micrófono justo en el centro. El plan mensual y las metas viven dentro de
+  Plata; las tarjetas y los préstamos, dentro de Deudas.
+- ⬅️ **El botón atrás del celu** (v2.5) cierra lo que tengas abierto o te
+  devuelve al inicio, en vez de cerrar la app de una.
 - 🏷 **Categorías automáticas** por palabras clave (súper → Comida, nafta → Transporte,
   luz → Servicios, etc.). Siempre podés corregir antes de guardar.
 - ➕ **Carga manual** para cuando no querés hablar.

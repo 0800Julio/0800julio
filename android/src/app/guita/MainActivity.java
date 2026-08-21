@@ -181,6 +181,21 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
+    @Override
+    public void onBackPressed() {
+        // que la app web cierre lo que tenga abierto; si no hay nada, recién ahí salimos
+        if (web == null) { super.onBackPressed(); return; }
+        web.evaluateJavascript(
+            "(function(){ try { return window.__guitaBack && window.__guitaBack() ? '1' : '0'; }"
+          + " catch(e){ return '0'; } })()",
+            value -> {
+                if (value == null || !value.contains("1")) {
+                    if (web.canGoBack()) web.goBack();
+                    else finish();
+                }
+            });
+    }
+
     private class Bridge {
         @JavascriptInterface
         public void start() {

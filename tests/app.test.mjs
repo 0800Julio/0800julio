@@ -189,10 +189,10 @@ const nav = await page.evaluate(()=>{
   const mic=document.getElementById('micBtn').getBoundingClientRect();
   return {tabs, micCentro: mic.x+mic.width/2, ancho: innerWidth};
 });
-ok(nav.tabs.length===6, 'nav: 6 pestañas', nav.tabs.join(','));
+ok(nav.tabs.length===4, 'nav: 4 pestañas', nav.tabs.join(','));
 ok(Math.abs(nav.micCentro - nav.ancho/2) < 6, 'nav: el micrófono queda centrado',
    `mic en ${nav.micCentro.toFixed(1)} de ${nav.ancho}`);
-ok(nav.tabs.includes('plan'), 'nav: existe la pestaña Plan');
+ok(!nav.tabs.includes('asesor'), 'nav: el asesor ya no está');
 
 const deslizar = async (dx)=>{
   const y = 300, x = 195;
@@ -205,7 +205,7 @@ ok(await vistaActiva()==='view-home', 'deslizar: arranca en Inicio');
 await deslizar(-160);
 ok(await vistaActiva()==='view-analisis', 'deslizar: hacia la izquierda pasa a Análisis', await vistaActiva());
 await deslizar(-160);
-ok(await vistaActiva()==='view-plan', 'deslizar: sigue hasta Plan', await vistaActiva());
+ok(await vistaActiva()==='view-tarjetas', 'deslizar: sigue hasta Deudas', await vistaActiva());
 await deslizar(160);
 ok(await vistaActiva()==='view-analisis', 'deslizar: hacia la derecha vuelve', await vistaActiva());
 await deslizar(160);
@@ -225,7 +225,7 @@ await sembrar(page, {
   config:{apiKey:''}, seq:60});
 await page.reload();
 await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
-await page.click('.g-tab[data-view="plan"]'); await page.waitForTimeout(600);
+await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(600);
 const planTot = await page.evaluate(()=>document.getElementById('planTotal').textContent);
 ok(/347\.999|347999/.test(planTot.replace(/\s/g,'')), 'plan: suma fijos + suscripciones de tarjeta', planTot);
 const planTxt = await page.evaluate(()=>document.getElementById('planLista').textContent);
@@ -333,7 +333,8 @@ ok(/financiando/.test(alcanza1) || true, '(2) ¿me alcanza?: considera la deuda'
 await page.keyboard.press('Escape'); await page.waitForTimeout(300);
 
 /* (3) aumentos + (5) suscripciones */
-await page.click('.g-tab[data-view="plan"]'); await page.waitForTimeout(700);
+await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(700);
+await page.evaluate(()=>document.getElementById('aumentosCard').scrollIntoView());
 ok(await page.isVisible('#aumentosCard'), '(3) aumentos: la tarjeta aparece');
 const aumTxt = await page.evaluate(()=>document.getElementById('aumentosList').textContent);
 ok(/NETFLIX/i.test(aumTxt), '(3) aumentos: detecta que Netflix subió', aumTxt.slice(0,70));
@@ -394,6 +395,149 @@ await page.waitForTimeout(700);
 const stR = await page.evaluate(()=>window.__guitaState());
 ok(stR.movs.length===1 && stR.tarjetas.length===1, '(7) respaldo: restaura todo', `${stR.movs.length} movs, ${stR.tarjetas.length} tarjetas`);
 ok(Object.keys(stR.tarjetas[0].resumenes||{}).length===3, '(7) respaldo: vuelven los resúmenes');
+await page.close();
+
+
+/* ══ v2.5: préstamos y panel del inicio ══ */
+page = await nuevaPagina();
+await sembrar(page, {
+  movs:[{id:1,fecha:new Date().toISOString().slice(0,10),tipo:'ingreso',monto:1000000,categoria:'Ingreso',billetera:1,descripcion:'Sueldo',origen:'manual'}],
+  billeteras:[{id:1,nombre:'Banco',saldoInicial:400000},{id:2,nombre:'Balanz',saldoInicial:250000,inversion:true}],
+  fijos:[{id:3,nombre:'Alquiler',monto:300000,dia:5,categoria:'Hogar',activo:true}],
+  pagosFijos:{}, transf:[], ajustes:[], metas:[{id:4,nombre:'Viaje',objetivo:500000,guardado:125000,fecha:'2026-12',icono:'✈️'}],
+  prestamos:[], tarjetas:[], config:{apiKey:'', diaCobro:28}, seq:70});
+await page.reload();
+await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+
+/* panel del inicio */
+ok(await page.isVisible('#panelCard'), 'panel: aparece en el inicio');
+ok(/1\.400\.000/.test(await page.evaluate(()=>document.getElementById('panelTenes').textContent)),
+   'panel: suma la plata a mano', await page.evaluate(()=>document.getElementById('panelTenes').textContent));
+ok(/invertido/.test(await page.evaluate(()=>document.getElementById('panelTenesSub').textContent)),
+   'panel: muestra lo invertido aparte');
+ok(/25%/.test(await page.evaluate(()=>document.getElementById('panelMetas').textContent)),
+   'panel: muestra el avance de las metas');
+await page.evaluate(()=>document.querySelector('[data-ir="plata"]').click());
+await page.waitForTimeout(500);
+ok(await page.evaluate(()=>document.querySelector('.view.active').id)==='view-plata',
+   'panel: tocar un dato lleva a su pantalla');
+await page.click('.g-tab[data-view="home"]'); await page.waitForTimeout(400);
+
+/* alta de préstamo */
+await page.click('.g-tab[data-view="tarjetas"]'); await page.waitForTimeout(500);
+ok(await page.isVisible('#prestamosEmpty'), 'préstamos: estado vacío al principio');
+await page.click('#addPrestamoBtn'); await page.waitForTimeout(300);
+await page.fill('#prNombre','Préstamo Santander');
+await page.fill('#prCuota','85000');
+await page.fill('#prTotal','12');
+await page.fill('#prPagadas','3');
+await page.fill('#prDia','10');
+await page.click('#savePrestamo'); await page.waitForTimeout(500);
+const prTxt = await page.evaluate(()=>document.getElementById('prestamosList').textContent);
+ok(/Préstamo Santander/.test(prTxt), 'préstamos: se creó');
+ok(/3\/12/.test(prTxt), 'préstamos: arranca desde las cuotas ya pagadas', prTxt.match(/\d+\/\d+/)?.[0]);
+ok(/9 cuotas/.test(prTxt) && /765\.000/.test(prTxt), 'préstamos: calcula lo que falta', prTxt.slice(0,150));
+
+/* pagar una cuota */
+await page.click('[data-pagarpr]'); await page.waitForTimeout(400);
+ok(/cuota 4 de 12/i.test(await page.evaluate(()=>document.getElementById('pagoPrNota').textContent)),
+   'préstamos: dice qué cuota estás pagando');
+await page.click('#savePagoPr'); await page.waitForTimeout(600);
+const st5 = await page.evaluate(()=>window.__guitaState());
+ok(st5.prestamos[0].pagos.length===1, 'préstamos: queda registrado el pago');
+ok(st5.movs.some(m=>/Cuota Préstamo Santander/.test(m.descripcion||'')),
+   'préstamos: el pago se anota como gasto');
+const prTxt2 = await page.evaluate(()=>document.getElementById('prestamosList').textContent);
+ok(/4\/12/.test(prTxt2) && /8 cuotas/.test(prTxt2), 'préstamos: baja la cuenta al pagar');
+ok(/ya lo pagaste/.test(prTxt2), 'préstamos: marca que este mes ya está');
+
+/* el préstamo entra en la deuda total y en los compromisos */
+ok(/680\.000/.test(await page.evaluate(()=>document.getElementById('debtTotal').textContent)),
+   'préstamos: suman a la deuda total', await page.evaluate(()=>document.getElementById('debtTotal').textContent));
+await page.click('.g-tab[data-view="home"]'); await page.waitForTimeout(500);
+ok(/préstamos/.test(await page.evaluate(()=>document.getElementById('panelDeudaSub').textContent)),
+   'préstamos: aparecen en el panel del inicio');
+await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(500);
+ok(/Préstamo Santander/.test(await page.evaluate(()=>document.getElementById('planCalendario').textContent)),
+   'préstamos: entran en el calendario del mes');
+await page.close();
+
+
+/* ══ v2.5b: botón atrás, año mal leído, duplicados y borrar recurrentes ══ */
+page = await nuevaPagina();
+
+/* corrección del año: un resumen no puede ser de hace años */
+const hoyY = new Date().getFullYear();
+const mesX = String(new Date().getMonth()+1).padStart(2,'0');
+ok(await page.evaluate(([y,m])=>window.__guitaMes(y+'-'+m), [String(hoyY), mesX]) === hoyY+'-'+mesX,
+   'año: un mes del año en curso queda igual');
+const corregido = await page.evaluate(m=>window.__guitaMes('2024-'+m), mesX);
+ok(corregido !== '2024-'+mesX && corregido.endsWith('-'+mesX),
+   'año: un resumen leído como 2024 se corrige al año plausible', corregido);
+const futuro = await page.evaluate(()=>window.__guitaMes('2031-05'));
+ok(!futuro.startsWith('2031'), 'año: también corrige años muy adelantados', futuro);
+
+/* botón atrás: cierra lo abierto en vez de salir */
+ok(await page.evaluate(()=>window.__guitaBack()) === false,
+   'atrás: en el inicio sin nada abierto, deja salir');
+await page.click('#addBtn'); await page.waitForTimeout(300);
+ok(await page.evaluate(()=>window.__guitaBack()) === true, 'atrás: con una hoja abierta la cierra');
+await page.waitForTimeout(300);
+ok(!await page.evaluate(()=>document.getElementById('sheet').classList.contains('open')),
+   'atrás: la hoja quedó cerrada');
+await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(400);
+ok(await page.evaluate(()=>window.__guitaBack()) === true, 'atrás: fuera del inicio, vuelve al inicio');
+await page.waitForTimeout(400);
+ok(await page.evaluate(()=>document.querySelector('.view.active').id)==='view-home',
+   'atrás: quedó en el inicio');
+
+/* duplicados entre lo que cargaste y lo que viene del resumen */
+await sembrar(page, {
+  movs:[], billeteras:[{id:1,nombre:'Banco',saldoInicial:100000}],
+  fijos:[{id:2,nombre:'PedidosYa Plus',monto:3834,dia:27,categoria:'Comida',activo:true,viaTarjeta:false},
+         {id:5,nombre:'Netflix',monto:16900,dia:27,categoria:'Servicios',activo:true}],
+  pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],
+  tarjetas:[{id:10,nombre:'Visa',cierre:13,vto:24,deuda:0,resumenes:{
+    [new Date().toISOString().slice(0,7)]:{monto:200000,detalle:[
+      {desc:'DLO*PEDIDOSYA PLUS',monto:3834,categoria:'Comida'},
+      {desc:'NETFLIX.COM',monto:16900,categoria:'Servicios'},
+      {desc:'WWW.CAMUZZI GAS',monto:32593,categoria:'Servicios'}]}}}],
+  config:{apiKey:''}, seq:60});
+await page.reload();
+await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(700);
+const cal2 = await page.evaluate(()=>document.getElementById('planCalendario').textContent);
+const vecesPedidos = (cal2.match(/pedidosya/gi)||[]).length;
+ok(vecesPedidos===1, 'duplicados: PedidosYa aparece una sola vez', vecesPedidos+' veces');
+const vecesNetflix = (cal2.match(/netflix/gi)||[]).length;
+ok(vecesNetflix===1, 'duplicados: Netflix aparece una sola vez', vecesNetflix+' veces');
+ok(/camuzzi/i.test(cal2), 'duplicados: lo que no está duplicado sigue apareciendo');
+
+/* borrar un recurrente desde el calendario */
+await page.evaluate(()=>document.querySelector('#planCalendario [data-rec]').click());
+await page.waitForTimeout(400);
+ok(await page.isVisible('#phaseRec'), 'recurrentes: tocar uno abre sus acciones');
+const acc = await page.evaluate(()=>document.getElementById('recAcciones').textContent);
+ok(/Eliminar|Sacarlo|No es mensual/.test(acc), 'recurrentes: ofrece borrarlo o dejar de contarlo', acc.slice(0,80));
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+// uno que viene del resumen: sacarlo de ahí
+const antesDet = await page.evaluate(()=>{
+  const t = window.__guitaState().tarjetas[0];
+  return t.resumenes[Object.keys(t.resumenes)[0]].detalle.length;
+});
+await page.evaluate(()=>{
+  const el = [...document.querySelectorAll('#planCalendario [data-rec]')].find(x=>/camuzzi/i.test(x.textContent));
+  if(el) el.click();
+});
+await page.waitForTimeout(400);
+await page.evaluate(()=>{ const b=document.querySelector('[data-recact="quitar"]'); if(b) b.click(); });
+await page.waitForTimeout(600);
+const despuesDet = await page.evaluate(()=>{
+  const t = window.__guitaState().tarjetas[0];
+  return t.resumenes[Object.keys(t.resumenes)[0]].detalle.length;
+});
+ok(despuesDet === antesDet-1, 'recurrentes: se puede sacar un consumo mal leído del resumen',
+   `${antesDet} → ${despuesDet}`);
 await page.close();
 
 await browser.close();
