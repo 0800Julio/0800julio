@@ -43,7 +43,7 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
 - 📈 **Cuentas de inversión** (Balanz, plazo fijo…): se muestran aparte del
   disponible, con su propio total.
 - 💣 **Deuda de tarjetas**: cargá el saldo financiado que venís arrastrando y
-  velo junto a los resúmenes sin pagar — el asesor lo trata como prioridad nº1.
+  velo junto a los resúmenes sin pagar, con lo que te cuesta arrastrarlo.
 - 💵 **Pagos parciales**: al cargar cada resumen te pregunta cuánto pagaste;
   si pagás menos que el total, el resto queda como deuda financiada visible.
 - 📊 **Historial mes a mes por tarjeta**: total, variación contra el mes
@@ -65,7 +65,7 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
   Rappi 🛵, YPF ⛽…), chips de cuota 📅 y descuentos en verde. Todos los
   totales leídos se pueden corregir a mano.
 - 💸 **Modo económico de IA** (v1.8): selector Haiku/Opus en Ajustes.
-  Con Haiku, leer un resumen sale ~US$0,02–0,05 y una consulta al asesor
+  Con Haiku, leer un resumen sale ~US$0,02–0,05 y un dictado largo
   menos de US$0,01 (~5× más barato que Opus).
 - 💡 **Recomendaciones locales gratis** en Análisis: costo real de financiar,
   cuotas que se liberan, suscripciones, presupuestos pasados, balance del
@@ -162,6 +162,23 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
   Plata; las tarjetas y los préstamos, dentro de Deudas.
 - ⬅️ **El botón atrás del celu** (v2.5) cierra lo que tengas abierto o te
   devuelve al inicio, en vez de cerrar la app de una.
+- 💳 **Pagar un resumen en un toque** (v3.0): desde el vencimiento del inicio,
+  con atajos de total / mínimo / mitad. Al escribir el monto te avisa **cuánto te
+  queda sin pagar** y **cuánto vendría el próximo resumen** con ese pago aplicado.
+  Los pagos parciales se acumulan: podés seguir adelantando.
+- ⏰ **Vencimientos primero** (v3.0): lo más próximo abre el inicio, con
+  recordatorio por vencimiento (🔔) y el resto en píldoras debajo.
+- ✅ **Lo que pagaste últimamente** (v3.0): resúmenes, cuotas de préstamo y
+  pagos de fijos, con cuánto quedó pendiente de cada uno.
+- 🧮 **Una sola fuente de verdad** (v3.0): `gastoDelMes()`, `deudaTotal()` y
+  `compromisos()`. Antes el mismo dato se calculaba de tres formas distintas en
+  tres pantallas y no coincidía. `compromisos()` separa lo que sale de tu
+  billetera de lo que ya viene adentro del resumen, así nada se cuenta dos veces.
+- 📐 **Un solo número grande por pantalla** (v3.0): Inicio = qué pago,
+  Deudas = cuánto debo, Plata = cuánto tengo, Análisis = en qué se me va.
+  Las secciones sin datos (metas, presupuestos) no ocupan lugar hasta usarlas.
+- 📈 **Fijos comparados con meses anteriores** (v3.0): cada recurrente dice
+  cuánto cambió contra el promedio de los meses previos.
 - 🏷 **Categorías automáticas** por palabras clave (súper → Comida, nafta → Transporte,
   luz → Servicios, etc.). Siempre podés corregir antes de guardar.
 - ➕ **Carga manual** para cuando no querés hablar.
