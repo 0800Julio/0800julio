@@ -162,7 +162,16 @@ ok(await page.isVisible('#phaseCat'), 'análisis: abre el detalle de la categor�
 ok(/resumen de/.test(await page.evaluate(()=>document.getElementById('catList').textContent)),
    'análisis: cada gasto dice de qué tarjeta sale');
 await page.keyboard.press('Escape'); await page.waitForTimeout(300);
-ok(await page.isVisible('#tipsBtn'), 'análisis: botón para recalcular recomendaciones');
+ok(!await page.evaluate(()=>document.getElementById('pieLbl').textContent.includes('Gastado')),
+   'análisis: el centro de la torta muestra la categoría, no el total repetido',
+   await page.evaluate(()=>document.getElementById('pieLbl').textContent));
+ok(/% del mes/.test(await page.evaluate(()=>document.getElementById('piePct').textContent)),
+   'análisis: dice qué porcentaje del mes es esa categoría');
+ok(await page.evaluate(()=>document.getElementById('budgetCard').hidden),
+   'análisis: sin presupuestos cargados la sección no ocupa lugar');
+ok(await page.isVisible('#budgetInvit'), 'análisis: igual se puede definir un tope');
+ok((await page.evaluate(()=>document.querySelectorAll('#tipsList .g-tip').length)) <= 2,
+   'análisis: como mucho 2 recomendaciones, sin repetir lo de al lado');
 
 /* v2.3: gráfico de evolución en canvas */
 ok(await page.isVisible('#evoCanvas'), 'gráfico: hay un canvas de evolución');
@@ -231,14 +240,21 @@ ok(/347\.999|347999/.test(planTot.replace(/\s/g,'')), 'plan: suma fijos + suscri
 const planTxt = await page.evaluate(()=>document.getElementById('planLista').textContent);
 ok(/Alquiler/.test(planTxt) && /NETFLIX/.test(planTxt), 'plan: junta los fijos y lo que viene en el resumen');
 ok(!/COMPRA SUELTA/.test(planTxt), 'plan: deja afuera las compras de una vez');
-ok(/vence el 5/.test(planTxt), 'plan: muestra el día de vencimiento');
+ok(/(vence|venció) el 5/.test(planTxt), 'plan: muestra el día de vencimiento',
+   (planTxt.match(/.{0,20}el 5.{0,10}/)||[''])[0]);
 ok(/%/.test(await page.evaluate(()=>document.getElementById('planNota').textContent)),
    'plan: dice qué porcentaje del ingreso se llevan');
-const cal = await page.evaluate(()=>document.getElementById('planCalendario').textContent);
-ok(/Alquiler/.test(cal), 'plan: calendario del mes con lo que se paga');
+ok(/Sale de tu plata/.test(planTxt) && /Ya va en la tarjeta/.test(planTxt),
+   'plan: una sola lista, agrupada por de dónde sale la plata');
+ok((planTxt.match(/Alquiler/g)||[]).length===1,
+   'plan: cada gasto aparece una sola vez',
+   (planTxt.match(/Alquiler/g)||[]).length+' veces');
+ok(/Pagar/.test(planTxt), 'plan: se puede pagar desde la lista');
 
 /* metas */
-await page.click('#addMetaBtn'); await page.waitForTimeout(300);
+ok(await page.evaluate(()=>document.getElementById('metasTitulo').hidden),
+   'metas: sin metas cargadas la sección no ocupa lugar');
+await page.click('#metaInvit'); await page.waitForTimeout(300);
 await page.fill('#mtNombre','Viaje a Brasil');
 await page.fill('#mtObjetivo','1200000');
 await page.fill('#mtGuardado','200000');
@@ -307,7 +323,8 @@ await page.reload();
 await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
 
 /* (1) días hasta cobrar */
-ok(await page.isVisible('#diarioCard'), '(1) por día: la tarjeta aparece');
+await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(700);
+ok(await page.isVisible('#walletGrandTotal'), '(1) por día: vive en el héroe de Plata');
 ok(/qué día cobrás/i.test(await page.evaluate(()=>document.getElementById('diarioNota').textContent)),
    '(1) por día: sin día de cobro, invita a configurarlo');
 await page.click('#cfgBtn'); await page.waitForTimeout(300);
@@ -458,8 +475,8 @@ await page.click('.g-tab[data-view="home"]'); await page.waitForTimeout(500);
 ok(/préstamos/.test(await page.evaluate(()=>document.getElementById('panelDeudaSub').textContent)),
    'préstamos: aparecen en el panel del inicio');
 await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(500);
-ok(/Préstamo Santander/.test(await page.evaluate(()=>document.getElementById('planCalendario').textContent)),
-   'préstamos: entran en el calendario del mes');
+ok(/Préstamo Santander/.test(await page.evaluate(()=>document.getElementById('planLista').textContent)),
+   'préstamos: entran en la lista del mes');
 await page.close();
 
 
@@ -506,7 +523,7 @@ await sembrar(page, {
 await page.reload();
 await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
 await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(700);
-const cal2 = await page.evaluate(()=>document.getElementById('planCalendario').textContent);
+const cal2 = await page.evaluate(()=>document.getElementById('planLista').textContent);
 const vecesPedidos = (cal2.match(/pedidosya/gi)||[]).length;
 ok(vecesPedidos===1, 'duplicados: PedidosYa aparece una sola vez', vecesPedidos+' veces');
 const vecesNetflix = (cal2.match(/netflix/gi)||[]).length;
@@ -514,7 +531,7 @@ ok(vecesNetflix===1, 'duplicados: Netflix aparece una sola vez', vecesNetflix+' 
 ok(/camuzzi/i.test(cal2), 'duplicados: lo que no está duplicado sigue apareciendo');
 
 /* borrar un recurrente desde el calendario */
-await page.evaluate(()=>document.querySelector('#planCalendario [data-rec]').click());
+await page.evaluate(()=>document.querySelector('#planLista [data-rec]').click());
 await page.waitForTimeout(400);
 ok(await page.isVisible('#phaseRec'), 'recurrentes: tocar uno abre sus acciones');
 const acc = await page.evaluate(()=>document.getElementById('recAcciones').textContent);
@@ -526,7 +543,7 @@ const antesDet = await page.evaluate(()=>{
   return t.resumenes[Object.keys(t.resumenes)[0]].detalle.length;
 });
 await page.evaluate(()=>{
-  const el = [...document.querySelectorAll('#planCalendario [data-rec]')].find(x=>/camuzzi/i.test(x.textContent));
+  const el = [...document.querySelectorAll('#planLista [data-rec]')].find(x=>/camuzzi/i.test(x.textContent));
   if(el) el.click();
 });
 await page.waitForTimeout(400);
@@ -538,6 +555,73 @@ const despuesDet = await page.evaluate(()=>{
 });
 ok(despuesDet === antesDet-1, 'recurrentes: se puede sacar un consumo mal leído del resumen',
    `${antesDet} → ${despuesDet}`);
+await page.close();
+
+/* ══ v3.0: un solo héroe por pantalla y el flujo de pago ══ */
+page = await nuevaPagina();
+const mkHoy = new Date().toISOString().slice(0,7);
+const diaHoy = new Date().getDate();
+await sembrar(page, {
+  movs:[{id:1,tipo:"ingreso",monto:3000000,fecha:mkHoy+"-05",categoria:"Sueldo",descripcion:"Sueldo",billetera:1}],
+  billeteras:[{id:1,nombre:'Lemon',saldoInicial:1284819}],
+  fijos:[{id:2,nombre:'Alquiler',monto:245117,dia:28,categoria:'Hogar',activo:true,viaTarjeta:false}],
+  pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],
+  tarjetas:[{id:10,nombre:'Visa',cierre:13,vto:Math.max(1,diaHoy-1),deuda:0,resumenes:{
+    [mkHoy]:{monto:246531,saldoAnterior:0,pagos:0,impuestos:8000,pagadoMonto:0,pagoMinimo:60000,detalle:[
+      {desc:'NETFLIX.COM',monto:16900,categoria:'Servicios'},
+      {desc:'SUPER Cuota 02/06',monto:40000,categoria:'Comida'}]}}}],
+  config:{apiKey:'', diaCobro:5}, seq:80});
+await page.reload();
+await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+
+// un solo número tamaño héroe por pantalla, y arriba de todo
+for(const [vista, heroe] of [['home','dueTotal'],['tarjetas','debtTotal'],['plata','walletGrandTotal']]){
+  await page.click(`.g-tab[data-view="${vista}"]`); await page.waitForTimeout(600);
+  const n = await page.evaluate(v=>document.querySelectorAll('#view-'+v+' .g-hero .num').length, vista);
+  ok(n===1, `héroe: ${vista} tiene un solo número grande`, n+' encontrados');
+  const primero = await page.evaluate(v=>{
+    const cards = [...document.querySelectorAll('#view-'+v+' > section.g-card, #view-'+v+' > .g-card')]
+      .filter(el=>!el.hidden);
+    return cards.length ? cards[0].id : null;
+  }, vista);
+  ok(primero==='dueCard' || primero==='debtCard' || (await page.evaluate(h=>!!document.getElementById(h).closest('.g-hero'), heroe)),
+     `héroe: en ${vista} el número grande abre la pantalla`, String(primero));
+}
+
+// el vencimiento del inicio se paga en un toque y avisa cuánto queda
+await page.click('.g-tab[data-view="home"]'); await page.waitForTimeout(600);
+ok(/Visa/.test(await page.evaluate(()=>document.getElementById('dueSub').textContent)),
+   'pago: el inicio muestra el resumen que vence',
+   await page.evaluate(()=>document.getElementById('dueSub').textContent));
+await page.evaluate(()=>document.querySelector('#dueAcciones button').click());
+await page.waitForTimeout(500);
+ok(await page.isVisible('#phasePagoRes'), 'pago: se llega en un toque desde el vencimiento');
+ok(await page.isVisible('#prAtajos'), 'pago: ofrece atajos (total, mínimo, mitad)');
+await page.fill('#prMonto','100000');
+await page.evaluate(()=>document.getElementById('prMonto').dispatchEvent(new Event('input')));
+await page.waitForTimeout(400);
+const cons = await page.evaluate(()=>document.getElementById('prConsecuencia').textContent);
+ok(/146\.531/.test(cons), 'pago: dice cuánto te queda sin pagar', cons.slice(0,90));
+ok(/próximo resumen/i.test(cons), 'pago: estima el próximo resumen con ese pago', cons.slice(0,90));
+await page.click('#savePagoRes'); await page.waitForTimeout(600);
+// y se puede seguir adelantando: el segundo pago suma al primero
+await page.click('.g-tab[data-view="home"]'); await page.waitForTimeout(500);
+const pagosTxt = await page.evaluate(()=>document.getElementById('pagosList').textContent);
+ok(/Resumen Visa/.test(pagosTxt) && /100\.000/.test(pagosTxt) && /quedan/.test(pagosTxt),
+   'pago: queda en "lo que pagaste últimamente" con lo que falta', pagosTxt.replace(/\s+/g,' ').slice(0,80));
+await page.evaluate(()=>document.querySelector('#dueAcciones button').click());
+await page.waitForTimeout(500);
+await page.fill('#prMonto','46531');
+await page.click('#savePagoRes'); await page.waitForTimeout(600);
+const pagado = await page.evaluate(()=>{
+  const t = window.__guitaState().tarjetas[0];
+  return t.resumenes[Object.keys(t.resumenes)[0]].pagadoMonto;
+});
+ok(pagado===146531, 'pago: seguir adelantando suma al pago anterior', String(pagado));
+ok(/al día|Todo al día/i.test(await page.evaluate(()=>document.getElementById('dueTotal').textContent))
+   || !/246\.531/.test(await page.evaluate(()=>document.getElementById('dueTotal').textContent)),
+   'pago: el vencimiento deja de figurar entero',
+   await page.evaluate(()=>document.getElementById('dueTotal').textContent));
 await page.close();
 
 await browser.close();
