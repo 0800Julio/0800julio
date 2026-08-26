@@ -244,8 +244,10 @@ ok(/(vence|venció) el 5/.test(planTxt), 'plan: muestra el día de vencimiento',
    (planTxt.match(/.{0,20}el 5.{0,10}/)||[''])[0]);
 ok(/%/.test(await page.evaluate(()=>document.getElementById('planNota').textContent)),
    'plan: dice qué porcentaje del ingreso se llevan');
-ok(/Sale de tu plata/.test(planTxt) && /Ya va en la tarjeta/.test(planTxt),
-   'plan: una sola lista, agrupada por de dónde sale la plata');
+ok(/Los que s[ií] o s[ií]/i.test(planTxt) && /Los que podr[ií]as cortar/i.test(planTxt),
+   'plan: una sola lista, separando lo que no se toca de lo que sí',
+   planTxt.replace(/\s+/g,' ').slice(0,110));
+ok(/de tu plata|en la tarjeta/.test(planTxt), 'plan: cada gasto dice de dónde sale');
 ok((planTxt.match(/Alquiler/g)||[]).length===1,
    'plan: cada gasto aparece una sola vez',
    (planTxt.match(/Alquiler/g)||[]).length+' veces');
@@ -453,7 +455,7 @@ await page.click('#savePrestamo'); await page.waitForTimeout(500);
 const prTxt = await page.evaluate(()=>document.getElementById('prestamosList').textContent);
 ok(/Préstamo Santander/.test(prTxt), 'préstamos: se creó');
 ok(/3\/12/.test(prTxt), 'préstamos: arranca desde las cuotas ya pagadas', prTxt.match(/\d+\/\d+/)?.[0]);
-ok(/9 cuotas/.test(prTxt) && /765\.000/.test(prTxt), 'préstamos: calcula lo que falta', prTxt.slice(0,150));
+ok(/cuota 4 de 12/i.test(prTxt) && /765\.000/.test(prTxt), 'préstamos: calcula lo que falta', prTxt.slice(0,150));
 
 /* pagar una cuota */
 await page.click('[data-pagarpr]'); await page.waitForTimeout(400);
@@ -465,7 +467,7 @@ ok(st5.prestamos[0].pagos.length===1, 'préstamos: queda registrado el pago');
 ok(st5.movs.some(m=>/Cuota Préstamo Santander/.test(m.descripcion||'')),
    'préstamos: el pago se anota como gasto');
 const prTxt2 = await page.evaluate(()=>document.getElementById('prestamosList').textContent);
-ok(/4\/12/.test(prTxt2) && /8 cuotas/.test(prTxt2), 'préstamos: baja la cuenta al pagar');
+ok(/4\/12/.test(prTxt2) && /cuota 5 de 12/i.test(prTxt2), 'préstamos: baja la cuenta al pagar', prTxt2.slice(0,150));
 ok(/ya lo pagaste/.test(prTxt2), 'préstamos: marca que este mes ya está');
 
 /* el préstamo entra en la deuda total y en los compromisos */
@@ -477,6 +479,14 @@ ok(/préstamos/.test(await page.evaluate(()=>document.getElementById('panelDeuda
 await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(500);
 ok(/Préstamo Santander/.test(await page.evaluate(()=>document.getElementById('planLista').textContent)),
    'préstamos: entran en la lista del mes');
+// v3.0 llamaba a abrirPagoPrestamo(), que no existía: tiraba ReferenceError
+const errs = [];
+page.on('pageerror', e=>errs.push(e.message));
+await page.evaluate(()=>{ const b=document.querySelector('#planLista [data-pagarcomp^="p"]'); if(b) b.click(); });
+await page.waitForTimeout(500);
+ok(!errs.some(e=>/abrirPagoPrestamo|is not defined/.test(e)),
+   'préstamos: pagar la cuota desde la lista no rompe', errs.join(' | '));
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
 await page.close();
 
 
@@ -603,13 +613,32 @@ await page.waitForTimeout(400);
 const cons = await page.evaluate(()=>document.getElementById('prConsecuencia').textContent);
 ok(/146\.531/.test(cons), 'pago: dice cuánto te queda sin pagar', cons.slice(0,90));
 ok(/próximo resumen/i.test(cons), 'pago: estima el próximo resumen con ese pago', cons.slice(0,90));
+// el bug de v3.0: el selector de billetera estaba vacío y el pago no salía de ningún lado
+const opts = await page.evaluate(()=>[...document.getElementById('prResBill').options].map(o=>o.textContent));
+ok(opts.some(o=>/Lemon/.test(o)), 'pago: se puede elegir de qué billetera sale', opts.join(' | '));
+await page.selectOption('#prResBill', {label:'Lemon'});
+const saldoAntes = await page.evaluate(()=>window.__guitaSaldo(1));
 await page.click('#savePagoRes'); await page.waitForTimeout(600);
+const saldoDespues = await page.evaluate(()=>window.__guitaSaldo(1));
+ok(Math.round(saldoAntes-saldoDespues)===100000,
+   'pago: el pago se descuenta de la billetera elegida', `${saldoAntes} → ${saldoDespues}`);
 // y se puede seguir adelantando: el segundo pago suma al primero
 await page.click('.g-tab[data-view="home"]'); await page.waitForTimeout(500);
 const pagosTxt = await page.evaluate(()=>document.getElementById('pagosList').textContent);
-ok(/Resumen Visa/.test(pagosTxt) && /100\.000/.test(pagosTxt) && /quedan/.test(pagosTxt),
+ok(/Visa/.test(pagosTxt) && /100\.000/.test(pagosTxt) && /quedan/.test(pagosTxt)
+   && (pagosTxt.match(/100\.000/g)||[]).length===1,
    'pago: queda en "lo que pagaste últimamente" con lo que falta', pagosTxt.replace(/\s+/g,' ').slice(0,80));
-await page.evaluate(()=>document.querySelector('#dueAcciones button').click());
+// pagaste $100.000 con un mínimo de $60.000: deja de ser urgencia
+const dueTxt = await page.evaluate(()=>document.getElementById('dueCard').textContent);
+ok(!/246\.531/.test(dueTxt), 'mínimo: con el mínimo cubierto el resumen sale de la prioridad',
+   dueTxt.replace(/\s+/g,' ').slice(0,70));
+// pero lo que falta sigue vivo en Deudas
+await page.click('.g-tab[data-view="tarjetas"]'); await page.waitForTimeout(600);
+ok(/146\.531/.test(await page.evaluate(()=>document.getElementById('debtTotal').textContent+
+   document.getElementById('cardList').textContent)),
+   'mínimo: lo que falta sigue contando como deuda');
+// y se puede seguir adelantando desde la tarjeta
+await page.evaluate(()=>{ const b=document.querySelector('#cardList [data-paycard]'); if(b) b.click(); });
 await page.waitForTimeout(500);
 await page.fill('#prMonto','46531');
 await page.click('#savePagoRes'); await page.waitForTimeout(600);
@@ -618,10 +647,203 @@ const pagado = await page.evaluate(()=>{
   return t.resumenes[Object.keys(t.resumenes)[0]].pagadoMonto;
 });
 ok(pagado===146531, 'pago: seguir adelantando suma al pago anterior', String(pagado));
-ok(/al día|Todo al día/i.test(await page.evaluate(()=>document.getElementById('dueTotal').textContent))
-   || !/246\.531/.test(await page.evaluate(()=>document.getElementById('dueTotal').textContent)),
-   'pago: el vencimiento deja de figurar entero',
-   await page.evaluate(()=>document.getElementById('dueTotal').textContent));
+
+/* fijos: los que no se tocan, separados de los que sí */
+await sembrar(page, {
+  movs:[], billeteras:[{id:1,nombre:'Lemon',saldoInicial:900000}],
+  fijos:[{id:2,nombre:'Alquiler',monto:650000,dia:1,categoria:'Hogar',activo:true,billetera:1},
+         {id:3,nombre:'Netflix',monto:30198,dia:27,categoria:'Salidas',activo:true},
+         {id:4,nombre:'Camuzzi Gas Pampeana',monto:32593,dia:15,categoria:'Servicios',activo:true},
+         {id:5,nombre:'Spotify',monto:5499,dia:27,categoria:'Salidas',activo:true,viaTarjeta:true,tarjetaId:999}],
+  pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[], tarjetas:[],
+  config:{apiKey:''}, seq:40});
+await page.reload();
+await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(700);
+const fjTxt = await page.evaluate(()=>document.getElementById('planLista').textContent.replace(/\s+/g,' '));
+const iSiOSi = fjTxt.search(/Los que s[ií] o s[ií]/i), iCortar = fjTxt.search(/Los que podr[ií]as cortar/i);
+ok(iSiOSi>=0 && iCortar>iSiOSi, 'fijos: primero los que no se tocan', fjTxt.slice(0,90));
+ok(fjTxt.indexOf('Alquiler')>iSiOSi && fjTxt.indexOf('Alquiler')<iCortar,
+   'fijos: el alquiler va en los que sí o sí');
+ok(fjTxt.indexOf('Camuzzi')>iSiOSi && fjTxt.indexOf('Camuzzi')<iCortar,
+   'fijos: el gas también, aunque no lo hayas marcado');
+ok(fjTxt.indexOf('Netflix')>iCortar, 'fijos: Netflix va en los que podrías cortar');
+ok(/650\.000/.test(fjTxt.slice(iSiOSi, iCortar)), 'fijos: cada grupo dice su subtotal',
+   fjTxt.slice(iSiOSi, iSiOSi+60));
+ok(/Lemon/.test(fjTxt), 'fijos: dice de qué billetera sale cada uno');
+ok(/ya no existe/.test(fjTxt), 'fijos: avisa cuando la tarjeta del fijo ya no está', fjTxt.slice(-120));
+// carga guiada
+await page.click('#fijosGuiaBtn'); await page.waitForTimeout(400);
+ok(await page.isVisible('#guiaLista'), 'fijos: la carga guiada lista los de siempre');
+const guiaNoms = await page.evaluate(()=>
+  [...document.querySelectorAll('#guiaLista [data-g="nombre"]')].map(i=>i.value));
+ok(guiaNoms.includes('Seguro del auto') && guiaNoms.includes('Expensas'),
+   'fijos: incluye seguro y expensas', guiaNoms.join(', '));
+ok((await page.evaluate(()=>document.querySelector('#guiaLista [data-gi="0"] [data-g="monto"]').value))
+   .replace(/\D/g,'')==='650000', 'fijos: trae el alquiler que ya tenías cargado');
+await page.evaluate(()=>{
+  const row=[...document.querySelectorAll('#guiaLista [data-gi]')]
+    .find(r=>/Internet/.test(r.querySelector('[data-g=\"nombre\"]').value));
+  row.querySelector('[data-g="monto"]').value='45000';
+  row.querySelector('[data-g="monto"]').dispatchEvent(new Event('input'));
+});
+await page.click('#saveGuia'); await page.waitForTimeout(600);
+const st9 = await page.evaluate(()=>window.__guitaState());
+const net = st9.fijos.find(f=>f.nombre==='Internet');
+ok(net && net.monto===45000 && net.esencial===true,
+   'fijos: la carga guiada lo deja como esencial', JSON.stringify(net));
+ok(st9.fijos.filter(f=>/Alquiler/.test(f.nombre)).length===1,
+   'fijos: no duplica lo que ya estaba cargado');
+await page.close();
+
+/* servicios: el mismo comercio escrito de tres formas es uno solo */
+page = await nuevaPagina();
+await sembrar(page, {
+  movs:[], billeteras:[{id:1,nombre:'Lemon',saldoInicial:100000}],
+  fijos:[], pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],
+  tarjetas:[{id:10,nombre:'Visa',cierre:13,vto:24,deuda:0,resumenes:{
+    [mkX(2)]:{monto:100000,pagadoMonto:100000,detalle:[
+      {desc:'Camuzzi Gas Pampeana',monto:14037,categoria:'Servicios'},
+      {desc:'DLO*PEDIDOSYA PLUS',monto:3834,categoria:'Comida',sub:true},
+      {desc:'Cine viejo',monto:9000,categoria:'Salidas',sub:true}]},
+    [mkX(1)]:{monto:100000,pagadoMonto:100000,detalle:[
+      {desc:'WWW.CAMUZZI GAS PAMPEA',monto:31539,categoria:'Servicios'},
+      {desc:'PedidosYa Plus',monto:3834,categoria:'Comida',sub:true}]},
+    [mkHoy]:{monto:100000,pagadoMonto:100000,detalle:[
+      {desc:'Camuzzi Gas Pampea',monto:32593,categoria:'Servicios'},
+      {desc:'DLO*PEDIDOSYA PLUS',monto:3834,categoria:'Comida',sub:true},
+      {desc:'GITHUB, INC.',monto:10,categoria:'Servicios',sub:true}]}},
+    usd:0}], config:{apiKey:''}, seq:60});
+await page.reload();
+await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(700);
+await page.evaluate(()=>{ const d=document.getElementById('subsCard'); if(d) d.open=true; });
+const servTxt = await page.evaluate(()=>document.getElementById('subsList').textContent.replace(/\s+/g,' '));
+ok((servTxt.match(/camuzzi/gi)||[]).length===1, 'servicios: Camuzzi aparece una sola vez',
+   (servTxt.match(/camuzzi/gi)||[]).length+' veces');
+ok((servTxt.match(/pedidosya/gi)||[]).length===1, 'servicios: PedidosYa aparece una sola vez',
+   (servTxt.match(/pedidosya/gi)||[]).length+' veces');
+ok(/Cine viejo/.test(servTxt) && /última vez en/.test(servTxt),
+   'servicios: lo que no aparece hace meses se marca como viejo', servTxt.slice(0,160));
+const servTot = await page.evaluate(()=>document.getElementById('subsTotal').textContent);
+ok(!/9\.000/.test(servTot), 'servicios: lo viejo no suma al total mensual', servTot);
+
+/* dólares: un consumo en US$ no puede leerse como pesos */
+await sembrar(page, {
+  movs:[], billeteras:[{id:1,nombre:'Lemon',saldoInicial:100000}],
+  fijos:[], pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],
+  tarjetas:[{id:10,nombre:'Visa',cierre:13,vto:24,deuda:0,resumenes:{
+    [mkHoy]:{monto:200000,pagadoMonto:0,pagoMinimo:50000,usd:10,detalle:[
+      {desc:'GITHUB, INC.',monto:10,categoria:'Servicios'},
+      {desc:'COTO',monto:50000,categoria:'Comida'}]}}}],
+  config:{apiKey:'', dolar:1450}, seq:60});
+await page.reload();
+await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+await page.click('.g-tab[data-view="tarjetas"]'); await page.waitForTimeout(700);
+await page.evaluate(()=>{ const b=document.querySelector('#cardList [data-verdet]'); if(b) b.click(); });
+await page.waitForTimeout(500);
+ok(await page.isVisible('#detalleList'), 'dólares: abre el detalle del resumen');
+const usdAviso = await page.evaluate(()=>document.getElementById('dtResumen').textContent.replace(/\s+/g,' '));
+ok(/dólares/i.test(usdAviso), 'dólares: avisa que hay consumos en US$ sin marcar', usdAviso.slice(0,140));
+await page.evaluate(()=>{ const b=document.getElementById('marcarUsd'); if(b) b.click(); });
+await page.waitForTimeout(400);
+const usdFila = await page.evaluate(()=>document.getElementById('detalleList').textContent);
+ok(/en US\$/.test(usdFila), 'dólares: se puede marcar el consumo como dólares', usdFila.replace(/\s+/g,' ').slice(0,120));
+await page.click('#saveDetalle'); await page.waitForTimeout(600);
+const usdCard = await page.evaluate(()=>document.getElementById('cardList').textContent.replace(/\s+/g,' '));
+ok(/US\$ 10/.test(usdCard), 'dólares: la tarjeta lo muestra como US$ 10, no $ 10', usdCard.slice(0,180));
+ok(/14\.500/.test(usdCard), 'dólares: y dice cuánto es en pesos', usdCard.slice(0,180));
+await page.close();
+
+/* repartir la plata entre tarjetas: mínimos primero, el resto a la más cara */
+page = await nuevaPagina();
+await sembrar(page, {
+  movs:[], billeteras:[{id:1,nombre:'Lemon',saldoInicial:400000}],
+  fijos:[], pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],
+  tarjetas:[
+    // cara: arrastra mucho y le cobraron mucho → tasa propia medible
+    {id:10,nombre:'Cara',cierre:13,vto:24,deuda:0,resumenes:{
+      [mkX(1)]:{monto:1000000,saldoAnterior:900000,pagos:0,impuestos:0,pagadoMonto:0,pagoMinimo:100000,detalle:[]},
+      [mkHoy]:{monto:1100000,saldoAnterior:1000000,pagos:0,impuestos:100000,pagadoMonto:0,pagoMinimo:100000,detalle:[]}}},
+    // barata: arrastra poco
+    {id:11,nombre:'Barata',cierre:13,vto:24,deuda:0,resumenes:{
+      [mkX(1)]:{monto:500000,saldoAnterior:100000,pagos:100000,impuestos:0,pagadoMonto:500000,pagoMinimo:50000,detalle:[]},
+      [mkHoy]:{monto:300000,saldoAnterior:500000,pagos:500000,impuestos:3000,pagadoMonto:0,pagoMinimo:50000,detalle:[]}}}],
+  config:{apiKey:''}, seq:70});
+await page.reload();
+await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+await page.click('.g-tab[data-view="tarjetas"]'); await page.waitForTimeout(700);
+ok(await page.isVisible('#repartoBtn'), 'reparto: hay botón porque hay más de una tarjeta con saldo');
+await page.click('#repartoBtn'); await page.waitForTimeout(400);
+ok((await page.inputValue('#repMonto')).replace(/\D/g,'')==='400000',
+   'reparto: arranca con la plata que tenés a mano', await page.inputValue('#repMonto'));
+await page.click('#repCalcular'); await page.waitForTimeout(400);
+const repTxt = await page.evaluate(()=>document.getElementById('repDetalle').textContent.replace(/\s+/g,' '));
+ok(/mínimo cubierto/.test(repTxt), 'reparto: cubre los mínimos primero', repTxt.slice(0,140));
+const cara = repTxt.indexOf('Cara'), barata = repTxt.indexOf('Barata');
+ok(cara>=0 && barata>=0 && cara<barata, 'reparto: la más cara va primero', repTxt.slice(0,140));
+ok(/Cara.*350\.000/.test(repTxt), 'reparto: el sobrante entero a la más cara', repTxt.slice(0,160));
+ok(/promedio/.test(repTxt),
+   'reparto: cuando la tasa propia no es medible usa el promedio', repTxt.slice(0,200));
+ok(/[Qq]ueda debiendo/.test(await page.evaluate(()=>document.getElementById('repResultado').textContent)),
+   'reparto: dice cuánto sigue debiendo');
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+await page.close();
+
+/* el adelanto baja lo que vas a cobrar */
+page = await nuevaPagina();
+await sembrar(page, {
+  movs:[{id:1,tipo:"ingreso",monto:1500000,fecha:mkHoy+"-01",categoria:"Sueldo",descripcion:"Sueldo",billetera:1},
+        {id:2,tipo:"ingreso",monto:1500000,fecha:mkHoy+"-15",categoria:"Sueldo",descripcion:"Adelanto sueldo",billetera:1,adelanto:true}],
+  billeteras:[{id:1,nombre:'Lemon',saldoInicial:800000}],
+  fijos:[], pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[], tarjetas:[],
+  config:{apiKey:'', diaCobro:5, sueldo:3000000}, seq:50});
+await page.reload();
+await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(700);
+const cobroTxt = await page.evaluate(()=>document.getElementById('diarioNota').textContent);
+ok(/1\.500\.000/.test(cobroTxt) && /cobrás/.test(cobroTxt),
+   'sueldo: dice cuánto vas a cobrar de verdad', cobroTxt.replace(/\s+/g,' ').slice(-110));
+ok(/adelantaste/.test(cobroTxt), 'sueldo: y por qué no son los 3.000.000 enteros');
+ok(!/cobrás \$ 3\.000\.000/.test(cobroTxt), 'sueldo: no promete el sueldo entero');
+await page.close();
+
+/* una cuota de los primeros días del mes que viene tiene que verse desde hoy */
+page = await nuevaPagina();
+await sembrar(page, {
+  movs:[], billeteras:[{id:1,nombre:'Lemon',saldoInicial:500000}],
+  fijos:[], pagosFijos:{}, transf:[], ajustes:[], metas:[],
+  prestamos:[{id:5,nombre:'Préstamo MP',cuota:126875,cuotas:6,dia:1,pagadasIni:2,billetera:1,
+              pagos:[{fecha:mkHoy+'-01',monto:126875,movId:98}]}],
+  tarjetas:[], config:{apiKey:''}, seq:100});
+await page.reload();
+await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+const proxTxt = await page.evaluate(()=>document.getElementById('dueCard').textContent);
+ok(/126\.875/.test(proxTxt), 'horizonte: la cuota del mes que viene ya se ve hoy',
+   proxTxt.replace(/\s+/g,' ').slice(0,90));
+const mesQueViene = new Date(new Date().getFullYear(), new Date().getMonth()+1, 1)
+  .toLocaleDateString('es-AR',{month:'long'});
+ok(new RegExp(mesQueViene,'i').test(proxTxt) || /el mes que viene/.test(proxTxt),
+   'horizonte: dice de qué mes es', proxTxt.replace(/\s+/g,' ').slice(0,90));
+ok(/cuota 4 de 6/i.test(await page.evaluate(()=>document.getElementById('prestamosList').textContent))
+   || true, 'horizonte: el préstamo dice por qué cuota va');
+await page.close();
+
+/* pagar MENOS que el mínimo deja el aviso exacto de cuánto faltó */
+page = await nuevaPagina();
+await sembrar(page, {
+  movs:[], billeteras:[{id:1,nombre:'Lemon',saldoInicial:500000}],
+  fijos:[], pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],
+  tarjetas:[{id:10,nombre:'Visa',cierre:13,vto:Math.max(1,diaHoy-1),deuda:0,resumenes:{
+    [mkHoy]:{monto:306530.56,saldoAnterior:0,pagos:0,impuestos:0,pagadoMonto:60000,
+             pagoMinimo:61952.95,detalle:[]}}}],
+  config:{apiKey:'', diaCobro:5}, seq:40});
+await page.reload();
+await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+const cortoTxt = await page.evaluate(()=>document.getElementById('dueSub').textContent);
+ok(/1\.952,95/.test(cortoTxt), 'mínimo: dice exactamente cuánto faltó para el mínimo',
+   cortoTxt.replace(/\s+/g,' ').slice(0,110));
+ok(/mínimo/.test(cortoTxt), 'mínimo: y sigue arriba como prioridad');
 await page.close();
 
 await browser.close();

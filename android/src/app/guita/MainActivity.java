@@ -69,6 +69,20 @@ public class MainActivity extends Activity {
         web.loadUrl("file:///android_asset/index.html");
     }
 
+    /**
+     * Al volver de los ajustes del sistema le avisamos a la web cómo quedó el permiso.
+     * Antes el switch de Guita quedaba prendido aunque el sistema lo hubiera bloqueado.
+     */
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (web == null) return;
+        try {
+            boolean ok = new Bridge().notifPermiso();
+            js("window.__notifPermisoCambio&&window.__notifPermisoCambio(" + ok + ")");
+        } catch (Exception ignored) {}
+    }
+
     private void js(final String code) {
         web.post(() -> web.evaluateJavascript(code, null));
     }
@@ -286,7 +300,29 @@ public class MainActivity extends Activity {
         public boolean notifPermiso() {
             String activos = android.provider.Settings.Secure.getString(
                     getContentResolver(), "enabled_notification_listeners");
-            return activos != null && activos.contains(getPackageName());
+            if (activos == null) return false;
+            // comparar contra nuestro componente exacto, no un contains() del paquete
+            String propio = new android.content.ComponentName(
+                    MainActivity.this, GuitaNotifListener.class).flattenToString();
+            for (String x : activos.split(":")) {
+                if (x.equals(propio) || x.startsWith(getPackageName() + "/")) return true;
+            }
+            return false;
+        }
+
+        /**
+         * ¿La app vino de afuera de una tienda? Android 13+ marca esas instalaciones y
+         * bloquea el acceso a notificaciones detrás de "Ajustes restringidos". No hay API
+         * que lo consulte, así que lo inferimos del instalador.
+         */
+        @JavascriptInterface
+        public boolean notifBloqueoProbable() {
+            if (Build.VERSION.SDK_INT < 33) return false;
+            try {
+                String inst = getPackageManager()
+                        .getInstallSourceInfo(getPackageName()).getInstallingPackageName();
+                return inst == null || !inst.equals("com.android.vending");
+            } catch (Exception e) { return true; }
         }
 
         /** Abre la pantalla del sistema donde se habilita el acceso. */
@@ -294,11 +330,35 @@ public class MainActivity extends Activity {
         public void notifPedirPermiso() {
             runOnUiThread(() -> {
                 try {
-                    startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
+                    Intent i = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+                    // en Android 12+ el sistema resalta nuestra fila en la lista
+                    if (Build.VERSION.SDK_INT >= 31) {
+                        i.putExtra("android.provider.extra.NOTIFICATION_LISTENER_COMPONENT_NAME",
+                                new android.content.ComponentName(
+                                        MainActivity.this, GuitaNotifListener.class).flattenToString());
+                    }
+                    startActivity(i);
                 } catch (Exception e) {
                     try { startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS)); }
                     catch (Exception ignored) {}
                 }
+            });
+        }
+
+        /**
+         * Abre la ficha de Guita, que es donde vive el menú ⋮ con
+         * "Permitir ajustes restringidos". No hay forma de abrir ese menú por código:
+         * Google lo hizo así a propósito. Lo máximo es dejarlo parado ahí.
+         */
+        @JavascriptInterface
+        public void abrirFichaApp() {
+            runOnUiThread(() -> {
+                try {
+                    Intent i = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            Uri.fromParts("package", getPackageName(), null));
+                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(i);
+                } catch (Exception ignored) {}
             });
         }
 

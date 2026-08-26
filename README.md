@@ -162,6 +162,23 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
   Plata; las tarjetas y los préstamos, dentro de Deudas.
 - ⬅️ **El botón atrás del celu** (v2.5) cierra lo que tengas abierto o te
   devuelve al inicio, en vez de cerrar la app de una.
+- ✅ **El mínimo pagado libera la prioridad** (v3.1): si cubriste el pago mínimo, el
+  resumen deja de figurar como urgencia y lo que falta pasa a Deudas y al próximo
+  resumen. Si te quedaste corto, te dice **exactamente cuánto faltó**.
+- 🗓 **Lo que vence el mes que viene** (v3.1): el horizonte llega hasta fin del mes
+  siguiente, agrupado por mes. Una cuota del 1 de septiembre se ve desde agosto.
+- 💵 **Sueldo y adelantos** (v3.1): cargás cuánto cobrás y qué día; si marcás un
+  ingreso como adelanto, la app descuenta y te dice lo que vas a cobrar de verdad.
+- 💸 **¿Cómo reparto?** (v3.1): le decís cuánta plata tenés y reparte entre las
+  tarjetas — primero el mínimo de cada una, el resto entero a la de mayor interés real.
+- 💲 **Consumos en dólares** (v3.1): se guardan en su moneda y se muestran como
+  **US$ 10 · ≈$14.500**. Antes un cargo de US$ 10 figuraba como $10.
+- 🏠 **Fijos de verdad vs. caprichos** (v3.1): "Los que sí o sí" (alquiler, luz, gas,
+  teléfono, seguro) separados de "Los que podrías cortar", cada grupo con su subtotal,
+  más una carga guiada con los típicos.
+- 🧹 **Servicios sin duplicados** (v3.1): `WWW.CAMUZZI GAS PAMPEA`, `Camuzzi Gas
+  Pampeana` y `Camuzzi Gas Pampea` son uno solo; lo que no aparece hace meses deja de
+  contar como mensual.
 - 💳 **Pagar un resumen en un toque** (v3.0): desde el vencimiento del inicio,
   con atajos de total / mínimo / mitad. Al escribir el monto te avisa **cuánto te
   queda sin pagar** y **cuánto vendría el próximo resumen** con ese pago aplicado.

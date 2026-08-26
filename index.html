@@ -27,6 +27,8 @@
        reservado a sheets, FAB y splash; los puntitos "bounce" usan ease-in-out */
     --ease:cubic-bezier(.22,.9,.36,1); --spring:cubic-bezier(.34,1.35,.64,1);
     --num-hero:clamp(29px,9.4vw,42px); --num-sub:clamp(25px,7vw,30px);
+    /* ritmo vertical: una sola separación entre bloques y un solo padding de card */
+    --gap:18px; --pad:16px;
   }
   @media (prefers-color-scheme: dark){
     :root{
@@ -100,7 +102,9 @@
   @keyframes viewFromLeft{from{opacity:0; transform:translateX(-38px)}}
   /* el dedo arrastra la pantalla mientras deslizás */
   #guita.swiping{will-change:transform}
-  .g-viewtitle{display:flex; align-items:center; justify-content:space-between; padding:12px 2px 12px}
+  .g-viewtitle{display:flex; align-items:center; justify-content:space-between; gap:10px;
+    flex-wrap:wrap; padding:16px 2px 8px}
+  .g-viewtitle h2{flex:1 1 auto; min-width:0}
   .g-viewtitle h2{font-size:17px; font-weight:700}
   .g-minibtn{font:inherit; font-size:13px; font-weight:700; color:var(--brand); background:var(--brand-soft);
     border:none; border-radius:999px; padding:8px 14px; cursor:pointer; transition:transform .15s var(--ease)}
@@ -112,7 +116,7 @@
   .g-monthnav h2{font-size:15px; font-weight:600}
 
   .g-card{background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow)}
-  .g-summary{padding:18px 18px 16px; display:flex; flex-direction:column; gap:13px;
+  .g-summary{margin-top:var(--gap); padding:18px var(--pad) 16px; display:flex; flex-direction:column; gap:14px;
     position:relative; overflow:hidden; box-shadow:var(--shadow), 0 14px 40px var(--glow)}
   .g-summary::before{content:""; position:absolute; inset:0; pointer-events:none;
     background:radial-gradient(75% 120% at 100% 0%, var(--glow), transparent 65%),
@@ -126,15 +130,16 @@
   .g-subrow .val{font-weight:700; font-variant-numeric:tabular-nums; font-size:15px}
   .g-subrow .val.pos{color:var(--income)}
   .g-bars{display:flex; flex-direction:column; gap:8px}
-  .g-bar{display:grid; grid-template-columns:96px 1fr 76px; align-items:center; gap:10px; font-size:13px}
+  .g-bar{display:grid; grid-template-columns:minmax(56px,auto) 1fr auto; align-items:center;
+    gap:12px; font-size:13px}
   .g-bar .name{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--muted)}
   .g-bar .track{display:block; height:8px; border-radius:4px; background:var(--brand-soft); overflow:hidden}
   .g-bar .fill{display:block; height:100%; border-radius:4px; transform-origin:left center;
     transition:transform .4s var(--ease)}
-  .g-bar .amt{text-align:right; font-variant-numeric:tabular-nums; font-weight:600}
+  .g-bar .amt{text-align:right; font-variant-numeric:tabular-nums; font-weight:600; white-space:nowrap}
 
   /* escala única de montos: un solo héroe por pantalla */
-  .g-hero{position:relative; margin-top:14px; padding:18px 18px 16px; display:flex; flex-direction:column; gap:10px}
+  .g-hero{position:relative; margin-top:var(--gap); padding:18px 18px 16px; display:flex; flex-direction:column; gap:10px}
   .g-hero-top{display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
   .g-hero-top > div{flex:1; min-width:0}
   /* el botón de la esquina no le come ancho al número */
@@ -150,19 +155,21 @@
   .g-heroactions{display:flex; gap:8px; flex-wrap:wrap}
   .g-heroactions:empty{display:none}
   .g-heroactions .g-btn{flex:1; min-width:130px; padding:11px 0; font-size:14.5px}
-  .g-grouphead{font-size:11.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
-    color:var(--muted); padding:12px 14px 6px}
+  .g-grouphead{display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+    font-size:11.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
+    color:var(--muted); padding:14px var(--pad) 6px}
+  .g-grouphead .tot{letter-spacing:0; font-variant-numeric:tabular-nums; color:var(--ink)}
   .g-grouphead:first-child{padding-top:10px}
-  .g-fold{margin-top:12px}
+  .g-fold{margin-top:var(--gap)}
   .g-fold summary{font-size:14px; font-weight:600; cursor:pointer; padding:12px 14px;
     display:flex; justify-content:space-between; gap:10px; align-items:center}
   .g-fold summary::-webkit-details-marker{display:none}
   .g-fold summary::after{content:"›"; color:var(--muted); transition:transform .2s var(--ease)}
   .g-fold[open] summary::after{transform:rotate(90deg)}
-  .g-panel{margin-top:14px; padding:6px}
+  .g-panel{margin-top:var(--gap); padding:8px}
   .g-panel-grid{display:grid; grid-template-columns:1fr 1fr}
   .g-panel-item{font:inherit; text-align:left; background:none; border:none; cursor:pointer;
-    padding:12px 12px; display:flex; flex-direction:column; gap:2px; border-radius:12px;
+    padding:13px 14px; display:flex; flex-direction:column; gap:4px; border-radius:12px;
     transition:background .15s var(--ease)}
   .g-panel-item:active{background:var(--paper)}
   .g-panel-item .lbl{font-size:10.5px; font-weight:600; letter-spacing:.06em;
@@ -171,20 +178,20 @@
     letter-spacing:-.02em}
   .g-panel-item .val.pos{color:var(--income)}
   .g-panel-item .val.neg{color:var(--expense)}
-  .g-panel-item .sub{font-size:11.5px; color:var(--muted); line-height:1.3}
-  .g-panel-grid > :nth-child(odd){border-right:1px solid var(--line)}
+  .g-panel-item .sub{font-size:11.5px; color:var(--muted); line-height:1.4}
+  .g-panel-grid > :nth-child(odd){box-shadow:1px 0 0 var(--line)}
   .g-panel-metas{display:flex; flex-direction:column; gap:6px; padding:4px 12px 10px}
   .g-panel-metas:empty{display:none}
   .g-panel-meta{display:flex; align-items:center; gap:8px; font-size:12.5px}
   .g-panel-meta .track{flex:1; height:6px; border-radius:3px; background:var(--brand-soft); overflow:hidden}
   .g-panel-meta .fill{display:block; height:100%; border-radius:3px; background:var(--brand);
     transform-origin:left center}
-  .g-diario{margin-top:14px; padding:15px 17px}
+  .g-diario{margin-top:var(--gap); padding:15px 17px}
   .g-diario-top{display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
   .g-diario .big{font-size:clamp(26px,7.5vw,32px); font-weight:800; letter-spacing:-.02em;
     font-variant-numeric:tabular-nums; color:var(--brand); margin-top:2px}
   .g-diario .big.apretado{color:var(--expense)}
-  .g-due{display:flex; flex-direction:column; gap:6px; margin-top:14px}
+  .g-due{display:flex; flex-direction:column; gap:6px; margin-top:var(--gap)}
   .g-duepill{display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line);
     border-radius:12px; padding:9px 11px; font-size:13px; cursor:pointer; animation:itemIn .28s var(--ease) both}
   .g-duepill .ic{font-size:15px; flex:none; line-height:1}
@@ -195,16 +202,20 @@
   .g-duepill .when{display:block; color:var(--muted); font-size:12px; font-weight:500; white-space:nowrap}
   .g-duepill.late .when{color:var(--danger)}
 
-  .g-daygroup{margin-top:16px}
+  .g-daygroup{margin-top:calc(var(--gap) + 4px)}
   .g-dayhead{font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); padding:0 2px 8px}
   .g-items{overflow:hidden}
-  .g-item{display:flex; align-items:center; gap:12px; padding:13px 14px; cursor:pointer; animation:itemIn .3s var(--ease) both; animation-delay:var(--d,0s)}
+  .g-item{display:flex; align-items:center; gap:14px; padding:14px var(--pad); cursor:pointer; animation:itemIn .3s var(--ease) both; animation-delay:var(--d,0s)}
   @keyframes itemIn{from{opacity:0; transform:translateY(7px)}}
   .g-item + .g-item{border-top:1px solid var(--line)}
+  .g-item .g-amt{padding-left:2px}
   .g-dot{width:10px; height:10px; border-radius:50%; flex:none}
   .g-info{flex:1; min-width:0}
-  .g-desc{font-size:15px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .g-cat{font-size:12px; color:var(--muted)}
+  /* inline no recorta: sin display:block el texto se desbordaba sobre el monto */
+  .g-desc{display:block; font-size:15px; font-weight:500;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .g-cat{display:block; font-size:12px; color:var(--muted);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .g-amt{font-variant-numeric:tabular-nums; font-weight:700; font-size:15px; color:var(--expense); flex:none}
   .g-amt.pos{color:var(--income)}
   .g-del{flex:none; display:none; border:none; background:var(--danger); color:#fff; font-size:13px;
@@ -212,7 +223,7 @@
   .armed .g-del{display:block}
   .g-item.armed .g-amt{opacity:.45}
 
-  .g-empty{margin-top:22px; padding:26px 22px; text-align:center; display:flex; flex-direction:column; gap:10px}
+  .g-empty{margin-top:calc(var(--gap) + 4px); padding:26px 22px; text-align:center; display:flex; flex-direction:column; gap:10px}
   .g-empty strong{font-size:17px}
   .g-empty p{font-size:14px; color:var(--muted); line-height:1.5}
   .g-empty .eg{font-size:14px; color:var(--brand); font-weight:600}
@@ -241,13 +252,13 @@
   .g-legrow .vercat:active{transform:scale(.94)}
   .g-switch{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); padding:0 16px 12px; cursor:pointer}
   .g-switch input{accent-color:var(--brand); width:17px; height:17px}
-  .g-ivg{padding:14px 16px; display:flex; flex-direction:column; gap:10px; margin-top:14px}
+  .g-ivg{padding:14px 16px; display:flex; flex-direction:column; gap:10px; margin-top:var(--gap)}
   .g-ivgbar{display:grid; grid-template-columns:70px 1fr 96px; align-items:center; gap:10px; font-size:13px}
   .g-ivgbar .track{display:block; height:12px; border-radius:6px; background:var(--brand-soft); overflow:hidden}
   .g-ivgbar .fill{display:block; height:100%; border-radius:6px; transform-origin:left center;
     transition:transform .4s var(--ease)}
   .g-ivgbar .amt{text-align:right; font-variant-numeric:tabular-nums; font-weight:600}
-  .g-evo{margin-top:14px; padding:14px 16px 12px}
+  .g-evo{margin-top:var(--gap); padding:14px 16px 12px}
   #evoCanvas{width:100%; height:auto; display:block; touch-action:manipulation}
   .g-evo .g-legend{display:flex; flex-direction:row; flex-wrap:wrap; gap:4px 12px}
   .g-evo .g-legrow{grid-template-columns:12px auto; padding:2px 0; cursor:default; font-size:12px}
@@ -272,7 +283,7 @@
   /* tarjetas */
   .g-ccard{border-radius:18px; padding:16px 18px; color:#fff; position:relative; overflow:hidden;
     background:linear-gradient(135deg, #24513B 0%, #1E7A4F 55%, #2E9B68 100%);
-    box-shadow:0 8px 20px rgba(30,122,79,.25); margin-top:14px; animation:itemIn .3s var(--ease) both}
+    box-shadow:0 8px 20px rgba(30,122,79,.25); margin-top:var(--gap); animation:itemIn .3s var(--ease) both}
   .g-ccard::after{content:""; position:absolute; right:-40px; top:-40px; width:150px; height:150px;
     border-radius:50%; background:rgba(255,255,255,.08)}
   .g-ccard .name{font-size:16px; font-weight:800; letter-spacing:.02em}
@@ -284,16 +295,24 @@
     cursor:pointer; background:rgba(255,255,255,.16); color:#fff; transition:transform .15s var(--ease)}
   .g-ccbtn:active{transform:scale(.94)}
   .g-ccbtn.solid{background:#fff; color:#1E7A4F}
-  .g-ccdetail{margin-top:10px; font-size:13px; position:relative; z-index:1}
+  .g-ccstat{margin-top:12px; display:flex; flex-direction:column; gap:5px; position:relative; z-index:1}
+  .g-ccstat .r{display:flex; justify-content:space-between; align-items:baseline; gap:12px; font-size:13.5px}
+  .g-ccstat .r > span:first-child{opacity:.85}
+  .g-ccstat .r strong{font-variant-numeric:tabular-nums; white-space:nowrap}
+  .g-ccstat .r.big strong{font-size:17px}
+  .g-ccstat .nota{font-size:12px; opacity:.8; line-height:1.4}
+  .g-ccdetail{margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,.18);
+    font-size:13px; position:relative; z-index:1}
   .g-ccdetail div{display:flex; align-items:center; gap:7px; padding:3px 0; opacity:.92}
   .g-ccdetail .cdot{width:8px; height:8px; border-radius:50%; flex:none; box-shadow:0 0 0 2px rgba(255,255,255,.35)}
   .g-ccdetail .nm{flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .g-ccdetail .m{font-variant-numeric:tabular-nums}
 
   /* fijos */
-  .g-fijo{display:flex; align-items:center; gap:12px; padding:13px 14px; cursor:pointer;
+  .g-fijo{display:flex; align-items:center; gap:12px; padding:14px var(--pad); cursor:pointer;
     animation:itemIn .3s var(--ease) both; animation-delay:var(--d,0s)}
   .g-fijo + .g-fijo{border-top:1px solid var(--line)}
+  .g-fijo.viejo{opacity:.55}
   .g-fijo .st{font-size:12px}
   .g-fijo .st.ok{color:var(--income); font-weight:600}
   .g-fijo .st.late{color:var(--danger); font-weight:600}
@@ -376,7 +395,7 @@
   .g-chips button:active{transform:scale(.94)}
 
   /* presupuestos y carga rápida */
-  .g-budget{margin-top:14px}
+  .g-budget{margin-top:var(--gap)}
   .g-budgetrow{display:grid; grid-template-columns:1fr 120px; gap:8px; align-items:center; padding:3px 0}
   .g-budgetrow > span{display:flex; align-items:center; gap:8px; font-size:14px}
   .g-budgetrow input{font:inherit; font-size:15px; color:var(--ink); background:var(--paper);
@@ -427,8 +446,8 @@
   .g-prow .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
   .g-prow .m{font-variant-numeric:tabular-nums; font-weight:600; flex:none}
   .g-prow.simu{align-items:flex-start; padding:8px 0}
-  .g-tips{margin-top:14px}
-  .g-tip{display:flex; gap:10px; padding:8px 0; font-size:13.5px; line-height:1.45;
+  .g-tips{margin-top:var(--gap); padding:14px var(--pad) 12px}
+  .g-tip{display:flex; gap:11px; padding:10px 0; font-size:13.5px; line-height:1.45;
     border-bottom:1px solid var(--line); animation:itemIn .3s var(--ease) both; animation-delay:var(--d,0s)}
   .g-tip:last-child{border-bottom:none}
   .g-tip.toc{cursor:pointer; border-radius:10px; margin:0 -6px; padding:8px 6px;
@@ -600,7 +619,7 @@
         <div class="g-due" id="dueList"></div>
       </section>
 
-      <div class="g-card g-tips" id="notifTip" hidden style="margin-top:14px" aria-label="Leer notificaciones">
+      <div class="g-card g-tips" id="notifTip" hidden style="margin-top:var(--gap)" aria-label="Leer notificaciones">
         <div class="g-tip"><span class="ic">🔔</span><div>
           <strong>Puedo cargar los gastos solos.</strong> Cuando Lemon, Mercado Pago o tu banco te avisan de un pago,
           lo detecto y te lo propongo — siempre te pregunto antes y nada sale del celular.
@@ -638,7 +657,7 @@
         </div>
         <div class="g-panel-metas" id="panelMetas"></div>
       </section>
-      <div class="g-card g-tips" id="pagosCard" style="margin-top:14px" hidden aria-label="Lo que pagaste">
+      <div class="g-card g-tips" id="pagosCard" style="margin-top:var(--gap)" hidden aria-label="Lo que pagaste">
         <div class="g-label">✅ Lo que pagaste últimamente</div>
         <div id="pagosList"></div>
       </div>
@@ -713,7 +732,10 @@
           </div>
         </div>
         <div class="g-note" id="debtNote"></div>
-        <div class="g-heroactions"><button class="g-btn" id="simuBtn" hidden style="flex:none">🧮 ¿Cómo salgo de la deuda?</button></div>
+        <div class="g-heroactions">
+          <button class="g-btn" id="repartoBtn" hidden>💸 ¿Cómo reparto?</button>
+          <button class="g-btn" id="simuBtn" hidden>🧮 ¿Cómo salgo?</button>
+        </div>
       </section>
 
       <div class="g-empty g-card" id="cardEmpty" hidden>
@@ -728,7 +750,7 @@
       <input type="file" id="fileInput" accept="application/pdf,image/*,.pdf,.txt,text/plain" hidden>
       <div id="cardList"></div>
 
-      <div class="g-viewtitle" style="margin-top:16px"><h2>🏦 Préstamos</h2>
+      <div class="g-viewtitle" style="margin-top:var(--gap)"><h2>🏦 Préstamos</h2>
         <button class="g-minibtn" id="addPrestamoBtn">+ Nuevo</button></div>
       <div id="prestamosList"></div>
       <div class="g-empty g-card" id="prestamosEmpty" hidden>
@@ -737,13 +759,13 @@
         <button class="g-btn primary" id="addPrestamoBtn2" style="flex:none;margin-top:10px">+ Cargar un préstamo</button>
       </div>
 
-      <section class="g-card g-tips" id="liberaCard" style="margin-top:14px" hidden aria-label="Cuándo se libera plata">
+      <section class="g-card g-tips" id="liberaCard" style="margin-top:var(--gap)" hidden aria-label="Cuándo se libera plata">
         <div class="g-label">🎉 Cuándo se te libera plata</div>
         <div id="liberaList"></div>
         <div class="g-note" style="margin-top:6px">Cuando termina una cuota, ese monto deja de venir en el resumen. Buen momento para pagar más de la deuda, no para gastarlo.</div>
       </section>
 
-      <section class="g-card" id="histCard" hidden style="margin-top:14px">
+      <section class="g-card" id="histCard" hidden style="margin-top:var(--gap)">
         <div class="g-label">📊 Resúmenes mes a mes</div>
         <div id="histList"></div>
       </section>
@@ -771,31 +793,34 @@
         <div class="g-heroactions"><button class="g-btn" id="alcanzaBtn" style="flex:none">🤔 ¿Me alcanza para…?</button></div>
       </section>
       <input type="file" id="capturaInput" accept="image/*,application/pdf,.pdf" hidden>
-      <div class="g-card" id="walletList" hidden style="margin-top:14px"></div>
+      <div class="g-card" id="walletList" hidden style="margin-top:var(--gap)"></div>
       <div class="g-empty g-card" id="walletEmpty" hidden>
         <strong>Sin billeteras</strong>
         <p>Creá tus billeteras (efectivo, banco, Mercado Pago…) con su saldo actual. Cada gasto o ingreso puede descontar de una, así sabés cuánta plata tenés al día.</p>
         <button class="g-btn primary" id="setupBtn2" style="flex:none;margin-top:10px">⚡ Carga rápida</button>
       </div>
-      <button class="g-upload" id="capturaBtn" style="margin-top:14px">
+      <button class="g-upload" id="capturaBtn" style="margin-top:var(--gap)">
         <strong>📸 Subir captura de movimientos</strong>
         <span>Mandame una captura de Lemon, Mercado Pago, Cuenta DNI o tu homebanking y cargo todo lo que se vea.</span>
       </button>
-      <div class="g-viewtitle" style="margin-top:16px"><h2>Todos los meses te sale</h2>
-        <button class="g-minibtn" id="addFijoBtn">+ Gasto fijo</button></div>
+      <div class="g-viewtitle" style="margin-top:var(--gap)"><h2>Todos los meses te sale</h2>
+        <div style="display:flex; gap:8px; flex:none">
+          <button class="g-minibtn" id="fijosGuiaBtn">📋 Los de siempre</button>
+          <button class="g-minibtn" id="addFijoBtn">+ Gasto fijo</button>
+        </div></div>
       <section class="g-card" aria-label="Lo que se repite todos los meses">
         <div class="g-label">Compromisos del mes</div>
         <div class="num gasto" id="planTotal" style="font-size:var(--num-sub)">$ 0</div>
         <div class="sub" id="planNota"></div>
       </section>
-      <div class="g-card" id="planLista" style="margin-top:12px"></div>
+      <div class="g-card" id="planLista" style="margin-top:var(--gap)"></div>
       <div class="g-empty g-card" id="planEmpty" hidden>
         <strong>Todavía no hay gastos fijos</strong>
         <p>El alquiler, los servicios, las suscripciones… cargalos una vez y te aviso todos los meses cuándo vencen.</p>
         <button class="g-btn primary" id="addFijoBtn3" style="flex:none;margin-top:10px">+ Cargar el primero</button>
       </div>
 
-      <div class="g-card g-tips" id="aumentosCard" style="margin-top:14px" hidden aria-label="Aumentos detectados">
+      <div class="g-card g-tips" id="aumentosCard" style="margin-top:var(--gap)" hidden aria-label="Aumentos detectados">
         <div class="g-label">📈 Aumentos que detecté</div>
         <div id="aumentosList"></div>
       </div>
@@ -805,7 +830,7 @@
         <div id="subsList"></div>
       </details>
 
-      <div class="g-viewtitle" style="margin-top:16px" id="metasTitulo"><h2>🎯 Mis metas</h2>
+      <div class="g-viewtitle" style="margin-top:var(--gap)" id="metasTitulo"><h2>🎯 Mis metas</h2>
         <button class="g-minibtn" id="addMetaBtn">+ Nueva</button></div>
       <div id="metasLista"></div>
       <div class="g-empty g-card" id="metasEmpty" hidden>
@@ -877,6 +902,9 @@
         </div>
         <div class="g-field"><label class="g-label" for="fDesc">Descripción</label>
           <input id="fDesc" type="text" autocomplete="off"></div>
+        <label class="g-switch" id="fAdelantoRow" hidden style="padding:2px 0"><input type="checkbox" id="fAdelanto">
+          Es un adelanto del próximo sueldo</label>
+        <div class="g-note" id="fAdelantoNota" hidden style="margin-top:-4px">Lo descuento de lo que vas a cobrar, así no contás la misma plata dos veces.</div>
         <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
           <button class="g-btn primary" id="saveMov">Guardar</button></div>
       </div>
@@ -902,7 +930,13 @@
           <div class="g-field"><label class="g-label" for="fjDia">Día de pago (1–28)</label>
             <input id="fjDia" type="number" inputmode="numeric" min="1" max="28" value="10"></div>
         </div>
-        <div class="g-field"><label class="g-label" for="fjCat">Categoría</label><select id="fjCat"></select></div>
+        <div class="g-row2">
+          <div class="g-field"><label class="g-label" for="fjCat">Categoría</label><select id="fjCat"></select></div>
+          <div class="g-field"><label class="g-label" for="fjBill">¿De dónde sale?</label><select id="fjBill"></select></div>
+        </div>
+        <label class="g-switch" style="padding:2px 0"><input type="checkbox" id="fjEsencial">
+          Es un gasto que sí o sí pago todos los meses</label>
+        <div class="g-note">Alquiler, luz, gas, teléfono, seguro. Los separo de las suscripciones, que son las que podrías cortar.</div>
         <div class="g-note" id="fjViaNote" hidden>Este fijo va incluido en el resumen de la tarjeta: no se paga aparte, se cuenta cuando pagás el resumen.</div>
         <div class="g-actions"><button class="g-btn danger" id="delFijo" hidden>Eliminar</button>
           <button class="g-btn" data-close>Cancelar</button>
@@ -1083,6 +1117,25 @@
           <button class="g-btn primary" id="simuCalcular">Calcular</button></div>
       </div>
 
+      <div id="phaseFijosGuia" hidden>
+        <h3>📋 Los gastos de siempre</h3>
+        <div class="g-note">Poné el monto de los que tengas y el día que vencen. Los que dejes vacíos no se cargan.</div>
+        <div id="guiaLista"></div>
+        <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
+          <button class="g-btn primary" id="saveGuia">Cargar los que puse</button></div>
+      </div>
+
+      <div id="phaseReparto" hidden>
+        <h3>💸 ¿Cómo reparto lo que tengo?</h3>
+        <div class="g-field"><label class="g-label" for="repMonto">¿Cuánto podés poner ahora?</label>
+          <input id="repMonto" type="text" inputmode="decimal" data-money></div>
+        <div class="g-note">Primero cubro el mínimo de cada tarjeta para que no te cobren punitorios, y lo que sobra va entero a la más cara. Es el reparto que menos intereses te hace pagar.</div>
+        <div class="g-stsum" id="repResultado" hidden></div>
+        <div id="repDetalle"></div>
+        <div class="g-actions"><button class="g-btn" data-close>Cerrar</button>
+          <button class="g-btn primary" id="repCalcular">Repartir</button></div>
+      </div>
+
       <div id="phaseAlcanza" hidden>
         <h3>¿Me alcanza para…?</h3>
         <div class="g-field"><label class="g-label" for="alMonto">¿Cuánto querés gastar?</label>
@@ -1177,7 +1230,7 @@
           <input id="prMonto" type="text" inputmode="decimal" data-money></div>
         <div class="g-chips" id="prAtajos"></div>
         <div class="g-stsum" id="prConsecuencia"></div>
-        <div class="g-field"><label class="g-label" for="prBill">¿De dónde salió?</label><select id="prBill"></select></div>
+        <div class="g-field"><label class="g-label" for="prResBill">¿De dónde salió?</label><select id="prResBill"></select></div>
         <div class="g-actions"><button class="g-btn" id="skipPagoRes">Todavía no pagué</button>
           <button class="g-btn primary" id="savePagoRes">Guardar pago</button></div>
       </div>
@@ -1225,10 +1278,31 @@
           Recordatorio diario para anotar los gastos</label>
         <div class="g-field"><label class="g-label" for="cfgCobro">¿Qué día del mes cobrás?</label>
           <input id="cfgCobro" type="number" min="0" max="28" step="1" placeholder="Ej: 5 — 0 si no tenés fecha fija"></div>
-        <div class="g-note">Con esto te digo cuánto podés gastar por día hasta el próximo sueldo, ya descontando los fijos y resúmenes que faltan pagar.</div>
+        <div class="g-field"><label class="g-label" for="cfgSueldo">¿Cuánto cobrás por mes?</label>
+          <input id="cfgSueldo" type="text" inputmode="decimal" data-money placeholder="Ej: 3000000 — vacío si varía"></div>
+        <div class="g-field"><label class="g-label" for="cfgDolar">¿A cuánto está el dólar?</label>
+          <input id="cfgDolar" type="text" inputmode="decimal" data-money placeholder="Ej: 1450 — para convertir los consumos en US$"></div>
+        <div class="g-note">Con esto te digo cuánto podés gastar por día hasta el próximo sueldo, ya descontando los fijos y resúmenes que faltan pagar. Si pedís un adelanto, marcalo al cargarlo y te lo descuento del próximo cobro.</div>
         <label class="g-switch" style="padding:0"><input type="checkbox" id="cfgNotif">
           Leer las notificaciones de mis billeteras</label>
         <div class="g-note" id="notifNota">Con esto, cuando Lemon, Mercado Pago o tu banco te avisan de un pago o una transferencia, Guita lo detecta y te lo propone para cargar (siempre te pregunta antes). Anda solo en la app instalada y tenés que darle permiso una vez en los ajustes del celu. Nada sale de tu teléfono.</div>
+        <div class="g-card g-tips" id="notifBloqueo" hidden style="margin-top:8px">
+          <div class="g-tip"><span class="ic">🔒</span><div>
+            <strong>Android te lo va a bloquear.</strong> Como Guita no vino de Play Store,
+            el sistema esconde este permiso detrás de "Ajustes restringidos". Se destraba así:
+            <ol style="margin:8px 0 0 18px; padding:0; line-height:1.6">
+              <li>Tocá <strong>Abrir el acceso</strong> e intentá prender Guita. Te lo va a rechazar: es a propósito.</li>
+              <li>Volvé y tocá <strong>Abrir la ficha de Guita</strong>.</li>
+              <li>Arriba a la derecha, el menú <strong>⋮</strong> → <strong>"Permitir ajustes restringidos"</strong>.</li>
+              <li>Confirmá con tu huella o PIN. No vas a ver ningún cambio: es normal.</li>
+              <li>Volvé a <strong>Abrir el acceso</strong> y ahora sí prendé Guita.</li>
+            </ol>
+            <div class="g-heroactions" style="margin-top:10px">
+              <button class="g-btn" id="notifAbrirLista">🔔 Abrir el acceso</button>
+              <button class="g-btn" id="notifAbrirFicha">⚙️ Abrir la ficha de Guita</button>
+            </div>
+          </div></div>
+        </div>
         <button class="g-btn" id="notifRevisar" style="flex:none" hidden>🔔 Revisar notificaciones ahora</button>
         <div class="g-row2" style="margin-top:2px">
           <button class="g-btn" id="backupBtn">💾 Guardar respaldo</button>
@@ -1341,7 +1415,7 @@
   if(!persistent) document.getElementById("storageNotice").classList.add("show");
 
   const blankConfig = () => ({apiKey:"", modeloIA:"eco", presupuestos:{}, alertaGrande:0,
-    recordatorio:{on:false, hora:"21:30"}, notificaciones:false, diaCobro:0});
+    recordatorio:{on:false, hora:"21:30"}, notificaciones:false, diaCobro:0, sueldo:0, dolar:0});
   const blankState = () => ({movs:[], billeteras:[], tarjetas:[], fijos:[], pagosFijos:{}, transf:[], ajustes:[],
     metas:[], prestamos:[], config:blankConfig(), seq:0});
 
@@ -1596,15 +1670,16 @@
       pago_minimo:{type:"number"},
       consumos_usd_total:{type:"number"},
       consumos:{type:"array", items:{type:"object", additionalProperties:false,
-        required:["descripcion","cuota","monto","categoria","suscripcion"],
+        required:["descripcion","cuota","monto","moneda","categoria","suscripcion"],
         properties:{
           descripcion:{type:"string"},
           cuota:{type:"string"},
           monto:{type:"number"},
+          moneda:{type:"string", enum:["ARS","USD"]},
           categoria:{type:"string", enum:["Comida","Transporte","Hogar","Servicios","Salud","Salidas","Ropa","Educación","Tarjeta","Otros"]},
           suscripcion:{type:"boolean"}
         }}}}};
-  const SYS_RESUMEN = "Leés resúmenes de tarjeta de crédito de bancos argentinos (PDF o foto) COMPLETOS, todas las páginas. Extraé: 'tarjeta' = red y banco en formato corto (ej 'Visa Provincia', 'Mastercard BBVA'); 'cierre_dia' y 'vencimiento_dia' = día del mes (1 a 28; si es 29-31 poné 28) del CIERRE ACTUAL y del VENCIMIENTO actual; 'mes' = mes de la fecha de cierre en formato YYYY-MM (no el del vencimiento); 'saldo_anterior' = SALDO ANTERIOR en pesos; 'pagos' = suma de los pagos y créditos del período en pesos ('SU PAGO EN PESOS' y similares), como número POSITIVO; 'impuestos' = suma en pesos de TODO lo que no es consumo ni saldo ni pago: impuesto de sellos, intereses de financiación, IVA, IIBB, percepciones, DB.RG, comisiones (positivo); 'pago_minimo' = PAGO MÍNIMO en pesos; 'total' = total a pagar en pesos (SALDO ACTUAL); 'total_usd' = total a pagar en dólares (0 si no hay); 'consumos_usd_total' = total de consumos del período en DÓLARES (0 si no hay); 'consumos' = cada consumo del período EN PESOS con: descripción corta legible, 'cuota' tipo '03/06' si aparece (sino ''), monto (los descuentos y bonificaciones van en NEGATIVO), categoría, y si es suscripción mensual recurrente. NO pongas en consumos: saldo anterior, pagos, impuestos, intereses, percepciones, transferencias de deuda, ni consumos en dólares. Comercios comunes: Coto/Dia/Carrefour/Jumbo/Rappi/PedidosYa=Comida; YPF/Shell/Axion/SUBE/Uber/Cabify/Hertz=Transporte; Farmacity=Salud; Edesur/Edea/Metrogas/Camuzzi/Aysa/Personal/Movistar/Claro/Tuenti=Servicios; Netflix/Spotify/YouTube/Canva/Github=Servicios y suscripción.";
+  const SYS_RESUMEN = "Leés resúmenes de tarjeta de crédito de bancos argentinos (PDF o foto) COMPLETOS, todas las páginas. Extraé: 'tarjeta' = red y banco en formato corto (ej 'Visa Provincia', 'Mastercard BBVA'); 'cierre_dia' y 'vencimiento_dia' = día del mes (1 a 28; si es 29-31 poné 28) del CIERRE ACTUAL y del VENCIMIENTO actual; 'mes' = mes de la fecha de cierre en formato YYYY-MM (no el del vencimiento); 'saldo_anterior' = SALDO ANTERIOR en pesos; 'pagos' = suma de los pagos y créditos del período en pesos ('SU PAGO EN PESOS' y similares), como número POSITIVO; 'impuestos' = suma en pesos de TODO lo que no es consumo ni saldo ni pago: impuesto de sellos, intereses de financiación, IVA, IIBB, percepciones, DB.RG, comisiones (positivo); 'pago_minimo' = PAGO MÍNIMO en pesos; 'total' = total a pagar en pesos (SALDO ACTUAL); 'total_usd' = total a pagar en dólares (0 si no hay); 'consumos_usd_total' = total de consumos del período en DÓLARES (0 si no hay); 'consumos' = cada consumo del período con: descripción corta legible, 'cuota' tipo '03/06' si aparece (sino ''), monto en su moneda original (los descuentos y bonificaciones van en NEGATIVO), 'moneda' = 'USD' si el consumo está en la sección de consumos en DÓLARES del resumen o si el monto figura con U$D/USD/US$, si no 'ARS', categoría, y si es suscripción mensual recurrente. Los consumos en dólares van con su monto EN DÓLARES, nunca convertidos a pesos: la suma de los que marques USD tiene que dar 'consumos_usd_total'. NO pongas en consumos: saldo anterior, pagos, impuestos, intereses, percepciones ni transferencias de deuda. Comercios comunes: Coto/Dia/Carrefour/Jumbo/Rappi/PedidosYa=Comida; YPF/Shell/Axion/SUBE/Uber/Cabify/Hertz=Transporte; Farmacity=Salud; Edesur/Edea/Metrogas/Camuzzi/Aysa/Personal/Movistar/Claro/Tuenti=Servicios; Netflix/Spotify/YouTube/Canva/Github=Servicios y suscripción.";
 
   const SCHEMA_CLASIF = {type:"object", additionalProperties:false, required:["items"], properties:{
     items:{type:"array", items:{type:"object", additionalProperties:false,
@@ -1764,7 +1839,30 @@
   /* pagos parciales de resúmenes: pagadoMonto manda; pagado (bool) queda por compat */
   const resPagado = r => r.pagadoMonto != null ? r.pagadoMonto : (r.pagado ? r.monto : 0);
   const resFinanciado = r => Math.max(0, r.monto - resPagado(r));
-  const sumaDetalle = r => (r.detalle||[]).reduce((s,d)=>s+(d.monto>0?d.monto:0),0);
+  /**
+   * Cómo viene un resumen. Una sola definición para toda la app: antes había tres
+   * criterios sueltos y ninguno miraba el pago mínimo, así que una tarjeta con el
+   * mínimo pagado seguía apareciendo como vencimiento por el saldo entero.
+   */
+  function estadoResumen(r){
+    const total = r.monto||0, pagado = resPagado(r), falta = Math.max(0, total-pagado);
+    const minimo = r.pagoMinimo>0 ? r.pagoMinimo : 0;
+    const saldado = falta <= 0.5;
+    // sin mínimo conocido, cualquier pago cuenta como atendido
+    const cubreMinimo = saldado || (pagado>0 && (!minimo || pagado >= minimo-0.5));
+    return {total, pagado, falta, minimo, saldado, cubreMinimo,
+      faltaMinimo: (minimo && !cubreMinimo) ? minimo-pagado : 0};
+  }
+  /**
+   * Cuánto vale en pesos un consumo del resumen. Los consumos en dólares se guardan
+   * con su monto en dólares y `moneda:"USD"`: antes GITHUB US$10 figuraba como $10.
+   */
+  const enPesos = d => d.moneda==="USD" ? d.monto*(S.config.dolar||0) : d.monto;
+  /** Cómo se escribe: en dólares se muestra el original y al lado el equivalente. */
+  const fmtConsumo = d => d.moneda==="USD"
+    ? `US$ ${fmtNum(d.monto)}` + (S.config.dolar>0 ? ` · ≈${fmtMoney(enPesos(d))}` : "")
+    : fmtMoney(d.monto);
+  const sumaDetalle = r => (r.detalle||[]).reduce((s,d)=>s+(enPesos(d)>0?enPesos(d):0),0);
   const mesAnterior = k => { const [y,m]=k.split("-").map(Number); return monthKey(new Date(y, m-2, 1)); };
 
   // impuestos e intereses reales del mes: leídos del resumen, o estimados
@@ -1807,10 +1905,10 @@
       else cuotasTerminan.push({desc, monto:d.monto, categoria:d.categoria});
     }
     // gastos que vuelven todos los meses (servicios, seguros, suscripciones), sin las cuotas
-    const recurrentes = (r.detalle||[]).filter(d=>d.monto>0 && !cuotaDe(d.desc) && esRecurrente(d))
+    const recurrentes = (r.detalle||[]).filter(d=>enPesos(d)>0 && !cuotaDe(d.desc) && esRecurrente(d))
       .map(d=>({desc:d.desc, monto:d.monto, categoria:d.categoria}));
     // lo único que NO vuelve: compras de una sola vez (no se proyectan)
-    const unicos = (r.detalle||[]).filter(d=>d.monto>0 && !cuotaDe(d.desc) && !esRecurrente(d))
+    const unicos = (r.detalle||[]).filter(d=>enPesos(d)>0 && !cuotaDe(d.desc) && !esRecurrente(d))
       .map(d=>({desc:d.desc, monto:d.monto, categoria:d.categoria}));
     const fijosVia = S.fijos.filter(f=>f.viaTarjeta && f.tarjetaId===t.id && f.activo!==false);
     const nuevos = S.movs.filter(m=>m.tarjetaId===t.id && m.tipo==="gasto" && !(t.resumenes||{})[m.fecha.slice(0,7)]);
@@ -1854,17 +1952,44 @@
 
   /* ---------- vencimientos ---------- */
   /** Lo que falta pagar y sale de tu plata, ordenado por fecha. Deriva de compromisos(). */
+  /**
+   * Cuándo vence el resumen de una tarjeta. Se calcula siempre, aunque ya hayas
+   * cubierto el mínimo: saber hasta cuándo podés pagar es parte del dato.
+   */
+  function vencimientoTarjeta(t){
+    const dia = Math.min(Math.max(1, t.vto||1), 28);
+    const hoy = new Date(); hoy.setHours(12,0,0,0);
+    const ks = Object.keys(t.resumenes||{}).sort();
+    if(!ks.length) return null;
+    const est = estadoResumen(t.resumenes[ks[ks.length-1]]);
+    // saldado: el que interesa es el vencimiento del próximo, el mes que viene
+    const mes = est.saldado ? hoy.getMonth()+1 : hoy.getMonth();
+    const fecha = new Date(hoy.getFullYear(), mes, dia, 12);
+    return {fecha, late: fecha < hoy, dias: diasHasta(fecha), saldado: est.saldado};
+  }
+  /** Días entre hoy y una fecha (negativo si ya pasó). */
+  function diasHasta(fecha){
+    const hoy = new Date(); hoy.setHours(12,0,0,0);
+    return Math.round((fecha-hoy)/86400000);
+  }
+  /**
+   * Lo que te falta pagar, de acá hasta el fin del mes que viene. Mira dos meses
+   * porque los primeros días del mes siguiente hay que verlos con tiempo.
+   */
   function vencimientos(){
     const hoy = new Date(); hoy.setHours(12,0,0,0);
-    return compromisos()
-      .filter(o=>o.cobra==="billetera" && !o.pagado && o.pagable)
-      .map(o=>{
-        const fecha = new Date(hoy.getFullYear(), hoy.getMonth(), Math.min(o.dia,28), 12);
-        return {kind: o.tipo==="resumen" ? "tarjeta" : o.tipo, ref:o.ref, comp:o,
-          nombre:o.nombre, monto:o.monto, fecha, late: fecha < hoy,
-          dias: Math.round((fecha-hoy)/86400000)};
-      })
-      .sort((a,b)=>a.fecha-b.fecha);
+    const out = [];
+    for(const desp of [0,1]){
+      const base = new Date(hoy.getFullYear(), hoy.getMonth()+desp, 1, 12);
+      for(const o of compromisos(desp)){
+        if(o.cobra!=="billetera" || o.pagado || !o.pagable) continue;
+        const fecha = new Date(base.getFullYear(), base.getMonth(), Math.min(o.dia,28), 12);
+        out.push({kind: o.tipo==="resumen" ? "tarjeta" : o.tipo, ref:o.ref, comp:o,
+          nombre:o.nombre, monto:o.monto, fecha, mk: monthKey(base), desp,
+          late: fecha < hoy, dias: diasHasta(fecha)});
+      }
+    }
+    return out.sort((a,b)=>a.fecha-b.fecha);
   }
 
   /* ---------- animación de números ---------- */
@@ -1993,7 +2118,7 @@
     }
     for(const r of res){
       if(desglosar && r.detalle && r.detalle.length){
-        for(const d of r.detalle) if(d.monto>0) byCat[d.categoria||"Otros"]=(byCat[d.categoria||"Otros"]||0)+d.monto;
+        for(const d of r.detalle) if(enPesos(d)>0) byCat[d.categoria||"Otros"]=(byCat[d.categoria||"Otros"]||0)+enPesos(d);
       } else {
         byCat["Tarjeta"]=(byCat["Tarjeta"]||0)+r.monto;
       }
@@ -2022,8 +2147,8 @@
     for(const r of res){
       const nom = r.__tarjeta || "Tarjeta";
       if(desglosar && r.detalle && r.detalle.length){
-        for(const d of r.detalle) if(d.monto>0)
-          push(d.categoria, {desc:d.desc, monto:d.monto, fecha:null,
+        for(const d of r.detalle) if(enPesos(d)>0)
+          push(d.categoria, {desc:d.desc, monto:enPesos(d), fecha:null, moneda:d.moneda, usd:d.monto,
             origen:"💳 "+nom+" · resumen de "+monthKeyLabel(mk)});
       } else {
         push("Tarjeta", {desc:"Resumen "+nom, monto:r.monto, fecha:null,
@@ -2098,7 +2223,7 @@
   function renderAnalisis(){
     $("monthTitleA").textContent = fmtMonth(view);
     const mm = monthMovs();
-    const inn = mm.filter(x=>x.tipo==="ingreso").reduce((s,x)=>s+x.monto,0);
+    const inn = gastoDelMes(monthKey(view)).ingreso;
     const cardTotal = cardResumenesMes(monthKey(view)).reduce((s,r)=>s+r.monto,0);
     const hasData = inn>0 || cardTotal>0 || mm.some(x=>x.tipo==="gasto");
     $("anEmpty").hidden = hasData;
@@ -2164,10 +2289,10 @@
       // los consumos del resumen entran por su propia categoría
       for(const r of res){
         if(r.detalle && r.detalle.length){
-          for(const dd of r.detalle) if(dd.monto>0){
-            porCat[dd.categoria||"Otros"] = (porCat[dd.categoria||"Otros"]||0) + dd.monto;
+          for(const dd of r.detalle) if(enPesos(dd)>0){
+            porCat[dd.categoria||"Otros"] = (porCat[dd.categoria||"Otros"]||0) + enPesos(dd);
           }
-          const suma = r.detalle.reduce((a,dd)=>a+(dd.monto>0?dd.monto:0),0);
+          const suma = r.detalle.reduce((a,dd)=>a+Math.max(0, enPesos(dd)),0);
           const resto = Math.max(0, r.monto - suma);
           if(resto>0) porCat["Tarjeta"] = (porCat["Tarjeta"]||0) + resto;
         } else {
@@ -2304,8 +2429,7 @@
     const finTotal = deudaTotal().financiado;
 
     // balance del mes
-    const mm = monthMovs();
-    const inn = mm.filter(x=>x.tipo==="ingreso").reduce((s,x)=>s+x.monto,0);
+    const inn = gastoDelMes(monthKey(view)).ingreso;
     const gasto = pieData.reduce((s,[,v])=>s+v,0);
     if(inn>0 && gasto>inn) tips.push({ic:"🚨", html:`Este mes llevás gastado <strong>${fmtMoney(gasto-inn)}</strong> más de lo que ingresó. Si sigue así, sale de ahorros o de financiar la tarjeta (carísimo).`});
     else if(inn>0 && gasto<inn*0.8) tips.push({ic:"👏", html:`Vas gastando el ${Math.round(gasto/inn*100)}% de tus ingresos — ese ${Math.round((inn-gasto)/inn*100)}% que sobra rinde más cancelando deuda de tarjeta que quieto en una cuenta que no remunera.`});
@@ -2452,23 +2576,37 @@
       const keys = Object.keys(t.resumenes||{}).sort();
       const mk = (t.resumenes||{})[hoyMk] ? hoyMk : keys[keys.length-1];
       const r = mk ? t.resumenes[mk] : null;
-      const pag = r ? resPagado(r) : 0;
-      const fin = r ? resFinanciado(r) : 0;
-      const estado = !r ? "Sin resúmenes cargados"
-        : monthKeyLabel(mk)+(fin<=0.005 ? " · pagado ✔"
-          : pag>0 ? ` · pagaste ${fmtMoney(pag)} — financiás ${fmtMoney(fin)}`
-          : " · vence el "+t.vto);
+      const est = r ? estadoResumen(r) : null;
+      const pag = est ? est.pagado : 0;
+      const fin = est ? est.falta : 0;
+      // lo que importa de una tarjeta: qué pagaste, qué falta, cuándo vence y qué viene
+      const venc = vencimientoTarjeta(t);
+      const proy = r ? proyeccionTarjeta(t) : null;
+      const filas = !r ? `<div class="g-ccstat"><div class="nota">Sin resúmenes cargados</div></div>` : `
+        <div class="g-ccstat">
+          <div class="r"><span>Ya pagaste</span><strong>${fmtMoney(pag)}</strong></div>
+          <div class="r big"><span>${est.saldado ? "Saldado" : "Te falta"}</span>
+            <strong>${est.saldado ? "✔" : fmtMoney(fin)}</strong></div>
+          ${est.faltaMinimo>0 ? `<div class="nota">⚠️ Te faltan ${fmtMoney(est.faltaMinimo)} para llegar al mínimo de ${fmtMoney(est.minimo)}.</div>`
+            : !est.saldado && est.pagado>0 ? `<div class="nota">Cubriste el mínimo ✔ — lo que falta se financia y va al próximo resumen.</div>`
+            : !est.saldado ? `<div class="nota">Si no lo pagás antes del ${t.vto}, va al próximo resumen con intereses.</div>` : ""}
+          ${venc ? `<div class="r"><span>${venc.saldado ? "Próximo vence" : venc.late ? "Venció" : "Vence"}</span><strong>${
+            venc.late ? `hace ${-venc.dias} día${-venc.dias===1?"":"s"}` : `el ${venc.fecha.getDate()} de ${MESES_LARGOS[venc.fecha.getMonth()]}`
+          }</strong></div>` : ""}
+          ${proy ? `<div class="r"><span>Próximo resumen</span><strong>≈${fmtMoney(proy.total)}</strong></div>` : ""}
+        </div>`;
       const nDet = (r && r.detalle) ? r.detalle.length : 0;
       const detalle = nDet
         ? `<div class="g-ccdetail">`+r.detalle.slice(0,4).map(d=>
-            `<div><span class="cemoji">${iconFor(d.desc, d.categoria)}</span><span class="nm">${esc(d.desc)}${d.sub?" 🔁":""}</span><span class="m">${fmtMoney(d.monto)}</span></div>`).join("")
+            `<div><span class="cemoji">${iconFor(d.desc, d.categoria)}</span><span class="nm">${esc(d.desc)}${d.sub?" 🔁":""}</span><span class="m">${fmtConsumo(d)}</span></div>`).join("")
           + (nDet>4?`<div><span class="cemoji">📋</span><span class="nm">… y ${nDet-4} consumos más</span><span class="m"></span></div>`:"") + `</div>`
         : "";
       return `<article class="g-ccard" data-card="${t.id}">
         <div class="name">${esc(t.nombre)}</div>
         <div class="dates">Cierra el ${t.cierre} · vence el ${t.vto}${t.deuda>0?" · arrastra "+fmtMoney(t.deuda):""}</div>
         <div class="amount">${r ? fmtMoney(r.monto) : "—"}</div>
-        <div class="state">${estado}</div>
+        <div class="state">${r ? "Resumen de "+monthKeyLabel(mk) : ""}</div>
+        ${filas}
         ${detalle}
         <div class="row">
           <button class="g-ccbtn solid" data-loadres="${t.id}">${r?"Editar resumen":"Cargar resumen"}</button>
@@ -2651,10 +2789,14 @@
   /** Junta cada servicio/suscripción con lo que pagaste mes a mes. */
   function historialServicios(){
     const mapa = {};   // clave normalizada → {nombre, puntos:[{mk, monto}], via}
+    // misma clave que usa el resto de la app para decidir si dos consumos son el mismo
+    // comercio: sin esto "WWW.CAMUZZI GAS PAMPEA" y "Camuzzi Gas Pampeana" eran dos
     const sumar = (nombre, mk, monto, via) => {
-      const k = norm(nombre).replace(/[^a-z0-9]/g,"").slice(0,18);
+      const k = claveComercio(nombre);
       if(!k) return;
       const e = mapa[k] || (mapa[k] = {nombre, puntos:[], via});
+      // nos quedamos con el nombre más prolijo (el más corto sin prefijos de pasarela)
+      if(nombre.length < e.nombre.length) e.nombre = nombre;
       const ya = e.puntos.find(p=>p.mk===mk);
       if(ya) ya.monto += monto; else e.puntos.push({mk, monto});
     };
@@ -2663,7 +2805,7 @@
       for(const mk of Object.keys(t.resumenes||{})){
         for(const d of (t.resumenes[mk].detalle||[])){
           if(!(d.monto>0) || cuotaDe(d.desc) || !esRecurrente(d)) continue;
-          sumar(d.desc, mk, d.monto, "💳 "+t.nombre);
+          sumar(d.desc, mk, enPesos(d), "💳 "+t.nombre);
         }
       }
     }
@@ -2708,8 +2850,12 @@
       const total = e.puntos.reduce((s,p)=>s+p.monto,0);
       // solo lo que parece suscripción de entretenimiento/servicio, no impuestos
       const esSub = SUBS_KW.some(w=>norm(e.nombre).includes(norm(w)));
+      // ¿sigue vivo? si no aparece hace 2 meses o más ya no lo estás pagando
+      const hoy = new Date();
+      const [uy, um] = ult.mk.split("-").map(Number);
+      const mesesAtras = (hoy.getFullYear()-uy)*12 + (hoy.getMonth()+1-um);
       out.push({nombre:e.nombre, via:e.via, ultimo:ult.monto, total, meses:e.puntos.length,
-        anual: ult.monto*12, esSub});
+        anual: ult.monto*12, esSub, ultimoMk: ult.mk, mesesAtras, vigente: mesesAtras <= 1});
     }
     return out.sort((a,b)=>b.ultimo-a.ultimo);
   }
@@ -2786,6 +2932,23 @@
   }
 
   /** Todo lo que debés, con el costo real de arrastrarlo. */
+  /**
+   * Cuánto te cuesta arrastrar saldo en una tarjeta, por mes.
+   * Devuelve null cuando el dato no es confiable: si arrastraste poco, los impuestos
+   * del mes son casi todos IVA y sellos de las compras nuevas, no interés — con una
+   * compra grande el cociente da disparates (una Mastercard real dio 81,9%).
+   */
+  function tasaTarjeta(t){
+    const ks = Object.keys(t.resumenes||{}).sort();
+    if(ks.length<2) return null;
+    const lastK = ks[ks.length-1], r = t.resumenes[lastK];
+    const arr = arrastreMes(t, lastK), cg = cargosMes(t, lastK);
+    if(arr==null || cg==null || !(arr>0) || !(cg>0)) return null;
+    if(arr < (r.monto||0)*0.15) return null;          // arrastre chico: no es medible
+    const tasa = cg/arr*100;
+    return (tasa>=3 && tasa<=25) ? tasa : null;
+  }
+
   function deudaTotal(){
     let tarjetas = 0, declarada = 0, financiado = 0, cargosUlt = 0, arrUlt = 0;
     for(const t of S.tarjetas){
@@ -2804,52 +2967,73 @@
       }
     }
     const prestamos = deudaPrestamos();
-    const tasa = arrUlt>0 ? Math.min(30, cargosUlt/arrUlt*100) : null;
+    const tasa = arrUlt>0 ? Math.min(25, Math.max(0.5, cargosUlt/arrUlt*100)) : null;
     return {tarjetas, declarada, prestamos, financiado, cargosUlt, tasa,
       total: tarjetas + declarada + prestamos};
   }
 
-  /** Todo lo que se paga este mes, en una sola lista ordenada por día.
-      Distingue lo que sale de tu plata de lo que ya va dentro del resumen. */
-  function compromisos(){
+  /**
+   * Todo lo que tenés que pagar en un mes. `desp` = 0 este mes, 1 el que viene:
+   * antes sólo existía el mes en curso y una cuota del 1 de septiembre era invisible.
+   */
+  function compromisos(desp){
+    desp = desp|0;
     const out = [];
-    const mk = monthKey(new Date());
-    const hoy = new Date().getDate();
+    const base = new Date(); base.setHours(12,0,0,0);
+    if(desp) base.setMonth(base.getMonth()+desp, 1);
+    const mk = monthKey(base);
+    const hoy = desp ? 0 : new Date().getDate();   // en un mes futuro nada está vencido
+    out.mk = mk; out.desp = desp;
     const pagosMes = S.pagosFijos[mk]||{};
-    const push = o => out.push(Object.assign({
-      pagado:false, pagable:false, editable:false, cobra:"billetera"
-    }, o, {vencido: !o.pagado && o.dia < hoy}));
+    const push = o => {
+      const it = Object.assign({pagado:false, pagable:false, editable:false, cobra:"billetera"}, o);
+      it.vencido = !it.pagado && it.dia < hoy;   // después del merge: antes leía un pagado undefined
+      out.push(it);
+    };
 
     for(const f of S.fijos){
       if(f.activo===false) continue;
       const t = f.viaTarjeta ? S.tarjetas.find(x=>x.id===f.tarjetaId) : null;
+      const bill = !f.viaTarjeta && f.billetera ? S.billeteras.find(b=>b.id===f.billetera) : null;
       push({tipo:"fijo", ref:f, id:"f"+f.id, nombre:f.nombre, monto:f.monto,
-        categoria:f.categoria, dia:f.dia, editable:true,
+        categoria:f.categoria, dia:f.dia, editable:true, esencial: esEsencial(f),
         cobra: f.viaTarjeta ? "tarjeta" : "billetera",
-        pagable: !f.viaTarjeta, pagado: !f.viaTarjeta && !!pagosMes[f.id],
-        via: t ? "💳 "+t.nombre : (f.viaTarjeta ? "💳 en la tarjeta" : "👛 de tu plata")});
+        pagable: !f.viaTarjeta, pagado: !desp && !f.viaTarjeta && !!pagosMes[f.id],
+        huerfano: !!(f.viaTarjeta && !t),
+        via: t ? "💳 "+t.nombre
+          : f.viaTarjeta ? "💳 ⚠️ tarjeta que ya no existe"
+          : (bill ? "👛 "+bill.nombre : "👛 de tu plata")});
     }
     for(const p of (S.prestamos||[])){
       const e = estadoPrestamo(p);
       if(e.listo) continue;
+      // la cuota vive en el mes de su próxima fecha real, no siempre en el mes en curso
+      const enEsteMes = e.proxima && monthKey(e.proxima)===mk;
+      if(!enEsteMes && !(desp===0 && e.pagadoEsteMes)) continue;
       push({tipo:"prestamo", ref:p, id:"p"+p.id, nombre:"Cuota "+p.nombre, monto:p.cuota,
-        categoria:"Otros", dia:p.dia, pagable:true, pagado:e.pagadoEsteMes, editable:true,
-        via:`🏦 quedan ${e.quedan} de ${e.total}`});
+        categoria:"Otros", dia:p.dia, pagable:true, pagado: desp===0 && e.pagadoEsteMes,
+        editable:true, est:e,
+        via:`🏦 cuota ${e.cuotaNum} de ${e.total}`});
     }
     // resúmenes sin pagar: son el compromiso más grande y faltaban en esta lista
-    for(const t of S.tarjetas){
+    for(const t of (desp ? [] : S.tarjetas)){
       const ks = Object.keys(t.resumenes||{}).sort();
       if(!ks.length) continue;
       const mkR = ks[ks.length-1];
       const r = t.resumenes[mkR];
-      const falta = resFinanciado(r);
-      if(falta<=0.5) continue;
+      const est = estadoResumen(r);
+      if(est.saldado) continue;
+      // con el mínimo cubierto deja de ser urgencia: el resto es deuda financiada,
+      // sigue viva en Deudas y en la proyección del próximo resumen
       push({tipo:"resumen", ref:t, mkResumen:mkR, id:"r"+t.id, nombre:"Resumen "+t.nombre,
-        monto:falta, categoria:"Tarjeta", dia:t.vto, pagable:true,
-        via:`💳 total ${fmtMoney(r.monto)}${resPagado(r)>0?" · pagaste "+fmtMoney(resPagado(r)):""}`});
+        monto:est.falta, categoria:"Tarjeta", dia:t.vto, pagable:true,
+        pagado: est.cubreMinimo, est,
+        via: est.faltaMinimo>0
+          ? `💳 pagaste ${fmtMoney(est.pagado)} — te faltan ${fmtMoney(est.faltaMinimo)} para el mínimo`
+          : `💳 total ${fmtMoney(r.monto)}${est.pagado>0?" · pagaste "+fmtMoney(est.pagado):""}`});
     }
     // servicios recurrentes que vienen dentro del resumen (no se suman aparte)
-    for(const t of S.tarjetas){
+    for(const t of (desp ? [] : S.tarjetas)){
       const ks = Object.keys(t.resumenes||{}).sort();
       const r = ks.length ? t.resumenes[ks[ks.length-1]] : null;
       if(!r || !r.detalle) continue;
@@ -2897,37 +3081,57 @@
     $("dueLbl").textContent = v.late ? "⚠️ Vencido" : "Lo próximo que vence";
     animMoney($("dueTotal"), v.monto);
     $("dueTotal").className = "num deuda";
-    $("dueSub").innerHTML = `<strong>${esc(v.nombre)}</strong> · ${cuando} (el ${v.fecha.getDate()})`;
+    const est = v.comp && v.comp.est;
+    // si es del mes que viene el número de día solo no alcanza: hay que nombrar el mes
+    const cuandoDia = v.desp ? `el ${v.fecha.getDate()} de ${MESES_LARGOS[v.fecha.getMonth()]}`
+                             : `el ${v.fecha.getDate()}`;
+    $("dueSub").innerHTML = `<strong>${esc(v.nombre)}</strong> · ${cuando} (${cuandoDia})`
+      + (est && est.faltaMinimo>0
+          ? `<br>Pagaste ${fmtMoney(est.pagado)} de ${fmtMoney(est.total)}: te faltaron ` +
+            `<strong style="color:var(--danger)">${fmtMoney(est.faltaMinimo)}</strong> para llegar al mínimo.`
+          : "");
     $("dueRecordar").hidden = false;
     $("dueRecordar").textContent = recordatorioActivo(v) ? "🔔" : "🔕";
     $("dueAcciones").innerHTML = `<button class="g-btn primary" id="duePagar">💸 Pagarlo</button>`;
     $("duePagar").onclick = ()=>pagarVencimiento(v);
-    // el resto, como píldoras
-    const resto = vs.slice(1);
-    $("dueList").innerHTML = resto.length
-      ? `<div class="g-label" style="margin:6px 0 2px">Después viene</div>` + resto.slice(0,4).map((x,i)=>{
-          const c = x.late ? `venció el ${x.fecha.getDate()}` : `el ${x.fecha.getDate()}`;
-          const tipo = x.comp ? x.comp.tipo : x.kind;
-          const ic = tipo==="prestamo" ? "\ud83c\udfe6" : tipo==="resumen" ? "\ud83d\udcb3" : "\ud83d\udccc";
-          // el "Resumen"/"Cuota" ya lo dice el ícono: el nombre del banco necesita el ancho
-          const corto = x.nombre.replace(/^(Resumen|Cuota)\s+/i, "");
-          return `<div class="g-duepill${x.late?" late":""}" data-venc="${i+1}" role="button" tabindex="0">
-            <span class="ic">${ic}</span>
-            <span class="nm">${esc(corto)}<span class="when">${c}</span></span>
-            <strong>${fmtMoney(x.monto)}</strong>
-          </div>`;
-        }).join("")
-        + (resto.length>4 ? `<div class="g-note" style="margin-top:4px">y ${resto.length-4} más</div>` : "")
-        + `<div class="g-note" style="margin-top:6px">En total te quedan <strong>${fmtMoney(vs.reduce((s,x)=>s+x.monto,0))}</strong> por pagar este mes.</div>`
-      : "";
+    // el resto, agrupado por mes: los primeros días del mes que viene hay que verlos
+    const resto = vs.slice(1, 9);
+    const pill = x => {
+      const c = x.late ? `venció el ${x.fecha.getDate()}` : diaCorto(x.fecha);
+      const tipo = x.comp ? x.comp.tipo : x.kind;
+      const ic = tipo==="prestamo" ? "\ud83c\udfe6" : tipo==="resumen" ? "\ud83d\udcb3" : "\ud83d\udccc";
+      // el "Resumen"/"Cuota" ya lo dice el ícono: el nombre del banco necesita el ancho
+      const corto = x.nombre.replace(/^(Resumen|Cuota)\s+/i, "");
+      return `<div class="g-duepill${x.late?" late":""}" data-comp="${esc(x.comp.id)}" data-desp="${x.desp}"
+          role="button" tabindex="0">
+        <span class="ic">${ic}</span>
+        <span class="nm">${esc(corto)}<span class="when">${c}</span></span>
+        <strong>${fmtMoney(x.monto)}</strong>
+      </div>`;
+    };
+    const esteMes = resto.filter(x=>!x.desp), proxMes = resto.filter(x=>x.desp);
+    const totMes = vs.filter(x=>!x.desp).reduce((s,x)=>s+x.monto,0);
+    const totProx = vs.filter(x=>x.desp).reduce((s,x)=>s+x.monto,0);
+    $("dueList").innerHTML = (resto.length
+      ? (esteMes.length ? `<div class="g-label" style="margin:6px 0 2px">Después este mes</div>`
+                          + esteMes.map(pill).join("") : "")
+        + (proxMes.length ? `<div class="g-label" style="margin:12px 0 2px">${esc(mesLargo(proxMes[0].fecha))}</div>`
+                          + proxMes.map(pill).join("") : "")
+        + (vs.length>9 ? `<div class="g-note" style="margin-top:4px">y ${vs.length-9} más</div>` : "")
+      : "")
+      + `<div class="g-note" style="margin-top:10px">Te quedan <strong>${fmtMoney(totMes)}</strong> este mes`
+      + (totProx>0 ? ` y <strong>${fmtMoney(totProx)}</strong> el que viene` : "") + `.</div>`;
   }
+  const MESES_LARGOS = ["enero","febrero","marzo","abril","mayo","junio",
+    "julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  const mesLargo = f => MESES_LARGOS[f.getMonth()].replace(/^./,c=>c.toUpperCase());
+  const diaCorto = f => `${f.getDate()} de ${MESES_LARGOS[f.getMonth()].slice(0,3)}`;
   $("dueList").addEventListener("click", e=>{
-    const el = e.target.closest("[data-venc]");
+    const el = e.target.closest("[data-comp]");
     if(!el) return;
-    const v = vencimientos()[Number(el.dataset.venc)];
+    const v = vencimientos().find(x=>x.comp.id===el.dataset.comp && String(x.desp)===el.dataset.desp);
     if(v) pagarVencimiento(v);
   });
-
   /** Abre el camino de pago que corresponda según qué venza. */
   function pagarVencimiento(v){
     if(v.kind==="tarjeta"){
@@ -2986,10 +3190,12 @@
     for(const t of S.tarjetas){
       for(const mk in (t.resumenes||{})){
         const r = t.resumenes[mk];
-        const pag = resPagado(r);
-        if(pag>0.5) pagos.push({nombre:"Resumen "+t.nombre, monto:pag, mk,
-          detalle: resFinanciado(r)>0.5 ? `quedan ${fmtMoney(resFinanciado(r))}` : "saldado ✔",
-          icono:"💳"});
+        const est = estadoResumen(r);
+        if(est.pagado>0.5) pagos.push({nombre:"Resumen "+t.nombre, monto:est.pagado, mk,
+          detalle: est.saldado ? "saldado ✔"
+            : est.faltaMinimo>0 ? `te faltó ${fmtMoney(est.faltaMinimo)} para el mínimo`
+            : `cubriste el mínimo ✔ · quedan ${fmtMoney(est.falta)}`,
+          alerta: est.faltaMinimo>0, icono:"💳"});
       }
     }
     // cuotas de préstamo
@@ -2998,10 +3204,16 @@
         mk:(x.fecha||"").slice(0,7), fecha:x.fecha, detalle:"", icono:"🏦"});
     }
     // movimientos marcados como pago
+    const movsDeResumen = new Set();
+    for(const t of S.tarjetas) for(const mk in (t.resumenes||{})){
+      const id = t.resumenes[mk].pagadoMovId; if(id) movsDeResumen.add(id);
+    }
     for(const m of S.movs){
       if(m.tipo!=="gasto") continue;
       if(m.categoria!=="Tarjeta" && !m.prestamo && !/^cuota |^pago /i.test(m.descripcion||"")) continue;
-      if(m.prestamo) continue;   // ya lo tomamos arriba
+      if(m.prestamo) continue;                 // ya lo tomamos arriba
+      if(movsDeResumen.has(m.id)) continue;    // el resumen ya lo cuenta
+      if(m.origen==="tarjeta") continue;       // ídem para pagos anteriores sin movId
       pagos.push({nombre:m.descripcion||"Pago", monto:m.monto, mk:m.fecha.slice(0,7),
         fecha:m.fecha, detalle:"", icono:"✅"});
     }
@@ -3013,11 +3225,12 @@
       <div class="g-tip" style="--d:${Math.min(i,8)*0.04}s">
         <span class="ic">${x.icono}</span>
         <div style="flex:1; min-width:0">
-          <div style="display:flex; gap:8px; justify-content:space-between">
-            <span style="font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${esc(x.nombre)}</span>
-            <strong style="flex:none; color:var(--income)">${fmtMoney(x.monto)}</strong>
+          <div style="display:flex; gap:10px; justify-content:space-between; align-items:baseline">
+            <span style="font-weight:600; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${esc(x.nombre.replace(/^(Resumen|Cuota)\s+/i,""))}</span>
+            <strong style="flex:none; color:var(--income); font-variant-numeric:tabular-nums">${fmtMoney(x.monto)}</strong>
           </div>
-          <div class="g-note" style="margin:0">${x.fecha ? x.fecha.slice(8)+"/"+x.fecha.slice(5,7) : monthKeyLabel(x.mk)}${
+          <div class="g-note" style="margin:0${x.alerta?"; color:var(--danger); font-weight:600":""}">${
+            x.fecha ? x.fecha.slice(8)+"/"+x.fecha.slice(5,7) : monthKeyLabel(x.mk)}${
             x.detalle ? " · "+x.detalle : ""}</div>
         </div>
       </div>`).join("");
@@ -3071,6 +3284,26 @@
     return Math.max(1, Math.round((prox-hoy)/86400000));
   }
 
+  /**
+   * Cuánto vas a cobrar la próxima vez. Si pediste adelantos desde el último cobro,
+   * se descuentan: el sueldo entero ya no va a entrar.
+   */
+  function proximoCobro(){
+    const dia = S.config.diaCobro|0, bruto = S.config.sueldo||0;
+    if(!(dia>=1 && dia<=28) || !(bruto>0)) return null;
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    let fecha = new Date(hoy.getFullYear(), hoy.getMonth(), dia);
+    if(fecha <= hoy) fecha = new Date(hoy.getFullYear(), hoy.getMonth()+1, dia);
+    // el cobro anterior: un mes antes de la próxima fecha
+    const desde = new Date(fecha.getFullYear(), fecha.getMonth()-1, dia);
+    const desdeISO = desde.toISOString().slice(0,10);
+    const adelantado = S.movs
+      .filter(m=>m.tipo==="ingreso" && m.adelanto && m.fecha >= desdeISO)
+      .reduce((s,m)=>s+m.monto, 0);
+    return {fecha, dias: Math.max(1, Math.round((fecha-hoy)/86400000)),
+      bruto, adelantado, neto: Math.max(0, bruto-adelantado)};
+  }
+
   /** Lo que realmente podés gastar: plata disponible menos lo que ya está comprometido. */
   function plataDisponible(){
     const dias = diasHastaCobro();
@@ -3083,7 +3316,7 @@
       .map(o=>({nombre:o.nombre, monto:o.monto, dia:o.dia}));
     const comprometido = comps.saleDeTuPlata;
     const libre = enMano - comprometido;
-    return {dias, enMano, comprometido, libre, pendientes,
+    return {dias, enMano, comprometido, libre, pendientes, cobro: proximoCobro(),
       porDia: dias ? libre/dias : null};
   }
 
@@ -3109,6 +3342,15 @@
       ? `Ya tenés comprometidos <strong>${fmtMoney(d.comprometido)}</strong> en fijos, cuotas y resúmenes — más de lo que tenés. Ojo con lo que gastes hasta cobrar.`
       : `<strong>${fmtMoney(d.libre)}</strong> libres · podés gastar <strong>${fmtMoney(d.porDia)}</strong> por día hasta cobrar`
         + `<div class="g-note" style="margin-top:5px">Es lo que queda después de cubrir ${fmtMoney(d.comprometido)} de fijos, cuotas y resúmenes.</div>`;
+    // qué vas a cobrar de verdad la próxima vez, ya descontando lo que adelantaste
+    if(d.cobro){
+      const c = d.cobro;
+      $("diarioNota").innerHTML += `<div class="g-note" style="margin-top:5px">El ` +
+        `${c.fecha.getDate()} de ${MESES_LARGOS[c.fecha.getMonth()]} cobrás ` +
+        `<strong style="color:var(--income)">${fmtMoney(c.neto)}</strong>` +
+        (c.adelantado>0 ? ` — de ${fmtMoney(c.bruto)}, ya adelantaste ${fmtMoney(c.adelantado)}.` : ".") +
+        `</div>`;
+    }
     $("diarioBar").hidden = false;
     const ciclo = 30;
     $("diarioFill").style.transform = `scaleX(${Math.max(.04, Math.min(1,(ciclo-d.dias)/ciclo)).toFixed(3)})`;
@@ -3151,6 +3393,10 @@
     }
     if(d.comprometido>0.5) detalle.push(`Ya tenés ${fmtMoney(d.comprometido)} comprometidos: ${
       d.pendientes.slice(0,3).map(p=>esc(p.nombre)+" el "+p.dia).join(", ")}${d.pendientes.length>3?" y más":""}.`);
+    // lo que entra antes del próximo cobro cambia la respuesta
+    if(d.cobro) detalle.push(`El ${d.cobro.fecha.getDate()} de ${MESES_LARGOS[d.cobro.fecha.getMonth()]} entran ` +
+      `${fmtMoney(d.cobro.neto)}` + (d.cobro.adelantado>0
+        ? `, no ${fmtMoney(d.cobro.bruto)}: ya adelantaste ${fmtMoney(d.cobro.adelantado)}.` : "."));
     // la deuda de tarjeta manda: si estás financiando, gastar sale más caro
     let finTotal = 0;
     for(const t of S.tarjetas){
@@ -3250,7 +3496,9 @@
       btns.push(`<button class="g-btn primary" data-recact="pagarres">💳 Registrar un pago</button>`);
       btns.push(`<button class="g-btn" data-recact="verconsumos">🧾 Ver los consumos del resumen</button>`);
     } else if(r.tipo==="fijo"){
-      btns.push(`<button class="g-btn primary" data-recact="editar">✏️ Editar este gasto fijo</button>`);
+      if(r.huerfano && S.tarjetas.length)
+        btns.push(`<button class="g-btn primary" data-recact="reasignar">💳 Decime en qué tarjeta viene</button>`);
+      btns.push(`<button class="g-btn ${r.huerfano?"":"primary"}" data-recact="editar">✏️ Editar este gasto fijo</button>`);
       btns.push(`<button class="g-btn danger" data-recact="borrar">🗑 Eliminarlo</button>`);
     } else if(r.tipo==="prestamo"){
       btns.push(`<button class="g-btn primary" data-recact="prestamo">✏️ Editar el préstamo</button>`);
@@ -3274,6 +3522,7 @@
       borrarConUndo(`"${nombre}" eliminado`, ()=>{ S.fijos = S.fijos.filter(f=>f!==ref); });
       return;
     }
+    if(acc==="reasignar"){ closeSheet(); setTimeout(()=>abrirFijo(r.ref), 250); return; }
     if(acc==="prestamo"){ closeSheet(); setTimeout(()=>abrirPrestamo(r.ref), 250); return; }
     if(acc==="pagarres"){ closeSheet(); setTimeout(()=>openPagoRes(r.ref, r.mkResumen), 250); return; }
     if(acc==="verconsumos"){
@@ -3329,7 +3578,7 @@
   /** Nombre "limpio" de un comercio, para poder comparar Netflix con NETFLIX.COM. */
   function claveComercio(nombre){
     let t = norm(nombre||"");
-    t = t.replace(/^(dlo|merpago|mercadopago|mp|pagofacil|rapipago|dl|sp|pp|py|www\.)[\s*.\-]*/g,"");
+    t = t.replace(/^(dlo|merpago|mercadopago|mp|pagofacil|rapipago|bind|dl|sp|pp|py|www\.)[\s*.\-]*/g,"");
     t = t.replace(/\b(plus|pro|premium|com|ar|sa|srl|inc|s\.a\.|suc\s*\d+|argentina|arg)\b/g," ");
     t = t.replace(/[^a-z0-9]/g," ").replace(/\s+/g," ").trim();
     return t.split(" ").slice(0,2).join(" ");   // las 2 primeras palabras alcanzan
@@ -3339,6 +3588,21 @@
     if(!x || !y) return false;
     return x===y || x.startsWith(y) || y.startsWith(x);
   };
+
+  /** Gastos que no se pueden cortar: techo, servicios, seguro. */
+  const ESENCIAL_KW = ["alquiler","expensas","luz","edea","edesur","edenor","gas","camuzzi",
+    "metrogas","naturgy","agua","aysa","absa","internet","fibertel","telecentro","telefono",
+    "teléfono","personal","movistar","claro","tuenti","seguro","prepaga","osde","swiss",
+    "galeno","medife","colegio","cuota escolar","abl","rentas","municipal","patente","vida"];
+  /**
+   * Si nunca lo marcaste a mano, adivinamos por el nombre. Los que vienen detectados
+   * del resumen (Netflix, Spotify…) caen del lado de los que sí podrías cortar.
+   */
+  function esEsencial(f){
+    if(typeof f.esencial === "boolean") return f.esencial;
+    const n = norm(f.nombre||"");
+    return ESENCIAL_KW.some(w=>n.includes(norm(w)));
+  }
 
   /** Junta en un solo lugar los fijos, las suscripciones y los servicios de tarjeta. */
   function recurrentesDelMes(){
@@ -3381,7 +3645,7 @@
     const total = mensual.reduce((s,o)=>s+o.monto,0);
     animMoney($("planTotal"), total);
     const mk = monthKey(new Date());
-    const ing = S.movs.filter(m=>m.tipo==="ingreso" && m.fecha.slice(0,7)===mk).reduce((s,m)=>s+m.monto,0);
+    const ing = gastoDelMes(mk).ingreso;
     const dePlata = mensual.filter(o=>o.cobra==="billetera").reduce((s,o)=>s+o.monto,0);
     const deTarjeta = total - dePlata;
     $("planNota").innerHTML = mensual.length
@@ -3394,14 +3658,17 @@
     $("planLista").hidden = mensual.length===0;
 
     // una sola lista, en dos grupos según de dónde sale la plata
+    // primero lo que no se puede cortar, después lo que sí: es la decisión que importa
+    const siOSi = o => o.tipo==="prestamo" || (o.tipo==="fijo" ? o.esencial : esEsencial({nombre:o.nombre}));
     const grupos = [
-      {t:"Sale de tu plata", items: mensual.filter(o=>o.cobra==="billetera"), nota:""},
-      {t:"Ya va en la tarjeta", items: mensual.filter(o=>o.cobra==="tarjeta"),
-       nota:"Esto ya está adentro del total del resumen — no lo sumes dos veces."}
+      {t:"Los que sí o sí", items: mensual.filter(siOSi),
+       nota:"Techo, servicios, seguro y cuotas. Esto no se toca."},
+      {t:"Los que podrías cortar", items: mensual.filter(o=>!siOSi(o)),
+       nota:"Suscripciones y comodidades. Dar de baja una es el ahorro más fácil que hay."}
     ].filter(g=>g.items.length);
     let n = 0;
     $("planLista").innerHTML = grupos.map(g=>
-      `<div class="g-grouphead">${g.t}</div>` +
+      `<div class="g-grouphead">${g.t} <span class="tot">${fmtMoney(g.items.reduce((a,o)=>a+o.monto,0))}</span></div>` +
       g.items.map(r=>{
         const est = r.pagado ? '<span class="ok">pagado ✔</span>'
           : r.vencido ? `<span style="color:var(--danger); font-weight:600">venció el ${r.dia}</span>`
@@ -3504,7 +3771,17 @@
     const falta = quedan * (p.cuota||0);
     const mk = monthKey(new Date());
     const pagadoEsteMes = (p.pagos||[]).some(x=>x.fecha.slice(0,7)===mk);
-    return {pagadas, total, quedan, pagado, falta, pagadoEsteMes, listo: quedan<=0};
+    // fecha real de la próxima cuota: este mes si todavía no la pagaste, si no el que viene
+    const hoy = new Date(); hoy.setHours(12,0,0,0);
+    const dia = Math.min(Math.max(1, p.dia||1), 28);
+    let proxima = null;
+    if(quedan>0){
+      // si todavía no pagaste este mes, la cuota es de este mes aunque el día ya pasó
+      // (eso es atraso, no mes que viene); recién con el mes pago salta al siguiente
+      proxima = new Date(hoy.getFullYear(), hoy.getMonth() + (pagadoEsteMes?1:0), dia, 12);
+    }
+    return {pagadas, total, quedan, pagado, falta, pagadoEsteMes, listo: quedan<=0,
+      proxima, cuotaNum: Math.min(total, pagadas+1)};
   }
 
   function deudaPrestamos(){
@@ -3523,7 +3800,9 @@
           <span style="font-size:21px">🏦</span>
           <div style="flex:1; min-width:0">
             <div style="font-weight:700; font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${esc(p.nombre)}</div>
-            <div class="g-note" style="margin:0">${fmtMoney(p.cuota)} por mes · vence el ${p.dia}${bill?" · "+esc(bill):""}</div>
+            <div class="g-note" style="margin:0">${fmtMoney(p.cuota)} por mes${
+              e.proxima ? ` · próxima el <strong>${e.proxima.getDate()} de ${MESES_LARGOS[e.proxima.getMonth()]}</strong>` : ""
+            }${bill?" · "+esc(bill):""}</div>
           </div>
           <button class="g-minibtn" data-editpr="${p.id}" aria-label="Editar préstamo">✏️</button>
         </div>
@@ -3533,7 +3812,7 @@
         </div>
         <div class="g-note" style="margin-top:8px">${
           e.listo ? "🎉 ¡Terminado! No debés más cuotas."
-          : `Te quedan <strong>${e.quedan}</strong> cuota${e.quedan===1?"":"s"} — <strong>${fmtMoney(e.falta)}</strong> en total.` +
+          : `Vas por la cuota <strong>${e.cuotaNum} de ${e.total}</strong> · te quedan <strong>${fmtMoney(e.falta)}</strong> en total.` +
             (e.pagadoEsteMes ? " Este mes ya lo pagaste ✔" : "")}</div>
         ${e.listo ? "" : `<button class="g-btn ${e.pagadoEsteMes?"":"primary"}" data-pagarpr="${p.id}" style="margin-top:10px">
           ${e.pagadoEsteMes ? "Registrar otro pago" : "💸 Pagar la cuota de este mes"}</button>`}
@@ -3559,29 +3838,15 @@
   }
 
   function panoramaDeuda(){
-    let deuda = 0, minimo = 0;
-    let intereses = 0, baseInteres = 0;
-    for(const t of S.tarjetas){
+    // la deuda y la tasa salen de deudaTotal(): antes había dos cuentas paralelas
+    // con topes distintos que mostraban números diferentes en pantallas distintas
+    const D = deudaTotal();
+    const minimo = S.tarjetas.reduce((s,t)=>{
       const ks = Object.keys(t.resumenes||{}).sort();
-      if(!ks.length) continue;
-      const r = t.resumenes[ks[ks.length-1]];
-      const fin = resFinanciado(r);
-      deuda += fin;
-      minimo += r.pagoMinimo||0;
-      // interés del último resumen contra lo que venías arrastrando
-      if(ks.length>=2){
-        const prev = t.resumenes[ks[ks.length-2]];
-        const arrastre = Math.max(0, resFinanciado(prev));
-        const cargos = cargosMes(t, ks[ks.length-1]);
-        if(arrastre>0 && cargos!=null && cargos>0){ intereses += cargos; baseInteres += arrastre; }
-      }
-      deuda += t.deuda||0;
-    }
-    deuda += deudaPrestamos();
-    // tasa mensual: la que surge de tus números, con tope sensato
-    let tasa = baseInteres>0 ? (intereses/baseInteres*100) : 6.5;
-    tasa = Math.min(25, Math.max(0.5, tasa));
-    return {deuda, minimo, tasa: Math.round(tasa*10)/10};
+      return s + (ks.length ? (t.resumenes[ks[ks.length-1]].pagoMinimo||0) : 0);
+    }, 0);
+    const tasa = D.tasa!=null ? D.tasa : 6.5;
+    return {deuda: D.total, minimo, tasa: Math.round(tasa*10)/10};
   }
 
   function simularDeuda(deuda, cuota, tasaPct){
@@ -3630,19 +3895,21 @@
     const ed = e.target.closest("[data-editpr]");
     if(ed){ abrirPrestamo((S.prestamos||[]).find(p=>p.id===Number(ed.dataset.editpr))); return; }
     const pg = e.target.closest("[data-pagarpr]");
-    if(pg){
-      pagoPrestamo = (S.prestamos||[]).find(p=>p.id===Number(pg.dataset.pagarpr));
-      if(!pagoPrestamo) return;
-      const e2 = estadoPrestamo(pagoPrestamo);
-      $("pagoPrTitle").textContent = "Cuota de "+pagoPrestamo.nombre;
-      $("pagoPrNota").innerHTML = `Vas por la cuota <strong>${e2.pagadas+1} de ${e2.total}</strong>. Después de esta te quedan ${Math.max(0,e2.quedan-1)}.`;
-      $("ppMonto").value = fmtNum(pagoPrestamo.cuota);
-      $("ppFecha").value = todayISO();
-      fillWalletSelect($("ppBill"), false, false);
-      if(pagoPrestamo.billetera) $("ppBill").value = String(pagoPrestamo.billetera);
-      openSheet("pagoprestamo");
-    }
+    if(pg) abrirPagoPrestamo((S.prestamos||[]).find(p=>p.id===Number(pg.dataset.pagarpr)));
   });
+  /** Hoja para registrar una cuota. También la llaman los vencimientos del inicio. */
+  function abrirPagoPrestamo(p){
+    if(!p) return;
+    pagoPrestamo = p;
+    const e2 = estadoPrestamo(p);
+    $("pagoPrTitle").textContent = "Cuota de "+p.nombre;
+    $("pagoPrNota").innerHTML = `Vas por la cuota <strong>${e2.pagadas+1} de ${e2.total}</strong>. Después de esta te quedan ${Math.max(0,e2.quedan-1)}.`;
+    $("ppMonto").value = fmtNum(p.cuota);
+    $("ppFecha").value = todayISO();
+    fillWalletSelect($("ppBill"), false, false);
+    if(p.billetera) $("ppBill").value = String(p.billetera);
+    openSheet("pagoprestamo");
+  }
   $("savePagoPr").onclick = ()=>{
     if(!pagoPrestamo) return;
     const monto = numVal($("ppMonto").value)||0;
@@ -3705,6 +3972,76 @@
       save(); renderAll(); toast("Volví a tus datos anteriores");
     });
   });
+  /**
+   * Reparto de una plata entre las tarjetas: primero el mínimo de cada una para no
+   * caer en punitorios, después todo lo que sobra a la de mayor interés real.
+   */
+  function repartir(monto){
+    const tasaProm = deudaTotal().tasa || 6.5;
+    const cands = [];
+    for(const t of S.tarjetas){
+      const ks = Object.keys(t.resumenes||{}).sort();
+      if(!ks.length) continue;
+      const est = estadoResumen(t.resumenes[ks[ks.length-1]]);
+      if(est.saldado) continue;
+      cands.push({t, est, mk:ks[ks.length-1], tasa: tasaTarjeta(t) ?? tasaProm,
+        propia: tasaTarjeta(t)!=null, asignado:0});
+    }
+    if(!cands.length) return null;
+    let resto = monto;
+    // 1) el mínimo que falte de cada una, de la más cara a la más barata
+    const porTasa = [...cands].sort((a,b)=>b.tasa-a.tasa);
+    for(const c of porTasa){
+      const falta = Math.min(c.est.faltaMinimo, c.est.falta, resto);
+      if(falta>0.5){ c.asignado += falta; resto -= falta; }
+    }
+    // 2) lo que sobra, entero a la más cara que todavía deba
+    for(const c of porTasa){
+      if(resto<=0.5) break;
+      const puede = Math.min(c.est.falta - c.asignado, resto);
+      if(puede>0.5){ c.asignado += puede; resto -= puede; }
+    }
+    const deudaTot = cands.reduce((s,c)=>s+c.est.falta,0);
+    // cuánto interés te ahorra contra repartir parejo
+    const interesPlan = cands.reduce((s,c)=>s+(c.est.falta-c.asignado)*c.tasa/100, 0);
+    const interesParejo = cands.reduce((s,c)=>
+      s + Math.max(0, c.est.falta - monto*(c.est.falta/deudaTot))*c.tasa/100, 0);
+    return {cands: porTasa, resto, deudaTot, tasaProm,
+      ahorro: Math.max(0, interesParejo-interesPlan), interesPlan};
+  }
+  alClick("repartoBtn", ()=>{
+    const d = plataDisponible();
+    $("repMonto").value = fmtNum(Math.round(Math.max(0, d.enMano)));
+    $("repResultado").hidden = true;
+    $("repDetalle").innerHTML = "";
+    openSheet("reparto");
+  });
+  alClick("repCalcular", ()=>{
+    const monto = numVal($("repMonto").value)||0;
+    if(!(monto>0)){ $("repMonto").focus(); toast("¿Cuánto podés poner?"); return; }
+    const r = repartir(monto);
+    if(!r){ toast("No tenés resúmenes con saldo"); return; }
+    $("repResultado").hidden = false;
+    $("repResultado").innerHTML =
+      `<div class="r"><span>Repartís</span><span>${fmtMoney(monto - r.resto)}</span></div>` +
+      (r.resto>0.5 ? `<div class="r"><span>Te sobra</span><span>${fmtMoney(r.resto)}</span></div>` : "") +
+      `<div class="r neg"><span>Queda debiendo</span><span>${fmtMoney(Math.max(0, r.deudaTot-(monto-r.resto)))}</span></div>` +
+      (r.ahorro>1 ? `<div class="r"><span>Ahorrás vs repartir parejo</span><span>${fmtMoney(r.ahorro)}/mes</span></div>` : "");
+    $("repDetalle").innerHTML = `<div class="g-label" style="margin-top:12px">Poné así</div>` +
+      r.cands.map(c=>{
+        const sinPagar = Math.max(0, c.est.falta - c.asignado);
+        return `<div class="g-prow simu"><span class="ic">${c.asignado>0.5?"💳":"⏳"}</span>
+          <div style="flex:1; min-width:0">
+            <div style="font-size:13.5px; font-weight:600">${esc(c.t.nombre)}
+              <span style="color:var(--muted); font-weight:400">· ${c.tasa.toFixed(1)}% mensual${c.propia?"":" (promedio)"}</span></div>
+            <div style="font-size:12.5px; font-weight:600; color:${c.asignado>0.5?"var(--income)":"var(--muted)"}">
+              ${c.asignado>0.5 ? fmtMoney(c.asignado) : "nada por ahora"}${
+                sinPagar>0.5 ? ` · queda debiendo ${fmtMoney(sinPagar)}` : " · saldada ✔"}${
+                c.est.faltaMinimo>0 && c.asignado>=c.est.faltaMinimo-0.5 ? " · mínimo cubierto ✔" : ""}</div>
+          </div></div>`;
+      }).join("");
+  });
+
   $("simuBtn").onclick = ()=>{
     const p = panoramaDeuda();
     const sugerido = Math.max(p.minimo, Math.round(p.deuda*0.25));
@@ -3791,14 +4128,18 @@
   function renderSubs(){
     const subs = auditoriaSubs().filter(x=>x.ultimo>0);
     $("subsCard").hidden = !subs.length;
-    $("subsTotal").textContent = subs.length ? fmtMoney(subs.reduce((s,x)=>s+x.ultimo,0))+" por mes" : "";
+    // el total cuenta solo lo que seguís pagando: lo que no aparece hace meses no suma
+    const vivos = subs.filter(x=>x.vigente);
+    $("subsTotal").textContent = vivos.length ? fmtMoney(vivos.reduce((s,x)=>s+x.ultimo,0))+" por mes" : "";
     if(!subs.length) return;
     $("subsList").innerHTML = subs.map((x,i)=>`
-      <div class="g-fijo" style="--d:${Math.min(i,10)*0.03}s">
+      <div class="g-fijo${x.vigente?"":" viejo"}" style="--d:${Math.min(i,10)*0.03}s">
         <span style="font-size:19px; width:26px; text-align:center; flex:none">${iconFor(x.nombre, "Servicios")}</span>
         <span class="g-info"><span class="g-desc">${esc(x.nombre)}</span><br>
-          <span class="st">${fmtMoney(x.ultimo)}/mes · ${fmtMoney(x.anual)} al año${
-            x.meses>1 ? ` · llevás ${fmtMoney(x.total)} en ${x.meses} meses` : ""}</span></span>
+          <span class="st">${x.vigente
+            ? `${fmtMoney(x.ultimo)}/mes · ${fmtMoney(x.anual)} al año${
+                x.meses>1 ? ` · llevás ${fmtMoney(x.total)} en ${x.meses} meses` : ""}`
+            : `última vez en ${monthKeyLabel(x.ultimoMk)} · no lo cuento como mensual`}</span></span>
         <span style="font-variant-numeric:tabular-nums; font-weight:700; flex:none">${fmtMoney(x.ultimo)}</span>
       </div>`).join("")
       + `<div class="g-note" style="padding:12px 14px; border-top:1px solid var(--line)">Si das de baja lo que no usás, cada ${fmtMoney(1000)} que cortás son ${fmtMoney(12000)} al año que te quedan.</div>`;
@@ -3807,10 +4148,12 @@
   function renderLiberacion(){
     const libs = liberacionCuotas();
     $("liberaCard").hidden = !libs.length;
-    $("simuBtn").hidden = !S.tarjetas.some(t=>{
+    const conSaldo = S.tarjetas.filter(t=>{
       const ks = Object.keys(t.resumenes||{}).sort();
       return ks.length && resFinanciado(t.resumenes[ks[ks.length-1]])>0.5;
     });
+    $("simuBtn").hidden = !conSaldo.length;
+    $("repartoBtn").hidden = conSaldo.length < 2;   // con una sola tarjeta no hay nada que repartir
     if(!libs.length) return;
     const max = Math.max(...libs.map(l=>l.libera));
     $("liberaList").innerHTML = libs.slice(0,6).map((l,i)=>`
@@ -3949,7 +4292,7 @@
 
   /* ---------- sheet ---------- */
   const sheet=$("sheet"), scrim=$("scrim");
-  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte","Alcanza","Simu","Prestamo","PagoPrestamo","Rec"];
+  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte","Alcanza","Simu","Reparto","FijosGuia","Prestamo","PagoPrestamo","Rec"];
   const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]),' +
     ' textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
   const focoVisibles = () => Array.from(sheet.querySelectorAll(FOCUSABLE))
@@ -4019,11 +4362,19 @@
       tipoSel = b.dataset.tipo;
       document.querySelectorAll("#tipoSeg button").forEach(x=>x.classList.toggle("on", x===b));
       fillCats(catSel, tipoSel==="ingreso");
+      mostrarAdelanto();
     };
   });
 
   /* ---------- alta/edición de movimientos ---------- */
   let lastOrigen = "manual";
+  /** El adelanto solo tiene sentido en un ingreso. */
+  function mostrarAdelanto(){
+    const ver = tipoSel==="ingreso";
+    $("fAdelantoRow").hidden = !ver;
+    $("fAdelantoNota").hidden = !ver || !$("fAdelanto").checked;
+  }
+  $("fAdelanto").addEventListener("change", mostrarAdelanto);
   function openReview(p){
     tipoSel = p.tipo || "gasto";
     document.querySelectorAll("#tipoSeg button").forEach(x=>x.classList.toggle("on", x.dataset.tipo===tipoSel));
@@ -4034,6 +4385,9 @@
     if(p.categoria) catSel.value = p.categoria;
     $("fBill").value = p.billetera ?? "";
     $("fDesc").value = p.descripcion || "";
+    // "adelanto de sueldo" dicho por voz o escrito ya viene marcado
+    $("fAdelanto").checked = !!p.adelanto || /adelanto/i.test(p.descripcion||"");
+    mostrarAdelanto();
     $("reviewTitle").textContent = p.frase ? `Entendí: “${p.frase}”` : "Cargar a mano";
     openSheet("review");
     if(p.monto == null) $("fMonto").focus();
@@ -4054,6 +4408,7 @@
       descripcion: $("fDesc").value.trim() || catSel.value,
       origen: lastOrigen
     };
+    if(tipoSel==="ingreso" && $("fAdelanto").checked) mov.adelanto = true;
     S.movs.push(mov);
     save();
     const d = new Date(($("fFecha").value||todayISO())+"T12:00:00");
@@ -4186,19 +4541,82 @@
     $("fjViaNote").hidden = true;
     $("fjNombre").value=""; $("fjMonto").value=""; $("fjDia").value="10";
     fillCats($("fjCat"), false); $("fjCat").value="Hogar";
+    fillWalletSelect($("fjBill"), true, true); $("fjBill").value = "";
+    $("fjEsencial").checked = true;   // lo que cargás a mano suele ser de los que sí o sí
     openSheet("fijo");
   };
+  /* ---------- carga guiada: los fijos que casi todo el mundo tiene ---------- */
+  const FIJOS_TIPICOS = [
+    {n:"Alquiler",           c:"Hogar",     d:1,  ic:"🏠"},
+    {n:"Expensas",           c:"Hogar",     d:10, ic:"🏢"},
+    {n:"Luz",                c:"Servicios", d:15, ic:"💡"},
+    {n:"Gas",                c:"Servicios", d:15, ic:"🔥"},
+    {n:"Agua",               c:"Servicios", d:15, ic:"🚿"},
+    {n:"Internet",           c:"Servicios", d:20, ic:"📶"},
+    {n:"Teléfono",           c:"Servicios", d:20, ic:"📱"},
+    {n:"Seguro del auto",    c:"Transporte",d:10, ic:"🚗"},
+    {n:"Prepaga",            c:"Salud",     d:5,  ic:"🩺"}
+  ];
+  alClick("fijosGuiaBtn", ()=>{
+    $("guiaLista").innerHTML = FIJOS_TIPICOS.map((f,i)=>{
+      const ya = S.fijos.find(x=>mismoComercio(x.nombre, f.n));
+      return `<div class="g-strow" data-gi="${i}" style="--d:${Math.min(i,10)*0.02}s">
+        <span class="g-avatar" style="background:${catColor(f.c)}22">${f.ic}</span>
+        <div>
+          <input type="text" data-g="nombre" value="${esc(ya?ya.nombre:f.n)}">
+          <div class="sub">
+            <label class="g-cuota" style="cursor:pointer">día
+              <input type="number" data-g="dia" min="1" max="28" value="${ya?ya.dia:f.d}"
+                style="width:42px; border:none; background:none; font:inherit; color:inherit"></label>
+            <select data-g="bill" class="g-cuota" style="max-width:150px"></select>
+          </div>
+        </div>
+        <input type="text" inputmode="decimal" data-money data-g="monto"
+          value="${ya?fmtNum(ya.monto):""}" placeholder="Monto">
+      </div>`;
+    }).join("");
+    // el selector de billetera se llena después, con el helper de siempre
+    document.querySelectorAll('#guiaLista [data-g="bill"]').forEach((sel,i)=>{
+      fillWalletSelect(sel, true, true);
+      const ya = S.fijos.find(x=>mismoComercio(x.nombre, FIJOS_TIPICOS[i].n));
+      sel.value = ya ? (ya.viaTarjeta && ya.tarjetaId ? "t"+ya.tarjetaId : (ya.billetera ?? "")) : "";
+    });
+    openSheet("fijosguia");
+  });
+  alClick("saveGuia", ()=>{
+    let nuevos = 0, actualizados = 0;
+    document.querySelectorAll("#guiaLista [data-gi]").forEach(row=>{
+      const i = Number(row.dataset.gi), base = FIJOS_TIPICOS[i];
+      const monto = numVal(row.querySelector('[data-g="monto"]').value)||0;
+      if(!(monto>0)) return;                       // vacío = no lo cargamos
+      const nombre = row.querySelector('[data-g="nombre"]').value.trim() || base.n;
+      const dia = Math.min(28, Math.max(1, parseInt(row.querySelector('[data-g="dia"]').value)||base.d));
+      const bs = parseBillSel(row.querySelector('[data-g="bill"]').value);
+      const datos = {nombre, monto, dia, categoria:base.c, esencial:true, activo:true,
+        viaTarjeta: !!bs.tarjetaId, tarjetaId: bs.tarjetaId || undefined,
+        billetera: bs.tarjetaId ? undefined : (bs.billetera ?? undefined)};
+      const ya = S.fijos.find(x=>mismoComercio(x.nombre, base.n));
+      if(ya){ Object.assign(ya, datos); actualizados++; }
+      else { S.fijos.push(Object.assign({id:nid()}, datos)); nuevos++; }
+    });
+    if(!nuevos && !actualizados){ toast("Poné al menos un monto"); return; }
+    save(); closeSheet(); renderAll();
+    toast(`${nuevos?nuevos+" gasto"+(nuevos===1?"":"s")+" fijo"+(nuevos===1?"":"s")+" cargado"+(nuevos===1?"":"s"):""}` +
+      `${nuevos&&actualizados?" y ":""}${actualizados?actualizados+" actualizado"+(actualizados===1?"":"s"):""} ✔`);
+  });
+
   $("saveFijo").onclick = ()=>{
     const nombre = $("fjNombre").value.trim();
     const monto = numVal($("fjMonto").value);
     const dia = Math.min(28, Math.max(1, parseInt($("fjDia").value)||10));
     if(!nombre){ $("fjNombre").focus(); toast("Falta el nombre"); return; }
     if(!monto || monto<=0){ $("fjMonto").focus(); toast("Falta el monto"); return; }
-    if(fijoEdit){
-      Object.assign(fijoEdit, {nombre, monto, dia, categoria:$("fjCat").value});
-    } else {
-      S.fijos.push({id:nid(), nombre, monto, dia, categoria:$("fjCat").value, activo:true});
-    }
+    const bs = parseBillSel($("fjBill").value);
+    const datos = {nombre, monto, dia, categoria:$("fjCat").value, esencial: $("fjEsencial").checked,
+      viaTarjeta: !!bs.tarjetaId, tarjetaId: bs.tarjetaId || undefined,
+      billetera: bs.tarjetaId ? undefined : (bs.billetera ?? undefined)};
+    if(fijoEdit) Object.assign(fijoEdit, datos);
+    else S.fijos.push(Object.assign({id:nid(), activo:true}, datos));
     save(); closeSheet(); renderAll(); toast("Gasto fijo guardado ✔");
   };
   $("delFijo").onclick = ()=>{
@@ -4215,6 +4633,9 @@
     $("fjViaNote").hidden = !f.viaTarjeta;
     $("fjNombre").value=f.nombre; $("fjMonto").value=fmtNum(f.monto); $("fjDia").value=f.dia;
     fillCats($("fjCat"), false); $("fjCat").value=f.categoria;
+    fillWalletSelect($("fjBill"), true, true);
+    $("fjBill").value = f.viaTarjeta && f.tarjetaId ? "t"+f.tarjetaId : (f.billetera ?? "");
+    $("fjEsencial").checked = esEsencial(f);
     openSheet("fijo");
   }
 
@@ -4282,7 +4703,8 @@
       const t = S.tarjetas.find(x=>x.id===Number(pay.dataset.paycard));
       const mk = pay.dataset.mes || monthKey(new Date());
       const r = t && (t.resumenes||{})[mk];
-      if(r) openPay({kind:"tarjeta", ref:t, mes:mk, nombre:"Resumen "+t.nombre, monto:resFinanciado(r)||r.monto});
+      // una sola hoja para pagar un resumen, la misma a la que llega el vencimiento
+      if(r) openPagoRes(t, mk);
       return;
     }
     const edit = e.target.closest("[data-editcard]");
@@ -4317,7 +4739,8 @@
 
   function loadDetMes(){
     const r = detCard && (detCard.resumenes||{})[$("dtMes").value];
-    detItems = ((r && r.detalle)||[]).map(d=>({desc:d.desc, monto:d.monto, categoria:d.categoria||"Otros", sub:!!d.sub}));
+    detItems = ((r && r.detalle)||[]).map(d=>({desc:d.desc, monto:d.monto,
+      categoria:d.categoria||"Otros", sub:!!d.sub, moneda:d.moneda, recur:d.recur}));
     // campos editables con lo que leyó la app — corregí lo que haga falta
     $("dtEditar").open = false;
     fillMesSelect($("edMes"));
@@ -4351,6 +4774,8 @@
             ${cq?`<span class="g-cuota">📅 Cuota ${cq.a}/${cq.b}</span>`:""}
             ${cq?"":`<button type="button" class="g-cuota rec${rec?" on":""}" data-rec="${i}"
               title="¿Vuelve todos los meses?">${rec?"🔁 vuelve":"1️⃣ una vez"}</button>`}
+            <button type="button" class="g-cuota rec${d.moneda==="USD"?" on":""}" data-usd="${i}"
+              title="¿Está en dólares?">${d.moneda==="USD"?"💵 en US$":"$ en pesos"}</button>
             ${d.monto<0?`<span class="g-cuota">🎁 descuento</span>`:""}
           </div>
         </div>
@@ -4367,8 +4792,11 @@
     const mk = $("dtMes").value;
     const r = detCard && (detCard.resumenes||{})[mk];
     if(!r){ el.innerHTML = ""; return; }
-    const suma = detItems.reduce((s,d)=>s+(d.monto>0?d.monto:0),0);
+    const suma = detItems.reduce((s,d)=>s+Math.max(0, enPesos(d)),0);
     const descuentos = detItems.reduce((s,d)=>s+(d.monto<0?-d.monto:0),0);
+    const usdMarcados = detItems.filter(d=>d.moneda==="USD" && d.monto>0)
+      .reduce((s,d)=>s+d.monto, 0);
+    const susUsd = sospechososUsd({usd:r.usd, detalle:detItems});
     const cg = cargosMes(detCard, mk), arr = arrastreMes(detCard, mk);
     const pag = resPagado(r), fin = resFinanciado(r);
     const row = (lbl, val, cls="") => val==null ? "" :
@@ -4380,11 +4808,38 @@
       row("Consumos del período", fmtMoney(suma)+` (${detItems.filter(d=>d.monto>0).length})`) +
       row("Descuentos y bonificaciones", descuentos>0 ? "− "+fmtMoney(descuentos) : null, "pos") +
       row("Consumos en dólares", r.usd>0 ? "U$D "+fmtNum(r.usd) : null) +
+      (r.usd>0 && Math.abs(usdMarcados-r.usd)>0.5
+        ? `<div class="r neg"><span>⚠️ Marcaste US$ ${fmtNum(usdMarcados)} en dólares</span><span>el resumen dice US$ ${fmtNum(r.usd)}</span></div>`
+          + (susUsd.length ? `<div class="r"><span>Parece que ${susUsd.map(x=>esc(x.d.desc)).join(", ")} está${susUsd.length>1?"n":""} en dólares</span>` +
+             `<span><button class="g-linkbtn" id="marcarUsd">Marcarlo${susUsd.length>1?"s":""}</button></span></div>` : "")
+        : "") +
+      (usdMarcados>0 && !(S.config.dolar>0)
+        ? `<div class="r"><span>Poné la cotización del dólar en ⚙ Ajustes</span><span>para convertirlos</span></div>`
+        : "") +
       row("Impuestos e intereses", cg!=null && cg>0.5 ? fmtMoney(cg) : null) +
       row("Total a pagar", fmtMoney(r.monto)+(r.totalUsd>0 ? " + U$D "+fmtNum(r.totalUsd) : ""), "tot") +
       row("Pago mínimo", r.pagoMinimo>0 ? fmtMoney(r.pagoMinimo) : null) +
       row("Pagaste", pag>0 ? fmtMoney(pag) : null, "pos") +
       row("Financiás para el próximo", fin>0.5 ? fmtMoney(fin) : null, "neg");
+    const bu = $("marcarUsd");
+    if(bu) bu.onclick = ()=>{
+      susUsd.forEach(x=>{ detItems[x.i].moneda = "USD"; });
+      renderDetalleRows();
+      toast(`Marcado en dólares ✔${S.config.dolar>0?"":" — poné la cotización en ⚙ Ajustes"}`);
+    };
+  }
+  /**
+   * Consumos que casi seguro están en dólares pero se guardaron como pesos.
+   * El resumen dice cuánto se consumió en US$; si una línea suelta coincide con ese
+   * total, es esa. Se propone, no se aplica solo.
+   */
+  function sospechososUsd(r){
+    const totalUsd = r.usd||0;
+    if(!(totalUsd>0)) return [];
+    const ya = (r.detalle||[]).filter(d=>d.moneda==="USD").reduce((s,d)=>s+d.monto,0);
+    if(Math.abs(ya-totalUsd)<=0.5) return [];         // ya está resuelto
+    return (r.detalle||[]).map((d,i)=>({d,i}))
+      .filter(({d})=>!d.moneda && d.monto>0 && Math.abs(d.monto-(totalUsd-ya))<=0.5);
   }
   function openDetalle(card, mes){
     detCard = card;
@@ -4420,6 +4875,13 @@
     if(rc){
       const d = detItems[Number(rc.dataset.rec)];
       if(d){ d.recur = !esRecurrente(d); renderDetalleRows(); }
+      return;
+    }
+    // marcar un consumo como hecho en dólares: el monto pasa a leerse en US$
+    const us = e.target.closest("[data-usd]");
+    if(us){
+      const d = detItems[Number(us.dataset.usd)];
+      if(d){ d.moneda = d.moneda==="USD" ? undefined : "USD"; renderDetalleRows(); }
     }
   });
   $("saveDetalle").onclick = ()=>{
@@ -4735,6 +5197,7 @@
       detalle: (out.consumos||[]).filter(c=>c.monto).map(c=>({
         desc: (String(c.descripcion||"Consumo").slice(0,52)+(c.cuota?" Cuota "+c.cuota:"")).trim(),
         monto: c.monto,
+        moneda: c.moneda==="USD" ? "USD" : undefined,
         categoria: c.categoria||"Otros", sub: !!c.suscripcion
       }))
     };
@@ -5051,8 +5514,11 @@
     const falta = Math.max(0, r.monto - yaPago);
     // si ya venías pagando, esto es un adelanto más: arranca en lo que falta
     $("prMonto").value = fmtNum(yaPago>0 ? falta : r.monto);
-    $("prBill").innerHTML = `<option value="">No descontar de ninguna billetera (pago viejo)</option>` +
+    $("prResBill").innerHTML = `<option value="">No descontar de ninguna billetera (pago viejo)</option>` +
       S.billeteras.filter(b=>!b.inversion).map(b=>`<option value="${b.id}">${esc(b.nombre)}</option>`).join("");
+    // de qué billetera solés pagar esta tarjeta: la última que usaste
+    const billPrev = card.billetera || (S.billeteras.find(b=>!b.inversion)||{}).id;
+    if(billPrev) $("prResBill").value = String(billPrev);
     // atajos: el total, el mínimo, la mitad
     const atajos = [
       {lbl: yaPago>0 ? "Todo lo que falta" : "El total", v: falta},
@@ -5116,7 +5582,8 @@
     const total = yaPago>0 ? yaPago + nuevo : nuevo;
     r.pagadoMonto = total;
     r.pagado = total >= r.monto - 0.01;
-    const bill = $("prBill").value ? Number($("prBill").value) : null;
+    const bill = $("prResBill").value ? Number($("prResBill").value) : null;
+    if(bill) card.billetera = bill;          // la recordamos para el próximo pago
     if(bill && nuevo>0){
       const hoyMk = monthKey(new Date());
       const fecha = mes===hoyMk ? todayISO() : `${mes}-${String(Math.min(card.vto,28)).padStart(2,"0")}`;
@@ -5246,6 +5713,8 @@
     $("cfgModelo").value = S.config.modeloIA||"eco";
     $("cfgAlerta").value = S.config.alertaGrande ? fmtNum(S.config.alertaGrande) : "";
     $("cfgCobro").value = S.config.diaCobro ? String(S.config.diaCobro) : "";
+    $("cfgSueldo").value = S.config.sueldo ? fmtNum(S.config.sueldo) : "";
+    $("cfgDolar").value = S.config.dolar ? fmtNum(S.config.dolar) : "";
     $("cfgRemOn").checked = !!(S.config.recordatorio&&S.config.recordatorio.on);
     $("cfgRemHora").value = (S.config.recordatorio&&S.config.recordatorio.hora)||"21:30";
     $("remNote").hidden = !!(window.AndroidVoz && window.AndroidVoz.setReminder);
@@ -5254,17 +5723,43 @@
     $("cfgNotif").checked = !!(S.config.notificaciones && hayNotif);
     $("cfgNotif").disabled = !hayNotif;
     $("notifRevisar").hidden = !(hayNotif && S.config.notificaciones);
+    pintarNotifBloqueo();
     $("notifNota").textContent = hayNotif
       ? "Cuando Lemon, Mercado Pago o tu banco te avisan de un pago o una transferencia, Guita lo detecta y te lo propone para cargar — siempre te pregunta antes. Nada sale de tu teléfono."
       : "Esto anda solo en la app instalada (APK). En el navegador no se pueden leer las notificaciones de otras apps.";
     openSheet("config");
   };
   // prender la lectura de notificaciones pide el permiso del sistema una sola vez
+  /** ¿Android puede estar bloqueando el permiso por venir de fuera de Play Store? */
+  const notifBloqueoProbable = () => {
+    try{ return !!(window.AndroidVoz && window.AndroidVoz.notifBloqueoProbable
+      && window.AndroidVoz.notifBloqueoProbable()); }catch(e){ return false; }
+  };
+  function pintarNotifBloqueo(){
+    const dado = notifOn() && (()=>{ try{ return window.AndroidVoz.notifPermiso(); }catch(e){ return false; } })();
+    $("notifBloqueo").hidden = !(notifOn() && !dado && notifBloqueoProbable());
+  }
+  alClick("notifAbrirLista", ()=>{ try{ window.AndroidVoz.notifPedirPermiso(); }catch(e){} });
+  alClick("notifAbrirFicha", ()=>{ try{ window.AndroidVoz.abrirFichaApp(); }catch(e){} });
+  // el sistema nos avisa al volver de los ajustes: el switch no puede mentir
+  window.__notifPermisoCambio = ok => {
+    if(!ok && S.config.notificaciones){ S.config.notificaciones = false; save(); }
+    const chk = $("cfgNotif");
+    if(chk) chk.checked = !!(ok && S.config.notificaciones);
+    pintarNotifBloqueo();
+    if(ok) toast("Listo, ya puedo leer tus notificaciones ✔");
+  };
   $("cfgNotif").addEventListener("change", ()=>{
     if(!notifOn()){ $("cfgNotif").checked = false; return; }
-    if($("cfgNotif").checked && !window.AndroidVoz.notifPermiso()){
-      toast("Buscá \u201cGuita\u201d en la lista y activalo");
-      try{ window.AndroidVoz.notifPedirPermiso(); }catch(e){}
+    let dado = false;
+    try{ dado = window.AndroidVoz.notifPermiso(); }catch(e){}
+    if($("cfgNotif").checked && !dado){
+      $("cfgNotif").checked = false;            // no lo damos por prendido hasta que el sistema lo confirme
+      pintarNotifBloqueo();
+      if(notifBloqueoProbable()) toast("Android lo bloquea: mirá los pasos acá abajo");
+      else { toast("Buscá \u201cGuita\u201d en la lista y activalo");
+             try{ window.AndroidVoz.notifPedirPermiso(); }catch(e){} }
+      return;
     }
     $("notifRevisar").hidden = !$("cfgNotif").checked;
   });
@@ -5285,6 +5780,8 @@
     S.config.alertaGrande = Math.max(0, numVal($("cfgAlerta").value)||0);
     S.config.recordatorio = {on: $("cfgRemOn").checked, hora: $("cfgRemHora").value||"21:30"};
     S.config.diaCobro = Math.min(28, Math.max(0, parseInt($("cfgCobro").value)||0));
+    S.config.sueldo = Math.max(0, numVal($("cfgSueldo").value)||0);
+    S.config.dolar = Math.max(0, numVal($("cfgDolar").value)||0);
     S.config.notificaciones = notifOn() && $("cfgNotif").checked;
     try{ if(notifOn()) window.AndroidVoz.notifActivar(!!S.config.notificaciones); }catch(e){}
     save(); closeSheet(); renderAll();
@@ -5748,6 +6245,7 @@
   window.__guitaPdfText = pdfToText;
   window.__guitaStatement = parseStatementText;
   window.__guitaState = () => JSON.parse(JSON.stringify(S));
+  window.__guitaSaldo = id => saldoBilletera(id);
   window.__guitaToast = () => ({busy: toastBusy, pend: toastQ.length, txt: toastEl.textContent});
   window.__guitaNotif = n => parseNotif(n);
   window.__guitaBackup = () => armarBackup();
