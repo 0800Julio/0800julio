@@ -648,7 +648,85 @@ const pagado = await page.evaluate(()=>{
 });
 ok(pagado===146531, 'pago: seguir adelantando suma al pago anterior', String(pagado));
 
+/* los gastos fijos, a un toque del inicio y sincronizados con el resumen */
+await sembrar(page, {
+  movs:[], billeteras:[{id:1,nombre:'Lemon',saldoInicial:900000}],
+  fijos:[{id:2,nombre:'Alquiler',monto:650000,dia:1,categoria:'Hogar',activo:true,billetera:1},
+         // el precio viejo, y apuntando a una tarjeta que ya no existe
+         {id:3,nombre:'Netflix',monto:30198.49,dia:27,categoria:'Salidas',activo:true,viaTarjeta:true,tarjetaId:999}],
+  pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],
+  tarjetas:[{id:10,nombre:'Visa',cierre:13,vto:24,deuda:0,resumenes:{
+    [mkHoy]:{monto:200000,pagadoMonto:0,pagoMinimo:50000,detalle:[
+      {desc:'NETFLIX',monto:30598.47,categoria:'Servicios',sub:true}]}}}],
+  config:{apiKey:''}, seq:60});
+await page.reload();
+await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+ok(/680\.198|680\.198,49/.test(await page.evaluate(()=>document.getElementById('panelFijos').textContent))
+   || /680/.test(await page.evaluate(()=>document.getElementById('panelFijos').textContent)),
+   'fijos: el inicio muestra cuánto te sale por mes',
+   await page.evaluate(()=>document.getElementById('panelFijos').textContent));
+ok(/de tu plata/.test(await page.evaluate(()=>document.getElementById('panelFijosSub').textContent)),
+   'fijos: y el desglose de dónde sale');
+await page.click('#panelFijosBtn'); await page.waitForTimeout(500);
+ok(await page.isVisible('#fijosDetalle'), 'fijos: se toca y abre el detalle');
+const fdTxt = await page.evaluate(()=>document.getElementById('fijosDetalle').textContent.replace(/\s+/g,' '));
+ok(/Alquiler/.test(fdTxt) && /Lemon/.test(fdTxt),
+   'fijos: los que cargás a mano dicen de qué billetera salen', fdTxt.slice(0,120));
+ok(/tarjeta que borraste/.test(fdTxt), 'fijos: marca el que apunta a una tarjeta que ya no existe');
+ok(/el resumen dice/.test(fdTxt) && /30\.598/.test(fdTxt),
+   'fijos: avisa que el resumen trae otro monto', fdTxt.slice(0,200));
+await page.evaluate(()=>document.getElementById('fijosSync').click());
+await page.waitForTimeout(600);
+const st11 = await page.evaluate(()=>window.__guitaState());
+const nfx = st11.fijos.find(f=>f.nombre==='Netflix');
+ok(Math.round(nfx.monto)===30598, 'fijos: se ponen al día con el resumen', String(nfx.monto));
+ok(nfx.tarjetaId===10, 'fijos: y quedan apuntando a la tarjeta donde aparecen', String(nfx.tarjetaId));
+// tocar uno lleva a editarlo
+await page.evaluate(()=>document.querySelector('#fijosDetalle [data-fj]').click());
+await page.waitForTimeout(500);
+ok(await page.isVisible('#fjMonto'), 'fijos: tocar uno lo abre para modificarlo');
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+await page.close();
+
+/* préstamos: la fecha de la cuota manda sobre "pagué algo este mes" */
+page = await nuevaPagina();
+const finAgo = new Date(new Date().getFullYear(), new Date().getMonth()+1, 0);
+const finAgoISO = `${finAgo.getFullYear()}-${String(finAgo.getMonth()+1).padStart(2,'0')}-${String(finAgo.getDate()).padStart(2,'0')}`;
+await sembrar(page, {
+  movs:[], billeteras:[{id:1,nombre:'Cuenta DNI',saldoInicial:300000}],
+  fijos:[], pagosFijos:{}, transf:[], ajustes:[], metas:[], tarjetas:[],
+  // pagó el 1 (la cuota anterior) pero la próxima vence el último día del mes
+  prestamos:[{id:5,nombre:'Provincia',cuota:118242,cuotas:3,dia:31,pagadasIni:0,billetera:1,
+              proxima:finAgoISO, pagos:[{fecha:mkHoy+'-01',monto:118242,movId:97}]}],
+  config:{apiKey:''}, seq:60});
+await page.reload();
+await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+const prFecha = await page.evaluate(()=>document.getElementById('dueCard').textContent.replace(/\s+/g,' '));
+ok(/118\.242/.test(prFecha),
+   'préstamo: con fecha propia la cuota se ve aunque hayas pagado antes ese mes',
+   prFecha.slice(0,110));
+ok(new RegExp('el '+finAgo.getDate()).test(prFecha), 'préstamo: y con el día exacto que pusiste',
+   prFecha.slice(0,110));
+await page.click('.g-tab[data-view="tarjetas"]'); await page.waitForTimeout(600);
+const prCard = await page.evaluate(()=>document.getElementById('prestamosList').textContent.replace(/\s+/g,' '));
+ok(/Pagar esta cuota/.test(prCard), 'préstamo: el botón dice que hay que pagarla', prCard.slice(0,140));
+// registrar el pago avanza la fecha un mes
+await page.evaluate(()=>document.querySelector('#prestamosList [data-pagarpr]').click());
+await page.waitForTimeout(400);
+await page.click('#savePagoPr'); await page.waitForTimeout(600);
+const st10 = await page.evaluate(()=>window.__guitaState());
+const mesProx = String(new Date().getMonth()+2).padStart(2,'0');
+ok(st10.prestamos[0].proxima.slice(5,7)===mesProx,
+   'préstamo: al pagar, la próxima avanza un mes sola', st10.prestamos[0].proxima);
+// un día 31 en un mes de 30 cae el 30, no el 1 del siguiente
+ok(await page.evaluate(()=>{
+  const d = window.__guitaDiaDelMes(2026, 3, 31);   // abril tiene 30
+  return d.getMonth()===3 && d.getDate()===30;
+}), 'préstamo: el día 31 en un mes de 30 cae el último día');
+await page.close();
+
 /* fijos: los que no se tocan, separados de los que sí */
+page = await nuevaPagina();
 await sembrar(page, {
   movs:[], billeteras:[{id:1,nombre:'Lemon',saldoInicial:900000}],
   fijos:[{id:2,nombre:'Alquiler',monto:650000,dia:1,categoria:'Hogar',activo:true,billetera:1},

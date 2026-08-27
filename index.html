@@ -168,14 +168,15 @@
   .g-fold[open] summary::after{transform:rotate(90deg)}
   .g-panel{margin-top:var(--gap); padding:8px}
   .g-panel-grid{display:grid; grid-template-columns:1fr 1fr}
-  .g-panel-item{font:inherit; text-align:left; background:none; border:none; cursor:pointer;
+  .g-panel-item{font:inherit; text-align:left; background:none; border:none; cursor:pointer; min-width:0;
     padding:13px 14px; display:flex; flex-direction:column; gap:4px; border-radius:12px;
     transition:background .15s var(--ease)}
   .g-panel-item:active{background:var(--paper)}
   .g-panel-item .lbl{font-size:10.5px; font-weight:600; letter-spacing:.06em;
     text-transform:uppercase; color:var(--muted)}
-  .g-panel-item .val{font-size:19px; font-weight:800; font-variant-numeric:tabular-nums;
-    letter-spacing:-.02em}
+  .g-panel-item .val{font-size:clamp(15px,4.5vw,19px); font-weight:800; font-variant-numeric:tabular-nums;
+    letter-spacing:-.025em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .g-panel-item .lbl, .g-panel-item .sub{overflow:hidden; text-overflow:ellipsis}
   .g-panel-item .val.pos{color:var(--income)}
   .g-panel-item .val.neg{color:var(--expense)}
   .g-panel-item .sub{font-size:11.5px; color:var(--muted); line-height:1.4}
@@ -654,6 +655,16 @@
             <span class="val pos" id="panelTenes">$ 0</span>
             <span class="sub" id="panelTenesSub"></span>
           </button>
+          <button class="g-panel-item" id="panelFijosBtn">
+            <span class="lbl">Gastos fijos por mes</span>
+            <span class="val" id="panelFijos">$ 0</span>
+            <span class="sub" id="panelFijosSub"></span>
+          </button>
+          <button class="g-panel-item" data-ir="tarjetas">
+            <span class="lbl">Próximo resumen</span>
+            <span class="val neg" id="panelProx">$ 0</span>
+            <span class="sub" id="panelProxSub"></span>
+          </button>
         </div>
         <div class="g-panel-metas" id="panelMetas"></div>
       </section>
@@ -1074,8 +1085,12 @@
           <div class="g-field"><label class="g-label" for="prCuota">Cuota por mes</label>
             <input id="prCuota" type="text" inputmode="decimal" data-money></div>
           <div class="g-field"><label class="g-label" for="prDia">Día de pago</label>
-            <input id="prDia" type="number" min="1" max="28" step="1" value="10"></div>
+            <input id="prDia" type="number" min="1" max="31" step="1" value="10"></div>
         </div>
+        <div class="g-note" style="margin-top:-4px">Si ponés 29, 30 o 31 y el mes no llega, lo cobro el último día.</div>
+        <div class="g-field"><label class="g-label" for="prProxima">¿Cuándo vence la próxima cuota?</label>
+          <input id="prProxima" type="date"></div>
+        <div class="g-note" style="margin-top:-4px">Si la fecha se te corre de mes a mes, cambiala acá y mando la cuenta desde ahí. Al registrar un pago avanza sola un mes.</div>
         <div class="g-row2">
           <div class="g-field"><label class="g-label" for="prTotal">Cuotas en total</label>
             <input id="prTotal" type="number" min="1" max="120" step="1" placeholder="12"></div>
@@ -1115,6 +1130,15 @@
         <div id="simuComparar"></div>
         <div class="g-actions"><button class="g-btn" data-close>Cerrar</button>
           <button class="g-btn primary" id="simuCalcular">Calcular</button></div>
+      </div>
+
+      <div id="phaseFijos" hidden>
+        <h3>🧾 Tus gastos fijos</h3>
+        <div class="g-stsum" id="fijosResumen"></div>
+        <div id="fijosDetalle"></div>
+        <div class="g-actions"><button class="g-btn" data-close>Cerrar</button>
+          <button class="g-btn" id="fijosGuiaBtn2">📋 Los de siempre</button>
+          <button class="g-btn primary" id="fijosNuevoBtn">+ Nuevo</button></div>
       </div>
 
       <div id="phaseFijosGuia" hidden>
@@ -1288,19 +1312,26 @@
         <div class="g-note" id="notifNota">Con esto, cuando Lemon, Mercado Pago o tu banco te avisan de un pago o una transferencia, Guita lo detecta y te lo propone para cargar (siempre te pregunta antes). Anda solo en la app instalada y tenés que darle permiso una vez en los ajustes del celu. Nada sale de tu teléfono.</div>
         <div class="g-card g-tips" id="notifBloqueo" hidden style="margin-top:8px">
           <div class="g-tip"><span class="ic">🔒</span><div>
-            <strong>Android te lo va a bloquear.</strong> Como Guita no vino de Play Store,
+            <strong>Android te lo bloquea.</strong> Como Guita no vino de Play Store,
             el sistema esconde este permiso detrás de "Ajustes restringidos". Se destraba así:
             <ol style="margin:8px 0 0 18px; padding:0; line-height:1.6">
-              <li>Tocá <strong>Abrir el acceso</strong> e intentá prender Guita. Te lo va a rechazar: es a propósito.</li>
-              <li>Volvé y tocá <strong>Abrir la ficha de Guita</strong>.</li>
-              <li>Arriba a la derecha, el menú <strong>⋮</strong> → <strong>"Permitir ajustes restringidos"</strong>.</li>
-              <li>Confirmá con tu huella o PIN. No vas a ver ningún cambio: es normal.</li>
+              <li>Tocá <strong>Abrir el acceso</strong> e intentá prender Guita. Te lo va a rechazar: <em>tiene que pasar</em>, es lo que hace aparecer la opción del paso 3.</li>
+              <li>Volvé acá y tocá <strong>Abrir la ficha de Guita</strong>.</li>
+              <li>Arriba a la derecha, el menú <strong>⋮</strong> → <strong>"Permitir ajustes restringidos"</strong>.
+                En Samsung puede decir <strong>"Permitir configuración restringida"</strong>;
+                en Xiaomi/Motorola a veces está en <strong>"Otros permisos"</strong>.</li>
+              <li>Confirmá con tu huella o PIN. No vas a ver ningún cambio en pantalla: es normal.</li>
               <li>Volvé a <strong>Abrir el acceso</strong> y ahora sí prendé Guita.</li>
             </ol>
             <div class="g-heroactions" style="margin-top:10px">
               <button class="g-btn" id="notifAbrirLista">🔔 Abrir el acceso</button>
               <button class="g-btn" id="notifAbrirFicha">⚙️ Abrir la ficha de Guita</button>
             </div>
+            <div class="g-note" style="margin-top:10px">Si tu Android no te deja de ninguna manera,
+              el camino que sí funciona es <strong>📸 Subir captura de movimientos</strong> en Plata:
+              sacás una captura de Lemon o Mercado Pago y cargo todo lo que se vea.</div>
+            <div class="g-note" id="notifDiag" style="margin-top:8px"></div>
+            <button class="g-linkbtn" id="notifCopiarDiag" style="margin-top:4px">Copiar el diagnóstico</button>
           </div></div>
         </div>
         <button class="g-btn" id="notifRevisar" style="flex:none" hidden>🔔 Revisar notificaciones ahora</button>
@@ -1927,7 +1958,7 @@
     const sumaCuotas = cuotasSiguen.reduce((s,c)=>s+c.monto,0);
     const sumaRecur = recurrentes.reduce((s,c)=>s+c.monto,0);
     const sumaUnicos = unicos.reduce((s,c)=>s+c.monto,0);
-    const sumaFijos = fijosVia.reduce((s,f)=>s+f.monto,0);
+    const sumaFijos = fijosVia.reduce((s,f)=>s+enPesos(f),0);
     const sumaNuevos = nuevos.reduce((s,m)=>s+m.monto,0);
     const total = fin + cargoProm + sumaCuotas + sumaRecur + sumaFijos + sumaNuevos;
     // pago mínimo estimado: proporción histórica mínimo/total de tus resúmenes
@@ -1967,6 +1998,15 @@
     const fecha = new Date(hoy.getFullYear(), mes, dia, 12);
     return {fecha, late: fecha < hoy, dias: diasHasta(fecha), saldado: est.saldado};
   }
+  /**
+   * El día `dia` de ese mes. Si el mes no llega (31 en un mes de 30), el último día:
+   * "pago el 31" en abril significa el 30, no el 1 de mayo.
+   */
+  const isoDe = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  function diaDelMes(anio, mes, dia){
+    const ultimo = new Date(anio, mes+1, 0).getDate();
+    return new Date(anio, mes, Math.min(Math.max(1, dia|0), ultimo), 12);
+  }
   /** Días entre hoy y una fecha (negativo si ya pasó). */
   function diasHasta(fecha){
     const hoy = new Date(); hoy.setHours(12,0,0,0);
@@ -1983,7 +2023,8 @@
       const base = new Date(hoy.getFullYear(), hoy.getMonth()+desp, 1, 12);
       for(const o of compromisos(desp)){
         if(o.cobra!=="billetera" || o.pagado || !o.pagable) continue;
-        const fecha = new Date(base.getFullYear(), base.getMonth(), Math.min(o.dia,28), 12);
+        // el día exacto si el compromiso lo trae (préstamos con fecha propia), si no el del mes
+        const fecha = o.fecha || diaDelMes(base.getFullYear(), base.getMonth(), o.dia);
         out.push({kind: o.tipo==="resumen" ? "tarjeta" : o.tipo, ref:o.ref, comp:o,
           nombre:o.nombre, monto:o.monto, fecha, mk: monthKey(base), desp,
           late: fecha < hoy, dias: diasHasta(fecha)});
@@ -2435,7 +2476,7 @@
     else if(inn>0 && gasto<inn*0.8) tips.push({ic:"👏", html:`Vas gastando el ${Math.round(gasto/inn*100)}% de tus ingresos — ese ${Math.round((inn-gasto)/inn*100)}% que sobra rinde más cancelando deuda de tarjeta que quieto en una cuenta que no remunera.`});
 
     // fondo de emergencia
-    const fijosMes = S.fijos.filter(f=>f.activo!==false).reduce((s,f)=>s+f.monto,0);
+    const fijosMes = S.fijos.filter(f=>f.activo!==false).reduce((s,f)=>s+enPesos(f),0);
     const disp = saldoTotal();
     if(fijosMes>0 && disp>0 && finTotal<=0.5){
       const meses = disp/fijosMes;
@@ -2995,7 +3036,7 @@
       if(f.activo===false) continue;
       const t = f.viaTarjeta ? S.tarjetas.find(x=>x.id===f.tarjetaId) : null;
       const bill = !f.viaTarjeta && f.billetera ? S.billeteras.find(b=>b.id===f.billetera) : null;
-      push({tipo:"fijo", ref:f, id:"f"+f.id, nombre:f.nombre, monto:f.monto,
+      push({tipo:"fijo", ref:f, id:"f"+f.id, nombre:f.nombre, monto:enPesos(f),
         categoria:f.categoria, dia:f.dia, editable:true, esencial: esEsencial(f),
         cobra: f.viaTarjeta ? "tarjeta" : "billetera",
         pagable: !f.viaTarjeta, pagado: !desp && !f.viaTarjeta && !!pagosMes[f.id],
@@ -3009,9 +3050,11 @@
       if(e.listo) continue;
       // la cuota vive en el mes de su próxima fecha real, no siempre en el mes en curso
       const enEsteMes = e.proxima && monthKey(e.proxima)===mk;
-      if(!enEsteMes && !(desp===0 && e.pagadoEsteMes)) continue;
+      if(!enEsteMes && !(desp===0 && e.cubierta)) continue;
       push({tipo:"prestamo", ref:p, id:"p"+p.id, nombre:"Cuota "+p.nombre, monto:p.cuota,
-        categoria:"Otros", dia:p.dia, pagable:true, pagado: desp===0 && e.pagadoEsteMes,
+        categoria:"Otros", dia: e.proxima ? e.proxima.getDate() : (p.dia||1),
+        fecha: enEsteMes ? e.proxima : null,
+        pagable:true, pagado: desp===0 && e.cubierta,
         editable:true, est:e,
         via:`🏦 cuota ${e.cuotaNum} de ${e.total}`});
     }
@@ -3257,6 +3300,21 @@
     animMoney($("panelTenes"), enMano);
     $("panelTenesSub").textContent = inv>0 ? "+ "+fmtMoney(inv)+" invertido" :
       (S.billeteras.length ? S.billeteras.length+" billetera"+(S.billeteras.length===1?"":"s") : "sin billeteras");
+
+    // fijos del mes: el número que pidió tener a mano, y se toca para ver el detalle
+    const F = resumenFijos();
+    animMoney($("panelFijos"), F.total);
+    $("panelFijosSub").textContent = F.total>0
+      ? [F.dePlata>0 ? fmtMoney(F.dePlata)+" de tu plata" : null,
+         F.deTarjeta>0 ? fmtMoney(F.deTarjeta)+" en la tarjeta" : null].filter(Boolean).join(" · ")
+      : "todavía no cargaste ninguno";
+
+    // lo que viene en el próximo resumen de todas las tarjetas
+    const proxs = S.tarjetas.map(t=>proyeccionTarjeta(t)).filter(Boolean);
+    const proxTot = proxs.reduce((a,x)=>a+x.total,0);
+    animMoney($("panelProx"), proxTot);
+    $("panelProxSub").textContent = proxs.length
+      ? `estimado de ${proxs.length} tarjeta${proxs.length===1?"":"s"}` : "sin resúmenes cargados";
 
     // metas: barra chiquita de cada una
     const metas = (S.metas||[]).filter(g=>(g.objetivo||0)>0).slice(0,3);
@@ -3604,6 +3662,42 @@
     return ESENCIAL_KW.some(w=>n.includes(norm(w)));
   }
 
+  /**
+   * Los gastos fijos con todo lo que hace falta para entenderlos: cuánto, qué día,
+   * de dónde salen, si vienen dentro del resumen de una tarjeta y si esa tarjeta
+   * todavía existe.
+   */
+  function resumenFijos(){
+    const items = S.fijos.filter(f=>f.activo!==false).map(f=>{
+      const t = f.viaTarjeta ? S.tarjetas.find(x=>x.id===f.tarjetaId) : null;
+      const bill = !f.viaTarjeta && f.billetera ? S.billeteras.find(b=>b.id===f.billetera) : null;
+      return {ref:f, nombre:f.nombre, monto: enPesos(f), montoOrig:f.monto||0, moneda:f.moneda,
+        dia:f.dia||1,
+        categoria:f.categoria||"Otros", esencial: esEsencial(f),
+        viaTarjeta: !!f.viaTarjeta, tarjeta: t, huerfano: !!(f.viaTarjeta && !t),
+        billetera: bill, ultimoDelResumen: ultimoMontoEnResumen(f, t)};
+    }).sort((a,b)=>(b.esencial-a.esencial) || (b.monto-a.monto));
+    const total = items.reduce((s,x)=>s+x.monto,0);
+    return {items, total,
+      dePlata: items.filter(x=>!x.viaTarjeta).reduce((s,x)=>s+x.monto,0),
+      deTarjeta: items.filter(x=>x.viaTarjeta).reduce((s,x)=>s+x.monto,0),
+      esenciales: items.filter(x=>x.esencial).reduce((s,x)=>s+x.monto,0)};
+  }
+  /** El último monto con el que ese servicio vino en el resumen, para comparar. */
+  function ultimoMontoEnResumen(f, t){
+    const cards = t ? [t] : S.tarjetas;
+    let mejor = null;
+    for(const c of cards){
+      for(const mk of Object.keys(c.resumenes||{}).sort()){
+        for(const d of (c.resumenes[mk].detalle||[])){
+          if(enPesos(d)>0 && !cuotaDe(d.desc) && mismoComercio(d.desc, f.nombre))
+            mejor = {mk, monto:d.monto, moneda:d.moneda, pesos:enPesos(d), tarjeta:c};
+        }
+      }
+    }
+    return mejor;
+  }
+
   /** Junta en un solo lugar los fijos, las suscripciones y los servicios de tarjeta. */
   function recurrentesDelMes(){
     const out = [];
@@ -3771,17 +3865,25 @@
     const falta = quedan * (p.cuota||0);
     const mk = monthKey(new Date());
     const pagadoEsteMes = (p.pagos||[]).some(x=>x.fecha.slice(0,7)===mk);
-    // fecha real de la próxima cuota: este mes si todavía no la pagaste, si no el que viene
     const hoy = new Date(); hoy.setHours(12,0,0,0);
-    const dia = Math.min(Math.max(1, p.dia||1), 28);
-    let proxima = null;
+    let proxima = null, usaFecha = false;
     if(quedan>0){
-      // si todavía no pagaste este mes, la cuota es de este mes aunque el día ya pasó
-      // (eso es atraso, no mes que viene); recién con el mes pago salta al siguiente
-      proxima = new Date(hoy.getFullYear(), hoy.getMonth() + (pagadoEsteMes?1:0), dia, 12);
+      if(p.proxima && /^\d{4}-\d{2}-\d{2}$/.test(p.proxima)){
+        // Fecha puesta a mano: manda, y apunta siempre a la próxima cuota IMPAGA.
+        // Avanza sola al registrar un pago, así que acá no se toca: si quedó atrás,
+        // es atraso de verdad. Y "pagué algo este mes" deja de decidir por vos —
+        // un pago del 1 puede ser de la cuota anterior, no de la que vence el 31.
+        proxima = new Date(p.proxima+"T12:00:00");
+        usaFecha = true;
+      } else {
+        // si todavía no pagaste este mes, la cuota es de este mes aunque el día ya pasó
+        // (eso es atraso, no mes que viene); recién con el mes pago salta al siguiente
+        proxima = diaDelMes(hoy.getFullYear(), hoy.getMonth() + (pagadoEsteMes?1:0), p.dia||1);
+      }
     }
     return {pagadas, total, quedan, pagado, falta, pagadoEsteMes, listo: quedan<=0,
-      proxima, cuotaNum: Math.min(total, pagadas+1)};
+      proxima, usaFecha, cuotaNum: Math.min(total, pagadas+1),
+      cubierta: usaFecha ? false : pagadoEsteMes};
   }
 
   function deudaPrestamos(){
@@ -3813,9 +3915,11 @@
         <div class="g-note" style="margin-top:8px">${
           e.listo ? "🎉 ¡Terminado! No debés más cuotas."
           : `Vas por la cuota <strong>${e.cuotaNum} de ${e.total}</strong> · te quedan <strong>${fmtMoney(e.falta)}</strong> en total.` +
-            (e.pagadoEsteMes ? " Este mes ya lo pagaste ✔" : "")}</div>
-        ${e.listo ? "" : `<button class="g-btn ${e.pagadoEsteMes?"":"primary"}" data-pagarpr="${p.id}" style="margin-top:10px">
-          ${e.pagadoEsteMes ? "Registrar otro pago" : "💸 Pagar la cuota de este mes"}</button>`}
+            (e.usaFecha && e.proxima
+              ? ` Vence el <strong>${e.proxima.getDate()} de ${MESES_LARGOS[e.proxima.getMonth()]}</strong>.`
+              : e.pagadoEsteMes ? " Este mes ya lo pagaste ✔" : "")}</div>
+        ${e.listo ? "" : `<button class="g-btn ${e.cubierta?"":"primary"}" data-pagarpr="${p.id}" style="margin-top:10px">
+          ${e.cubierta ? "Registrar otro pago" : "💸 Pagar esta cuota"}</button>`}
       </div>`;
     }).join("");
   }
@@ -3827,6 +3931,10 @@
     $("prNombre").value = p ? p.nombre : "";
     $("prCuota").value = p && p.cuota ? fmtNum(p.cuota) : "";
     $("prDia").value = p ? p.dia : 10;
+    // la fecha exacta de la próxima: prellenada con la que calcularíamos igual
+    const ep = p ? estadoPrestamo(p) : null;
+    $("prProxima").value = p && p.proxima ? p.proxima
+      : (ep && ep.proxima ? isoDe(ep.proxima) : "");
     $("prTotal").value = p ? p.cuotas : "";
     $("prPagadas").value = p ? ((p.pagadasIni||0) + (p.pagos||[]).length) : 0;
     fillWalletSelect($("prBill"), false, false);
@@ -3872,7 +3980,9 @@
     if(!(cuota>0)){ $("prCuota").focus(); toast("¿Cuánto pagás por mes?"); return; }
     const cuotas = Math.max(1, parseInt($("prTotal").value)||1);
     const yaPagadas = Math.min(cuotas, Math.max(0, parseInt($("prPagadas").value)||0));
-    const datos = {nombre, cuota, cuotas, dia: Math.min(28, Math.max(1, parseInt($("prDia").value)||10)),
+    const prox = $("prProxima").value;
+    const datos = {nombre, cuota, cuotas, dia: Math.min(31, Math.max(1, parseInt($("prDia").value)||10)),
+      proxima: /^\d{4}-\d{2}-\d{2}$/.test(prox) ? prox : undefined,
       billetera: parseInt($("prBill").value)||null};
     S.prestamos = S.prestamos || [];
     if(prestamoEdit){
@@ -3921,6 +4031,11 @@
     S.movs.push(mov);
     pagoPrestamo.pagos = pagoPrestamo.pagos || [];
     pagoPrestamo.pagos.push({fecha, monto, movId:mov.id});
+    // la próxima cuota avanza un mes sola; si se corre, la corregís en el préstamo
+    if(pagoPrestamo.proxima){
+      const d = new Date(pagoPrestamo.proxima+"T12:00:00");
+      pagoPrestamo.proxima = isoDe(diaDelMes(d.getFullYear(), d.getMonth()+1, pagoPrestamo.dia||d.getDate()));
+    }
     const e = estadoPrestamo(pagoPrestamo);
     save(); closeSheet(); renderAll();
     toast(e.listo ? `🎉 ¡Terminaste de pagar ${pagoPrestamo.nombre}!`
@@ -4292,7 +4407,7 @@
 
   /* ---------- sheet ---------- */
   const sheet=$("sheet"), scrim=$("scrim");
-  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte","Alcanza","Simu","Reparto","FijosGuia","Prestamo","PagoPrestamo","Rec"];
+  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte","Alcanza","Simu","Reparto","Fijos","FijosGuia","Prestamo","PagoPrestamo","Rec"];
   const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]),' +
     ' textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
   const focoVisibles = () => Array.from(sheet.querySelectorAll(FOCUSABLE))
@@ -4545,6 +4660,80 @@
     $("fjEsencial").checked = true;   // lo que cargás a mano suele ser de los que sí o sí
     openSheet("fijo");
   };
+  /* ---------- el detalle de los fijos, a un toque del inicio ---------- */
+  function abrirFijos(){
+    const F = resumenFijos();
+    $("fijosResumen").innerHTML =
+      `<div class="r tot"><span>Todos los meses te sale</span><span>${fmtMoney(F.total)}</span></div>` +
+      (F.dePlata>0 ? `<div class="r"><span>👛 Sale de tu plata</span><span>${fmtMoney(F.dePlata)}</span></div>` : "") +
+      (F.deTarjeta>0 ? `<div class="r"><span>💳 Viene en el resumen</span><span>${fmtMoney(F.deTarjeta)}</span></div>` : "") +
+      (F.esenciales>0 ? `<div class="r"><span>De eso, los que sí o sí</span><span>${fmtMoney(F.esenciales)}</span></div>` : "");
+    $("fijosDetalle").innerHTML = F.items.length ? F.items.map((x,i)=>{
+      // ¿el resumen trae otro monto que el que tenés cargado?
+      const u = x.ultimoDelResumen;
+      const desfasado = u && Math.abs(u.pesos - x.monto) > 1;
+      const donde = x.huerfano ? `⚠️ tarjeta que borraste`
+        : x.viaTarjeta ? `💳 ${esc(x.tarjeta.nombre)}`
+        : x.billetera ? `👛 ${esc(x.billetera.nombre)}`
+        : `👛 de tu plata`;
+      return `<div class="g-fijo" data-fj="${x.ref.id}" role="button" tabindex="0" style="--d:${Math.min(i,10)*0.03}s">
+        <span class="g-dot" style="background:${catColor(x.categoria)}"></span>
+        <span class="g-info">
+          <span class="g-desc">${x.esencial?"":"🔁 "}${esc(x.nombre)}</span>
+          <span class="st">vence el ${x.dia} · ${donde}${
+            desfasado ? ` · <span style="color:var(--c-salidas); font-weight:600">el resumen dice ${fmtConsumo(u)}</span>` : ""}</span>
+        </span>
+        <span style="font-variant-numeric:tabular-nums; font-weight:700; flex:none">${
+          x.moneda==="USD" ? `US$ ${fmtNum(x.montoOrig)}` : fmtMoney(x.monto)}</span>
+      </div>`;
+    }).join("")
+      + (F.items.some(x=>x.ultimoDelResumen && Math.abs(x.ultimoDelResumen.pesos-x.monto)>1)
+        ? `<div class="g-note" style="padding:12px var(--pad) 4px">Algunos montos cambiaron en el último resumen.
+           <button class="g-linkbtn" id="fijosSync">Actualizarlos con lo que dice el resumen</button></div>` : "")
+      + (F.items.some(x=>x.huerfano)
+        ? `<div class="g-note" style="padding:8px var(--pad) 4px">⚠️ Hay fijos apuntando a una tarjeta que borraste.
+           <button class="g-linkbtn" id="fijosReasignar">Reasignarlos</button></div>` : "")
+      : `<div class="g-note" style="padding:14px var(--pad)">Todavía no cargaste ninguno. El alquiler, la luz, el gas, el seguro: cargalos una vez y te aviso todos los meses.</div>`;
+    const bs = $("fijosSync");
+    if(bs) bs.onclick = sincronizarFijos;
+    const br = $("fijosReasignar");
+    if(br) br.onclick = ()=>{ const h = resumenFijos().items.find(x=>x.huerfano);
+      if(h){ closeSheet(); setTimeout(()=>abrirFijo(h.ref), 250); } };
+    openSheet("fijos");
+  }
+  alClick("panelFijosBtn", abrirFijos);
+  alClick("fijosNuevoBtn", ()=>{ closeSheet(); setTimeout(()=>$("addFijoBtn").click(), 250); });
+  alClick("fijosGuiaBtn2", ()=>{ closeSheet(); setTimeout(()=>$("fijosGuiaBtn").click(), 250); });
+  $("fijosDetalle").addEventListener("click", e=>{
+    const el = e.target.closest("[data-fj]");
+    if(!el) return;
+    const f = S.fijos.find(x=>x.id===Number(el.dataset.fj));
+    if(f){ closeSheet(); setTimeout(()=>abrirFijo(f), 250); }
+  });
+  /**
+   * Pone al día los fijos que vienen en la tarjeta con el monto del último resumen.
+   * Netflix sube todos los meses y el fijo quedaba clavado en el precio viejo.
+   */
+  function sincronizarFijos(){
+    let montos = 0, reasignados = 0;
+    for(const x of resumenFijos().items){
+      const u = x.ultimoDelResumen;
+      if(!u) continue;
+      // si apuntaba a una tarjeta que ya no está, la reasignamos aunque el monto coincida
+      if(x.huerfano && u.tarjeta){ x.ref.tarjetaId = u.tarjeta.id; x.ref.viaTarjeta = true; reasignados++; }
+      if(Math.abs(u.pesos - x.monto) > 1){
+        x.ref.monto = Math.round(u.monto*100)/100;
+        x.ref.moneda = u.moneda;         // US$ 10 se guarda como 10 en dólares, no 15.000
+        montos++;
+      }
+    }
+    if(!montos && !reasignados){ toast("Ya estaban todos al día ✔"); return; }
+    save(); renderAll(); abrirFijos();
+    toast([montos ? `${montos} monto${montos===1?"":"s"} al día` : null,
+           reasignados ? `${reasignados} reasignado${reasignados===1?"":"s"} a su tarjeta` : null]
+      .filter(Boolean).join(" · ")+" ✔");
+  }
+
   /* ---------- carga guiada: los fijos que casi todo el mundo tiene ---------- */
   const FIJOS_TIPICOS = [
     {n:"Alquiler",           c:"Hogar",     d:1,  ic:"🏠"},
@@ -4927,6 +5116,31 @@
       if(it){ it.categoria = c.categoria; it.sub = !!c.suscripcion; }
     }
     return true;
+  }
+
+  /**
+   * Cuando entra un resumen, los gastos fijos que vienen en esa tarjeta toman el
+   * monto nuevo. Netflix sube todos los meses: el fijo quedaba con el precio viejo
+   * y el "todos los meses te sale" mentía.
+   */
+  function actualizarFijosDesde(card, mes){
+    const r = (card.resumenes||{})[mes];
+    if(!r || !r.detalle) return [];
+    const out = [];
+    for(const f of S.fijos){
+      if(f.activo===false) continue;
+      // solo los que ya sabemos que vienen en esta tarjeta (o en una que ya no existe)
+      const suya = f.viaTarjeta && (f.tarjetaId===card.id || !S.tarjetas.some(t=>t.id===f.tarjetaId));
+      if(!suya) continue;
+      const linea = r.detalle.find(d=>enPesos(d)>0 && !cuotaDe(d.desc) && mismoComercio(d.desc, f.nombre));
+      if(!linea) continue;
+      f.tarjetaId = card.id;                       // de paso queda apuntando bien
+      if(Math.abs(enPesos(linea) - enPesos(f)) <= 1) continue;
+      out.push({nombre:f.nombre, viejo:enPesos(f), nuevo:enPesos(linea)});
+      f.monto = Math.round(linea.monto*100)/100;
+      f.moneda = linea.moneda;
+    }
+    return out;
   }
 
   function proposeSubs(tarjeta, detalle){
@@ -5475,8 +5689,14 @@
         setTimeout(()=>toast(`Detecté tu pago de ${fmtMoney(importData.pagos)} al resumen de ${monthKeyLabel(pk)} ✔`), 1400);
       }
     }
+    // los fijos que vienen en esta tarjeta se ponen al día con el monto del resumen
+    const ajustados = actualizarFijosDesde(card, mes);
     save(); closeSheet(); switchView("tarjetas"); renderAll();
     toast("Resumen de "+nombre+" cargado ✔");
+    if(ajustados.length) setTimeout(()=>toast(
+      ajustados.length===1
+        ? `${ajustados[0].nombre} pasó a ${fmtMoney(ajustados[0].nuevo)} ✔`
+        : `Actualicé ${ajustados.length} gastos fijos con los montos del resumen ✔`), 2600);
     importPendingSubs = importData.detalle.length ? {card, detalle: importData.detalle} : null;
     openPagoRes(card, mes);
     importCtx = null; importData = null;
@@ -5735,10 +5955,29 @@
     try{ return !!(window.AndroidVoz && window.AndroidVoz.notifBloqueoProbable
       && window.AndroidVoz.notifBloqueoProbable()); }catch(e){ return false; }
   };
+  /** El diagnóstico crudo, para saber contra qué estamos peleando. */
+  function diagNotif(){
+    try{
+      if(window.AndroidVoz && window.AndroidVoz.notifDiag) return JSON.parse(window.AndroidVoz.notifDiag());
+    }catch(e){}
+    return null;
+  }
   function pintarNotifBloqueo(){
     const dado = notifOn() && (()=>{ try{ return window.AndroidVoz.notifPermiso(); }catch(e){ return false; } })();
     $("notifBloqueo").hidden = !(notifOn() && !dado && notifBloqueoProbable());
+    const d = diagNotif();
+    $("notifDiag").textContent = d
+      ? `Tu celu: ${d.marca||"?"} ${d.modelo||""} · Android ${d.android} (SDK ${d.sdk}) · ` +
+        `instalada por ${d.instalador==="sideload" ? "archivo (sideload)" : d.instalador} · ` +
+        `pantalla de accesos: ${d.hayPantalla ? "sí" : "no"} · permiso: ${d.permiso ? "dado ✔" : "sin dar"}`
+      : "";
   }
+  alClick("notifCopiarDiag", ()=>{
+    const d = diagNotif();
+    const txt = d ? JSON.stringify(d) : "sin puente Android";
+    try{ navigator.clipboard.writeText(txt); toast("Diagnóstico copiado — pegámelo y lo miro"); }
+    catch(e){ toast(txt); }
+  });
   alClick("notifAbrirLista", ()=>{ try{ window.AndroidVoz.notifPedirPermiso(); }catch(e){} });
   alClick("notifAbrirFicha", ()=>{ try{ window.AndroidVoz.abrirFichaApp(); }catch(e){} });
   // el sistema nos avisa al volver de los ajustes: el switch no puede mentir
@@ -5757,6 +5996,7 @@
       $("cfgNotif").checked = false;            // no lo damos por prendido hasta que el sistema lo confirme
       pintarNotifBloqueo();
       if(notifBloqueoProbable()) toast("Android lo bloquea: mirá los pasos acá abajo");
+      else if(!(diagNotif()||{}).hayPantalla) toast("Tu Android no tiene esa pantalla — usá 📸 Subir captura");
       else { toast("Buscá \u201cGuita\u201d en la lista y activalo");
              try{ window.AndroidVoz.notifPedirPermiso(); }catch(e){} }
       return;
@@ -6246,6 +6486,7 @@
   window.__guitaStatement = parseStatementText;
   window.__guitaState = () => JSON.parse(JSON.stringify(S));
   window.__guitaSaldo = id => saldoBilletera(id);
+  window.__guitaDiaDelMes = (a,m,d) => diaDelMes(a,m,d);
   window.__guitaToast = () => ({busy: toastBusy, pend: toastQ.length, txt: toastEl.textContent});
   window.__guitaNotif = n => parseNotif(n);
   window.__guitaBackup = () => armarBackup();

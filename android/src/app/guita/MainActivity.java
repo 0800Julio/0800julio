@@ -325,6 +325,43 @@ public class MainActivity extends Activity {
             } catch (Exception e) { return true; }
         }
 
+        /**
+         * Todo lo que hace falta para entender por qué el permiso no se puede dar:
+         * versión de Android, quién instaló la app y si el servicio siquiera existe.
+         */
+        @JavascriptInterface
+        public String notifDiag() {
+            String sdk = String.valueOf(Build.VERSION.SDK_INT);
+            String rel = String.valueOf(Build.VERSION.RELEASE);
+            String inst = "?";
+            try {
+                if (Build.VERSION.SDK_INT >= 30) {
+                    String x = getPackageManager()
+                            .getInstallSourceInfo(getPackageName()).getInstallingPackageName();
+                    inst = x == null ? "sideload" : x;
+                } else {
+                    String x = getPackageManager().getInstallerPackageName(getPackageName());
+                    inst = x == null ? "sideload" : x;
+                }
+            } catch (Exception e) { inst = "sideload"; }
+            boolean hayPantalla = false;
+            try {
+                hayPantalla = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+                        .resolveActivity(getPackageManager()) != null;
+            } catch (Exception ignored) {}
+            try {
+                JSONObject o = new JSONObject();
+                o.put("sdk", sdk);
+                o.put("android", rel);
+                o.put("marca", Build.MANUFACTURER);
+                o.put("modelo", Build.MODEL);
+                o.put("instalador", inst);
+                o.put("hayPantalla", hayPantalla);
+                o.put("permiso", notifPermiso());
+                return o.toString();
+            } catch (Exception e) { return "{}"; }
+        }
+
         /** Abre la pantalla del sistema donde se habilita el acceso. */
         @JavascriptInterface
         public void notifPedirPermiso() {
