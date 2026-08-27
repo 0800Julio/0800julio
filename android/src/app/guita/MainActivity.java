@@ -40,6 +40,8 @@ public class MainActivity extends Activity {
     private String pendingCsv = null;
     private ValueCallback<Uri[]> fileCallback;
     private int pendingRemH = -1, pendingRemM = -1;
+    /** Archivo que llegó por "Compartir con Guita", esperando a que la web lo pida. */
+    private String sharedB64 = null, sharedMime = null, sharedName = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +69,43 @@ public class MainActivity extends Activity {
         web.addJavascriptInterface(new Bridge(), "AndroidVoz");
         setContentView(web);
         web.loadUrl("file:///android_asset/index.html");
+        tomarCompartido(getIntent());
+    }
+
+    /** La app ya estaba abierta y le compartieron algo. */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (tomarCompartido(intent)) js("window.__guitaHayCompartido&&window.__guitaHayCompartido()");
+    }
+
+    /**
+     * Guarda en memoria la captura o el PDF que llegó por ACTION_SEND. No se toca el
+     * disco: la web lo pide en base64 y lo manda a leer como si lo hubieras elegido.
+     */
+    private boolean tomarCompartido(Intent intent) {
+        if (intent == null || !Intent.ACTION_SEND.equals(intent.getAction())) return false;
+        Uri uri = null;
+        try { uri = intent.getParcelableExtra(Intent.EXTRA_STREAM); } catch (Exception ignored) {}
+        if (uri == null) return false;
+        try (InputStream in = getContentResolver().openInputStream(uri)) {
+            if (in == null) return false;
+            java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[16384];
+            int n, total = 0;
+            while ((n = in.read(buf)) > 0) {
+                total += n;
+                if (total > 12 * 1024 * 1024) return false;   // 12 MB es más que suficiente
+                bos.write(buf, 0, n);
+            }
+            sharedB64 = android.util.Base64.encodeToString(bos.toByteArray(), android.util.Base64.NO_WRAP);
+            String t = intent.getType();
+            sharedMime = t != null ? t : getContentResolver().getType(uri);
+            if (sharedMime == null) sharedMime = "image/jpeg";
+            sharedName = uri.getLastPathSegment();
+            return true;
+        } catch (Exception e) { return false; }
     }
 
     /**
@@ -411,6 +450,20 @@ public class MainActivity extends Activity {
         public String notifPendientes() {
             return GuitaNotifListener.leerCola(
                     getSharedPreferences(GuitaNotifListener.PREFS, MODE_PRIVATE)).toString();
+        }
+
+        /** Lo que te compartieron, en base64, o "" si no hay nada esperando. */
+        @JavascriptInterface
+        public String compartidoPendiente() {
+            if (sharedB64 == null) return "";
+            try {
+                JSONObject o = new JSONObject();
+                o.put("b64", sharedB64);
+                o.put("mime", sharedMime);
+                o.put("nombre", sharedName == null ? "" : sharedName);
+                sharedB64 = null; sharedMime = null; sharedName = null;   // una sola vez
+                return o.toString();
+            } catch (Exception e) { sharedB64 = null; return ""; }
         }
 
         /** Vacía la cola una vez que la app ya la procesó. */

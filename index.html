@@ -630,6 +630,10 @@
           </div>
         </div></div>
       </div>
+      <button class="g-upload" id="capturaBtnHome" style="margin-top:var(--gap)" hidden>
+        <strong>📸 Cargar desde una captura</strong>
+        <span>Sacale una captura a Lemon, Mercado Pago o tu banco y cargo todo lo que se vea. También podés compartírmela desde la otra app.</span>
+      </button>
 
       <section class="g-card g-summary" aria-label="Resumen del mes">
         <div>
@@ -1132,6 +1136,16 @@
           <button class="g-btn primary" id="simuCalcular">Calcular</button></div>
       </div>
 
+      <div id="phaseCompartido" hidden>
+        <h3>📥 Me compartiste algo</h3>
+        <div class="g-note" id="compNota">¿Qué es? Lo leo y te propongo lo que encuentre.</div>
+        <div class="g-heroactions" style="margin-top:12px; flex-direction:column">
+          <button class="g-btn primary" id="compCaptura" style="flex:none">📸 Movimientos de mi billetera</button>
+          <button class="g-btn" id="compResumen" style="flex:none">📄 Resumen de tarjeta</button>
+        </div>
+        <div class="g-actions"><button class="g-btn" data-close>Descartar</button></div>
+      </div>
+
       <div id="phaseFijos" hidden>
         <h3>🧾 Tus gastos fijos</h3>
         <div class="g-stsum" id="fijosResumen"></div>
@@ -1314,15 +1328,7 @@
           <div class="g-tip"><span class="ic">🔒</span><div>
             <strong>Android te lo bloquea.</strong> Como Guita no vino de Play Store,
             el sistema esconde este permiso detrás de "Ajustes restringidos". Se destraba así:
-            <ol style="margin:8px 0 0 18px; padding:0; line-height:1.6">
-              <li>Tocá <strong>Abrir el acceso</strong> e intentá prender Guita. Te lo va a rechazar: <em>tiene que pasar</em>, es lo que hace aparecer la opción del paso 3.</li>
-              <li>Volvé acá y tocá <strong>Abrir la ficha de Guita</strong>.</li>
-              <li>Arriba a la derecha, el menú <strong>⋮</strong> → <strong>"Permitir ajustes restringidos"</strong>.
-                En Samsung puede decir <strong>"Permitir configuración restringida"</strong>;
-                en Xiaomi/Motorola a veces está en <strong>"Otros permisos"</strong>.</li>
-              <li>Confirmá con tu huella o PIN. No vas a ver ningún cambio en pantalla: es normal.</li>
-              <li>Volvé a <strong>Abrir el acceso</strong> y ahora sí prendé Guita.</li>
-            </ol>
+            <ol style="margin:8px 0 0 18px; padding:0; line-height:1.6" id="notifPasos"></ol>
             <div class="g-heroactions" style="margin-top:10px">
               <button class="g-btn" id="notifAbrirLista">🔔 Abrir el acceso</button>
               <button class="g-btn" id="notifAbrirFicha">⚙️ Abrir la ficha de Guita</button>
@@ -1330,6 +1336,15 @@
             <div class="g-note" style="margin-top:10px">Si tu Android no te deja de ninguna manera,
               el camino que sí funciona es <strong>📸 Subir captura de movimientos</strong> en Plata:
               sacás una captura de Lemon o Mercado Pago y cargo todo lo que se vea.</div>
+            <details style="margin-top:10px">
+              <summary style="font-size:13px; font-weight:600; color:var(--brand); cursor:pointer">Si el menú ⋮ no te muestra la opción</summary>
+              <div class="g-note" style="margin-top:6px">Pasa en algunos Android 14. Con una computadora se destraba en un comando,
+                sin reinstalar nada ni perder datos: activá <strong>Depuración USB</strong> (Ajustes → Sistema →
+                Opciones para desarrolladores), conectá el celu y corré:</div>
+              <code id="notifAdb" style="display:block; margin-top:6px; padding:9px 11px; border-radius:10px;
+                background:var(--paper); border:1px solid var(--line); font-size:12px; word-break:break-all">adb shell appops set app.guita ACCESS_RESTRICTED_SETTINGS allow</code>
+              <button class="g-linkbtn" id="notifCopiarAdb" style="margin-top:6px">Copiar el comando</button>
+            </details>
             <div class="g-note" id="notifDiag" style="margin-top:8px"></div>
             <button class="g-linkbtn" id="notifCopiarDiag" style="margin-top:4px">Copiar el diagnóstico</button>
           </div></div>
@@ -2080,6 +2095,8 @@
     $("monthTitle").textContent = fmtMonth(view);
     // la lectura de notificaciones existe desde hace rato pero nadie la encuentra en Ajustes
     $("notifTip").hidden = !(notifOn() && !S.config.notificaciones && !S.config.notifTipNo);
+    // si las notificaciones no están, el camino que sí anda tiene que estar a la vista
+    $("capturaBtnHome").hidden = !(S.billeteras.length && !S.config.notificaciones);
     const mm = monthMovs();
     const G = gastoDelMes(monthKey(view));
     const out = G.total, inn = G.ingreso;
@@ -4407,7 +4424,7 @@
 
   /* ---------- sheet ---------- */
   const sheet=$("sheet"), scrim=$("scrim");
-  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte","Alcanza","Simu","Reparto","Fijos","FijosGuia","Prestamo","PagoPrestamo","Rec"];
+  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte","Alcanza","Simu","Reparto","Compartido","Fijos","FijosGuia","Prestamo","PagoPrestamo","Rec"];
   const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]),' +
     ' textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
   const focoVisibles = () => Array.from(sheet.querySelectorAll(FOCUSABLE))
@@ -5866,7 +5883,40 @@
 
   /* ---------- billeteras ---------- */
   let walletEdit = null;
+  /* ---------- "Compartir con Guita": la captura entra sin pasar por el explorador ---------- */
+  let compartido = null;
+  /** Convierte lo que llegó por el puente en un File, para reusar el mismo camino. */
+  function fileDeB64(b64, mime, nombre){
+    const bin = atob(b64);
+    const buf = new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) buf[i] = bin.charCodeAt(i);
+    return new File([buf], nombre || "compartido", {type: mime || "image/jpeg"});
+  }
+  function revisarCompartido(){
+    if(!(window.AndroidVoz && window.AndroidVoz.compartidoPendiente)) return;
+    let raw = "";
+    try{ raw = window.AndroidVoz.compartidoPendiente(); }catch(e){ return; }
+    if(!raw) return;
+    let d = null;
+    try{ d = JSON.parse(raw); }catch(e){ return; }
+    if(!d || !d.b64) return;
+    try{ compartido = fileDeB64(d.b64, d.mime, d.nombre); }
+    catch(e){ toast("No pude leer lo que compartiste"); return; }
+    const esPdf = /pdf/i.test(compartido.type);
+    $("compNota").textContent = esPdf
+      ? "Un PDF. Casi seguro es un resumen de tarjeta, pero decime vos."
+      : "Una imagen. ¿Es una captura de tus movimientos o la foto de un resumen?";
+    openSheet("compartido");
+    if(esPdf) setTimeout(()=>$("compResumen").focus(), 200);
+  }
+  window.__guitaHayCompartido = revisarCompartido;
+  alClick("compCaptura", ()=>{ const f = compartido; compartido = null; closeSheet();
+    if(f) setTimeout(()=>processCapturaFile(f), 250); });
+  alClick("compResumen", ()=>{ const f = compartido; compartido = null; closeSheet();
+    if(f){ importCtx = {tarjetaId:null}; setTimeout(()=>processStatementFile(f), 250); } });
+
   $("capturaBtn").onclick = ()=>{ $("capturaInput").value=""; $("capturaInput").click(); };
+  alClick("capturaBtnHome", ()=>$("capturaBtn").click());
   $("capturaInput").addEventListener("change", e=>{
     const f = e.target.files && e.target.files[0];
     if(f) processCapturaFile(f);
@@ -5966,12 +6016,38 @@
     const dado = notifOn() && (()=>{ try{ return window.AndroidVoz.notifPermiso(); }catch(e){ return false; } })();
     $("notifBloqueo").hidden = !(notifOn() && !dado && notifBloqueoProbable());
     const d = diagNotif();
+    pintarPasosNotif(d);
     $("notifDiag").textContent = d
       ? `Tu celu: ${d.marca||"?"} ${d.modelo||""} · Android ${d.android} (SDK ${d.sdk}) · ` +
         `instalada por ${d.instalador==="sideload" ? "archivo (sideload)" : d.instalador} · ` +
         `pantalla de accesos: ${d.hayPantalla ? "sí" : "no"} · permiso: ${d.permiso ? "dado ✔" : "sin dar"}`
       : "";
   }
+  /**
+   * Los pasos, con el nombre que usa cada marca. Motorola y Samsung llaman distinto
+   * a la misma opción, y ese es justo el punto donde la gente se traba.
+   */
+  function pintarPasosNotif(d){
+    const marca = ((d&&d.marca)||"").toLowerCase();
+    const comoSeLlama =
+      /samsung/.test(marca) ? `<strong>"Permitir configuración restringida"</strong>`
+      : /xiaomi|redmi|poco/.test(marca) ? `<strong>"Permitir ajustes restringidos"</strong> (si no está, mirá en <strong>Otros permisos</strong>)`
+      : `<strong>"Permitir ajustes restringidos"</strong>`;
+    const donde = /motorola/.test(marca)
+      ? `los <strong>3 puntitos ⋮</strong> arriba a la derecha de la ficha de la app`
+      : `el menú <strong>⋮</strong> arriba a la derecha`;
+    $("notifPasos").innerHTML = [
+      `Tocá <strong>Abrir el acceso</strong> e intentá prender Guita. <em>Te lo va a rechazar, y tiene que rechazártelo</em>: ese rechazo es lo que hace aparecer la opción del paso 3.`,
+      `Sin cerrar nada, volvé acá y tocá <strong>Abrir la ficha de Guita</strong>. Hacelo seguido: si dejás pasar mucho rato, la opción se va.`,
+      `En ${donde}, buscá ${comoSeLlama}.`,
+      `Confirmá con tu huella o PIN. No vas a ver ningún cambio en pantalla: es normal, ya quedó.`,
+      `Volvé a <strong>Abrir el acceso</strong> y ahora sí prendé Guita.`
+    ].map(t=>`<li>${t}</li>`).join("");
+  }
+  alClick("notifCopiarAdb", ()=>{
+    const txt = $("notifAdb").textContent;
+    try{ navigator.clipboard.writeText(txt); toast("Comando copiado ✔"); }catch(e){ toast(txt); }
+  });
   alClick("notifCopiarDiag", ()=>{
     const d = diagNotif();
     const txt = d ? JSON.stringify(d) : "sin puente Android";
@@ -6463,6 +6539,9 @@
     // esperar a que la app termine de dibujar para no tapar el arranque
     setTimeout(()=>revisarNotificaciones(true), 1800);
   })();
+
+  /* ---------- si te compartieron una captura, atenderla al abrir ---------- */
+  setTimeout(revisarCompartido, 700);
 
   /* ---------- recordatorio diario: reprogramar al abrir + aviso web ---------- */
   aplicarRecordatorio();

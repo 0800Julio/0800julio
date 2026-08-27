@@ -648,6 +648,43 @@ const pagado = await page.evaluate(()=>{
 });
 ok(pagado===146531, 'pago: seguir adelantando suma al pago anterior', String(pagado));
 
+/* compartir una captura a Guita: el camino cuando Android no deja leer notificaciones */
+{
+  const pageC = await browser.newPage({viewport:{width:390,height:844}});
+  pageC.on('pageerror', e=>{ console.log('PAGE ERROR:', e.message); fail++; });
+  // un PNG de 1x1 haciendo de captura compartida
+  const PNG1x1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  // el puente real entrega el archivo una sola vez; acá lo imitamos con sessionStorage
+  await pageC.addInitScript(b64=>{
+    window.AndroidVoz = {
+      compartidoPendiente(){
+        if(sessionStorage.getItem('compEntregado')) return "";
+        sessionStorage.setItem('compEntregado','1');
+        return JSON.stringify({b64, mime:"image/png", nombre:"captura.png"});
+      }
+    };
+  }, PNG1x1);
+  await pageC.goto(BASE+'/');
+  await pageC.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+  await pageC.waitForTimeout(1400);
+  ok(await pageC.isVisible('#phaseCompartido'),
+     'compartir: lo que te comparten abre la hoja apenas entrás');
+  const compTxt = await pageC.evaluate(()=>document.getElementById('compNota').textContent);
+  ok(/captura|imagen/i.test(compTxt), 'compartir: reconoce que es una imagen', compTxt);
+  ok(await pageC.isVisible('#compCaptura') && await pageC.isVisible('#compResumen'),
+     'compartir: podés elegir si es un movimiento o un resumen');
+  // sin API key el camino de captura avisa en vez de romper
+  await pageC.click('#compCaptura'); await pageC.waitForTimeout(600);
+  ok(await pageC.isVisible('#phaseConfig'),
+     'compartir: sin IA activada te manda a activarla');
+  // y no queda pegado: al volver a entrar no reabre lo mismo
+  await pageC.reload();
+  await pageC.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+  await pageC.waitForTimeout(1200);
+  ok(!await pageC.isVisible('#phaseCompartido'), 'compartir: no se repite en la próxima apertura');
+  await pageC.close();
+}
+
 /* los gastos fijos, a un toque del inicio y sincronizados con el resumen */
 await sembrar(page, {
   movs:[], billeteras:[{id:1,nombre:'Lemon',saldoInicial:900000}],
