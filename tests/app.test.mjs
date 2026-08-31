@@ -574,7 +574,9 @@ const diaHoy = new Date().getDate();
 await sembrar(page, {
   movs:[{id:1,tipo:"ingreso",monto:3000000,fecha:mkHoy+"-05",categoria:"Sueldo",descripcion:"Sueldo",billetera:1}],
   billeteras:[{id:1,nombre:'Lemon',saldoInicial:1284819}],
-  fijos:[{id:2,nombre:'Alquiler',monto:245117,dia:28,categoria:'Hogar',activo:true,viaTarjeta:false}],
+  // sin fijos: acá lo que se prueba es el resumen, y un fijo con día fijo hace que
+  // el test dependa de en qué día del mes se corra
+  fijos:[],
   pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],
   tarjetas:[{id:10,nombre:'Visa',cierre:13,vto:Math.max(1,diaHoy-1),deuda:0,resumenes:{
     [mkHoy]:{monto:246531,saldoAnterior:0,pagos:0,impuestos:8000,pagadoMonto:0,pagoMinimo:60000,detalle:[
@@ -648,7 +650,100 @@ const pagado = await page.evaluate(()=>{
 });
 ok(pagado===146531, 'pago: seguir adelantando suma al pago anterior', String(pagado));
 
+/* ¿adelanto la tarjeta o pongo la plata a rendir? */
+await sembrar(page, {
+  movs:[], billeteras:[{id:1,nombre:'Lemon',saldoInicial:1000000}],
+  fijos:[], pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],
+  tarjetas:[{id:10,nombre:'Visa',cierre:13,vto:24,deuda:0,resumenes:{
+    [mkX(1)]:{monto:1000000,saldoAnterior:900000,pagos:0,impuestos:0,pagadoMonto:0,pagoMinimo:100000,detalle:[]},
+    [mkHoy]:{monto:1100000,saldoAnterior:1000000,pagos:0,impuestos:100000,pagadoMonto:0,pagoMinimo:100000,detalle:[]}}}],
+  config:{apiKey:''}, seq:70});
+await page.reload();
+await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+await page.click('.g-tab[data-view="tarjetas"]'); await page.waitForTimeout(700);
+ok(await page.isVisible('#rendirBtn'), 'rendir: hay botón porque tenés deuda de tarjeta');
+await page.click('#rendirBtn'); await page.waitForTimeout(400);
+ok(/10[.,]0% por mes/.test(await page.evaluate(()=>document.getElementById('rdTasaNota').textContent)),
+   'rendir: parte de la tasa que sale de tus propios resúmenes',
+   await page.evaluate(()=>document.getElementById('rdTasaNota').textContent));
+// rindiendo menos que la tarjeta: conviene adelantar
+await page.fill('#rdTasa','3');
+await page.click('#rdCalcular'); await page.waitForTimeout(400);
+let rdTxt = await page.evaluate(()=>document.getElementById('rdResultado').textContent.replace(/\s+/g,' '));
+ok(/Conviene adelantar/.test(rdTxt), 'rendir: con 3% mensual conviene adelantar', rdTxt.slice(-70));
+ok(/100\.000/.test(rdTxt), 'rendir: y dice cuántos intereses te ahorrás', rdTxt.slice(0,120));
+// rindiendo más: conviene guardar
+await page.fill('#rdTasa','15');
+await page.click('#rdCalcular'); await page.waitForTimeout(400);
+rdTxt = await page.evaluate(()=>document.getElementById('rdResultado').textContent.replace(/\s+/g,' '));
+ok(/Conviene ponerlo a rendir/.test(rdTxt), 'rendir: con 15% mensual conviene guardar', rdTxt.slice(-70));
+ok(/punitorios|mínimo/.test(await page.evaluate(()=>document.getElementById('rdDetalle').textContent)),
+   'rendir: pero avisa que igual hay que pagar el mínimo');
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+await page.close();
+
+/* enganchar un consumo del resumen a un gasto de siempre, con tu nombre */
+page = await nuevaPagina();
+await sembrar(page, {
+  movs:[], billeteras:[{id:1,nombre:'Lemon',saldoInicial:500000}],
+  fijos:[], pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],
+  tarjetas:[{id:10,nombre:'Master',cierre:13,vto:24,deuda:0,resumenes:{
+    [mkX(1)]:{monto:100000,pagadoMonto:100000,detalle:[
+      {desc:'WWW.CAMUZZI GAS PAMPEA',monto:31539.42,categoria:'Servicios'}]},
+    [mkHoy]:{monto:200000,pagadoMonto:0,pagoMinimo:50000,detalle:[
+      {desc:'Camuzzi Gas Pampea',monto:32593.41,categoria:'Servicios'},
+      {desc:'MERCANTIL ANDINA',monto:74500,categoria:'Otros'}]}}}],
+  config:{apiKey:''}, seq:60});
+await page.reload();
+await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+await page.click('.g-tab[data-view="tarjetas"]'); await page.waitForTimeout(700);
+await page.evaluate(()=>document.querySelector('#cardList [data-verdet]').click());
+await page.waitForTimeout(500);
+ok(/es de siempre/.test(await page.evaluate(()=>document.getElementById('detalleList').textContent)),
+   'enganchar: cada consumo se puede marcar como gasto de siempre');
+// "esto que dice CAMUZZI es mi gas"
+await page.evaluate(()=>{
+  const filas = [...document.querySelectorAll('#detalleList [data-fijar]')];
+  const i = filas.findIndex(b=>/camuzzi/i.test(b.closest('.g-strow').querySelector('[data-f="desc"]').value));
+  filas[i].click();
+});
+await page.waitForTimeout(600);
+ok(await page.isVisible('#fjNombre'), 'enganchar: abre la ficha del gasto fijo');
+ok(/Camuzzi/i.test(await page.inputValue('#fjNombre')),
+   'enganchar: propone un nombre limpio', await page.inputValue('#fjNombre'));
+ok((await page.inputValue('#fjMonto')).replace(/\D/g,'').startsWith('32593'),
+   'enganchar: trae el monto del resumen', await page.inputValue('#fjMonto'));
+ok(await page.isChecked('#fjEsencial'), 'enganchar: entra como uno de los que sí o sí');
+// le pongo MI nombre
+await page.fill('#fjNombre','Gas');
+await page.click('#saveFijo'); await page.waitForTimeout(700);
+const st12 = await page.evaluate(()=>window.__guitaState());
+const gas = st12.fijos.find(f=>f.nombre==='Gas');
+ok(!!gas && gas.comercio, 'enganchar: guarda el comercio original aparte del nombre',
+   JSON.stringify(gas&&{n:gas.nombre,c:gas.comercio,t:gas.tarjetaId}));
+ok(gas.tarjetaId===10 && gas.esencial===true, 'enganchar: queda atado a la tarjeta y como esencial');
+// y el vínculo sobrevive el renombre: el próximo resumen le actualiza el monto
+await page.evaluate(()=>{
+  const st = window.__guitaState();
+  return null;
+});
+await page.click('.g-tab[data-view="home"]'); await page.waitForTimeout(500);
+await page.click('#panelFijosBtn'); await page.waitForTimeout(500);
+const fjTxt2 = await page.evaluate(()=>document.getElementById('fijosDetalle').textContent.replace(/\s+/g,' '));
+ok(/Gas/.test(fjTxt2) && /Master/.test(fjTxt2),
+   'enganchar: aparece con tu nombre y su tarjeta', fjTxt2.slice(0,120));
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+// el consumo ya enganchado muestra a qué fijo pertenece
+await page.click('.g-tab[data-view="tarjetas"]'); await page.waitForTimeout(600);
+await page.evaluate(()=>document.querySelector('#cardList [data-verdet]').click());
+await page.waitForTimeout(500);
+ok(/📌 Gas/.test(await page.evaluate(()=>document.getElementById('detalleList').textContent)),
+   'enganchar: el consumo dice a qué gasto fijo pertenece');
+await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+await page.close();
+
 /* compartir una captura a Guita: el camino cuando Android no deja leer notificaciones */
+page = await nuevaPagina();
 {
   const pageC = await browser.newPage({viewport:{width:390,height:844}});
   pageC.on('pageerror', e=>{ console.log('PAGE ERROR:', e.message); fail++; });

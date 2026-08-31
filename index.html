@@ -749,6 +749,7 @@
         <div class="g-note" id="debtNote"></div>
         <div class="g-heroactions">
           <button class="g-btn" id="repartoBtn" hidden>💸 ¿Cómo reparto?</button>
+          <button class="g-btn" id="rendirBtn" hidden>🤔 ¿Adelanto o guardo?</button>
           <button class="g-btn" id="simuBtn" hidden>🧮 ¿Cómo salgo?</button>
         </div>
       </section>
@@ -1161,6 +1162,19 @@
         <div id="guiaLista"></div>
         <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
           <button class="g-btn primary" id="saveGuia">Cargar los que puse</button></div>
+      </div>
+
+      <div id="phaseRendir" hidden>
+        <h3>🤔 ¿Adelanto la tarjeta o lo pongo a rendir?</h3>
+        <div class="g-field"><label class="g-label" for="rdMonto">¿Cuánta plata estás pensando?</label>
+          <input id="rdMonto" type="text" inputmode="decimal" data-money></div>
+        <div class="g-field"><label class="g-label" for="rdTasa">¿Cuánto te rendiría por mes? (%)</label>
+          <input id="rdTasa" type="number" step="0.1" min="0" max="30" placeholder="Ej: 2,5"></div>
+        <div class="g-note" id="rdTasaNota"></div>
+        <div class="g-stsum" id="rdResultado" hidden></div>
+        <div class="g-note" id="rdDetalle"></div>
+        <div class="g-actions"><button class="g-btn" data-close>Cerrar</button>
+          <button class="g-btn primary" id="rdCalcular">Comparar</button></div>
       </div>
 
       <div id="phaseReparto" hidden>
@@ -3099,7 +3113,7 @@
       if(!r || !r.detalle) continue;
       for(const d of r.detalle){
         if(!(d.monto>0) || cuotaDe(d.desc) || !esRecurrente(d)) continue;
-        if(S.fijos.some(f=>mismoComercio(f.nombre, d.desc))) continue;
+        if(S.fijos.some(f=>esteFijo(f, d.desc))) continue;
         if(out.some(o=>mismoComercio(o.nombre, d.desc))) continue;
         push({tipo:"tarjeta", ref:d, id:"t"+t.id+claveComercio(d.desc), nombre:d.desc,
           monto:d.monto, categoria:d.categoria, dia:t.vto, cobra:"tarjeta",
@@ -3663,6 +3677,14 @@
     if(!x || !y) return false;
     return x===y || x.startsWith(y) || y.startsWith(x);
   };
+  /**
+   * ¿Este consumo del resumen es este gasto fijo? Si el fijo guarda el comercio
+   * original, manda ese: así podés llamarlo "Gas" aunque en el resumen diga
+   * "WWW.CAMUZZI GAS PAMPEA" y el vínculo no se rompe al renombrarlo.
+   */
+  const esteFijo = (f, desc) => f.comercio
+    ? mismoComercio(f.comercio, desc)
+    : mismoComercio(f.nombre, desc);
 
   /** Gastos que no se pueden cortar: techo, servicios, seguro. */
   const ESENCIAL_KW = ["alquiler","expensas","luz","edea","edesur","edenor","gas","camuzzi",
@@ -3707,7 +3729,7 @@
     for(const c of cards){
       for(const mk of Object.keys(c.resumenes||{}).sort()){
         for(const d of (c.resumenes[mk].detalle||[])){
-          if(enPesos(d)>0 && !cuotaDe(d.desc) && mismoComercio(d.desc, f.nombre))
+          if(enPesos(d)>0 && !cuotaDe(d.desc) && esteFijo(f, d.desc))
             mejor = {mk, monto:d.monto, moneda:d.moneda, pesos:enPesos(d), tarjeta:c};
         }
       }
@@ -3739,7 +3761,7 @@
       for(const d of r.detalle){
         if(!(d.monto>0) || cuotaDe(d.desc) || !esRecurrente(d)) continue;
         // no repetir lo que ya está cargado como fijo (Netflix ≡ NETFLIX.COM ≡ DLO*NETFLIX)
-        if(S.fijos.some(f=>mismoComercio(f.nombre, d.desc))) continue;
+        if(S.fijos.some(f=>esteFijo(f, d.desc))) continue;
         // ni repetir entre tarjetas
         if(out.some(o=>mismoComercio(o.nombre, d.desc))) continue;
         out.push({tipo:"tarjeta", ref:d, id:"t"+t.id+norm(d.desc), nombre:d.desc, monto:d.monto,
@@ -4141,6 +4163,61 @@
     return {cands: porTasa, resto, deudaTot, tasaProm,
       ahorro: Math.max(0, interesParejo-interesPlan), interesPlan};
   }
+  /**
+   * La pregunta que se hace cualquiera con plata en la mano y deuda de tarjeta.
+   * La respuesta sale de tus propios números: la tasa que te cobran contra la que
+   * conseguís. No hay magia: gana la más alta.
+   */
+  alClick("rendirBtn", ()=>{
+    const d = plataDisponible();
+    $("rdMonto").value = fmtNum(Math.round(Math.max(0, d.enMano)));
+    $("rdTasa").value = "";
+    $("rdResultado").hidden = true;
+    $("rdDetalle").innerHTML = "";
+    const tasa = deudaTotal().tasa;
+    $("rdTasaNota").innerHTML = tasa!=null
+      ? `Tus resúmenes dicen que financiar te cuesta <strong>${tasa.toFixed(1)}% por mes</strong>. ` +
+        `Poné lo que te pagaría el plazo fijo o la cuenta remunerada y comparamos.`
+      : `Todavía no tengo suficientes resúmenes para medir cuánto te cobran por financiar.`;
+    openSheet("rendir");
+    setTimeout(()=>$("rdTasa").focus(), 200);
+  });
+  alClick("rdCalcular", ()=>{
+    const monto = numVal($("rdMonto").value)||0;
+    if(!(monto>0)){ $("rdMonto").focus(); toast("¿Cuánta plata?"); return; }
+    const rinde = Math.max(0, parseFloat($("rdTasa").value)||0);
+    if(!(rinde>0)){ $("rdTasa").focus(); toast("¿Cuánto te rendiría por mes?"); return; }
+    const D = deudaTotal();
+    const cuesta = D.tasa!=null ? D.tasa : 6.5;
+    const deuda = D.tarjetas + D.declarada;
+    const aplica = Math.min(monto, deuda);          // no podés adelantar más de lo que debés
+    const ahorro = aplica * cuesta/100;             // intereses que dejás de pagar en un mes
+    const ganancia = monto * rinde/100;             // lo que te rendiría ese mismo mes
+    const dif = ahorro - ganancia;
+    const gana = dif > 0;
+    $("rdResultado").hidden = false;
+    $("rdResultado").innerHTML =
+      `<div class="r"><span>Financiar te cuesta</span><span>${cuesta.toFixed(1)}% por mes</span></div>` +
+      `<div class="r"><span>Te rendiría</span><span>${rinde.toFixed(1)}% por mes</span></div>` +
+      `<div class="r neg"><span>Si adelantás, dejás de pagar</span><span>${fmtMoney(ahorro)}/mes</span></div>` +
+      `<div class="r pos"><span>Si lo ponés a rendir, ganás</span><span>${fmtMoney(ganancia)}/mes</span></div>` +
+      `<div class="r tot"><span>${gana ? "Conviene adelantar" : "Conviene ponerlo a rendir"}</span>` +
+        `<span>por ${fmtMoney(Math.abs(dif))}/mes</span></div>`;
+    const meses = [3,6,12].map(m=>`${m} meses: ${fmtMoney(Math.abs(dif)*m)}`).join(" · ");
+    $("rdDetalle").innerHTML =
+      (gana
+        ? `<strong>Adelantá.</strong> Cada peso que le sacás a la tarjeta rinde ${cuesta.toFixed(1)}% seguro y libre de impuestos, ` +
+          `porque es plata que dejás de regalar. Para que te convenga guardarla tendrías que conseguir más de ` +
+          `<strong>${cuesta.toFixed(1)}% mensual neto</strong>, y eso no lo paga ninguna cuenta ni plazo fijo.`
+        : `<strong>Poné a rendir.</strong> Con ${rinde.toFixed(1)}% mensual ganás más de lo que te cuesta financiar. ` +
+          `Ojo igual con no pagar el mínimo: los punitorios y la mora no entran en esta cuenta.`) +
+      `<div style="margin-top:8px">La diferencia acumulada sería ${meses}.</div>` +
+      (monto > deuda && deuda>0
+        ? `<div style="margin-top:8px">Adelantando cubrís toda la deuda de tarjeta (${fmtMoney(deuda)}) y te sobran ${fmtMoney(monto-deuda)}: eso sí conviene ponerlo a rendir.</div>`
+        : "") +
+      `<div style="margin-top:8px">Dejate siempre un colchón para los gastos del mes: adelantar todo y después pagar con la misma tarjeta no sirve de nada.</div>`;
+  });
+
   alClick("repartoBtn", ()=>{
     const d = plataDisponible();
     $("repMonto").value = fmtNum(Math.round(Math.max(0, d.enMano)));
@@ -4286,6 +4363,7 @@
     });
     $("simuBtn").hidden = !conSaldo.length;
     $("repartoBtn").hidden = conSaldo.length < 2;   // con una sola tarjeta no hay nada que repartir
+    $("rendirBtn").hidden = !conSaldo.length;
     if(!libs.length) return;
     const max = Math.max(...libs.map(l=>l.libera));
     $("liberaList").innerHTML = libs.slice(0,6).map((l,i)=>`
@@ -4424,7 +4502,7 @@
 
   /* ---------- sheet ---------- */
   const sheet=$("sheet"), scrim=$("scrim");
-  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte","Alcanza","Simu","Reparto","Compartido","Fijos","FijosGuia","Prestamo","PagoPrestamo","Rec"];
+  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte","Alcanza","Simu","Reparto","Rendir","Compartido","Fijos","FijosGuia","Prestamo","PagoPrestamo","Rec"];
   const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]),' +
     ' textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
   const focoVisibles = () => Array.from(sheet.querySelectorAll(FOCUSABLE))
@@ -4665,9 +4743,9 @@
   $("nextMonthA").onclick = ()=>monthShift(1);
 
   /* ---------- fijos ---------- */
-  let fijoEdit = null;
+  let fijoEdit = null, fijoVinculo = null;
   $("addFijoBtn").onclick = ()=>{
-    fijoEdit = null;
+    fijoEdit = null; fijoVinculo = null;
     $("fijoTitle").textContent = "Nuevo gasto fijo";
     $("delFijo").hidden = true;
     $("fjViaNote").hidden = true;
@@ -4821,9 +4899,17 @@
     const datos = {nombre, monto, dia, categoria:$("fjCat").value, esencial: $("fjEsencial").checked,
       viaTarjeta: !!bs.tarjetaId, tarjetaId: bs.tarjetaId || undefined,
       billetera: bs.tarjetaId ? undefined : (bs.billetera ?? undefined)};
+    // el comercio original del resumen: renombrar el fijo no rompe el vínculo
+    if(fijoVinculo){
+      datos.comercio = fijoVinculo.comercio;
+      if(fijoVinculo.moneda) datos.moneda = fijoVinculo.moneda;
+    }
     if(fijoEdit) Object.assign(fijoEdit, datos);
     else S.fijos.push(Object.assign({id:nid(), activo:true}, datos));
-    save(); closeSheet(); renderAll(); toast("Gasto fijo guardado ✔");
+    const vinculado = !!fijoVinculo;
+    fijoVinculo = null;
+    save(); closeSheet(); renderAll();
+    toast(vinculado ? `"${nombre}" queda enganchado al resumen ✔` : "Gasto fijo guardado ✔");
   };
   $("delFijo").onclick = ()=>{
     if(!fijoEdit) return;
@@ -4833,10 +4919,13 @@
   };
   function abrirFijo(f){
     if(!f) return;
-    fijoEdit = f;
+    fijoEdit = f; fijoVinculo = null;
     $("fijoTitle").textContent = "Editar gasto fijo";
     $("delFijo").hidden = false;
     $("fjViaNote").hidden = !f.viaTarjeta;
+    $("fjViaNote").textContent = f.comercio
+      ? `Enganchado a "${f.comercio}" del resumen: cada resumen nuevo le actualiza el monto solo.`
+      : "Este fijo va incluido en el resumen de la tarjeta: no se paga aparte, se cuenta cuando pagás el resumen.";
     $("fjNombre").value=f.nombre; $("fjMonto").value=fmtNum(f.monto); $("fjDia").value=f.dia;
     fillCats($("fjCat"), false); $("fjCat").value=f.categoria;
     fillWalletSelect($("fjBill"), true, true);
@@ -4966,6 +5055,8 @@
     $("edPagado").value = r && resPagado(r) ? fmtNum(resPagado(r)) : "";
     renderDetalleRows();
   }
+  /** El gasto fijo al que ya está enganchado este consumo, si hay alguno. */
+  const yaEsFijo = d => S.fijos.find(f=>f.activo!==false && esteFijo(f, d.desc)) || null;
   function renderDetalleRows(){
     $("detalleList").innerHTML = detItems.length ? detItems.map((d,i)=>{
       const cq = cuotaDe(d.desc);
@@ -4982,6 +5073,8 @@
               title="¿Vuelve todos los meses?">${rec?"🔁 vuelve":"1️⃣ una vez"}</button>`}
             <button type="button" class="g-cuota rec${d.moneda==="USD"?" on":""}" data-usd="${i}"
               title="¿Está en dólares?">${d.moneda==="USD"?"💵 en US$":"$ en pesos"}</button>
+            ${cq?"":`<button type="button" class="g-cuota rec${yaEsFijo(d)?" on":""}" data-fijar="${i}"
+              title="¿Es uno de tus gastos de siempre?">${yaEsFijo(d) ? "📌 "+esc(yaEsFijo(d).nombre) : "📌 es de siempre"}</button>`}
             ${d.monto<0?`<span class="g-cuota">🎁 descuento</span>`:""}
           </div>
         </div>
@@ -5088,8 +5181,56 @@
     if(us){
       const d = detItems[Number(us.dataset.usd)];
       if(d){ d.moneda = d.moneda==="USD" ? undefined : "USD"; renderDetalleRows(); }
+      return;
+    }
+    // "esto que dice CAMUZZI es mi gasto de gas": lo convierte en fijo con tu nombre
+    const fj = e.target.closest("[data-fijar]");
+    if(fj){
+      const d = detItems[Number(fj.dataset.fijar)];
+      if(!d) return;
+      const ya = yaEsFijo(d);
+      if(ya){ closeSheet(); setTimeout(()=>abrirFijo(ya), 250); return; }
+      guardarDetalleSilencioso();
+      closeSheet();
+      setTimeout(()=>abrirFijoDesdeConsumo(d, detCard), 250);
     }
   });
+  /** Guarda lo editado del detalle sin cerrar ni avisar, para no perderlo al saltar. */
+  function guardarDetalleSilencioso(){
+    const mk = $("dtMes").value;
+    const r = detCard && (detCard.resumenes||{})[mk];
+    if(r){ r.detalle = detItems.filter(d=>d.monto>0 || d.desc.trim()); save(); }
+  }
+  /**
+   * Crea un gasto fijo a partir de un consumo del resumen. El nombre lo ponés vos
+   * ("Gas", "Seguro del auto") pero queda enganchado al comercio original, así el
+   * monto se actualiza solo cuando llegue el próximo resumen.
+   */
+  function abrirFijoDesdeConsumo(d, card){
+    fijoEdit = null;
+    fijoVinculo = {comercio: claveComercio(d.desc), tarjetaId: card ? card.id : null,
+                   moneda: d.moneda};
+    $("fijoTitle").textContent = "¿Qué es este gasto?";
+    $("delFijo").hidden = true;
+    $("fjViaNote").hidden = false;
+    $("fjViaNote").textContent = `Lo vi como "${d.desc}" en ${card?card.nombre:"tu resumen"}. ` +
+      `Ponele el nombre con el que lo conocés y cada resumen nuevo le actualiza el monto solo.`;
+    $("fjNombre").value = nombreLindo(d.desc);
+    $("fjMonto").value = d.monto ? fmtNum(d.monto) : "";
+    $("fjDia").value = card ? card.vto : 10;
+    fillCats($("fjCat"), false); $("fjCat").value = d.categoria || "Servicios";
+    fillWalletSelect($("fjBill"), true, true);
+    if(card) $("fjBill").value = "t"+card.id;
+    $("fjEsencial").checked = true;
+    openSheet("fijo");
+    setTimeout(()=>{ $("fjNombre").focus(); $("fjNombre").select(); }, 250);
+  }
+  /** "WWW.CAMUZZI GAS PAMPEA" → "Camuzzi Gas": un punto de partida para renombrar. */
+  function nombreLindo(desc){
+    const k = claveComercio(desc);
+    if(!k) return desc;
+    return k.split(" ").map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(" ");
+  }
   $("saveDetalle").onclick = ()=>{
     if(!detCard) return;
     const mkViejo = $("dtMes").value;
@@ -5149,7 +5290,7 @@
       // solo los que ya sabemos que vienen en esta tarjeta (o en una que ya no existe)
       const suya = f.viaTarjeta && (f.tarjetaId===card.id || !S.tarjetas.some(t=>t.id===f.tarjetaId));
       if(!suya) continue;
-      const linea = r.detalle.find(d=>enPesos(d)>0 && !cuotaDe(d.desc) && mismoComercio(d.desc, f.nombre));
+      const linea = r.detalle.find(d=>enPesos(d)>0 && !cuotaDe(d.desc) && esteFijo(f, d.desc));
       if(!linea) continue;
       f.tarjetaId = card.id;                       // de paso queda apuntando bien
       if(Math.abs(enPesos(linea) - enPesos(f)) <= 1) continue;
@@ -6034,14 +6175,14 @@
       : /xiaomi|redmi|poco/.test(marca) ? `<strong>"Permitir ajustes restringidos"</strong> (si no está, mirá en <strong>Otros permisos</strong>)`
       : `<strong>"Permitir ajustes restringidos"</strong>`;
     const donde = /motorola/.test(marca)
-      ? `los <strong>3 puntitos ⋮</strong> arriba a la derecha de la ficha de la app`
+      ? `los <strong>3 puntitos ⋮</strong> de arriba a la derecha (en la misma pantalla donde dice "Desinstalar" y "Forzar detención")`
       : `el menú <strong>⋮</strong> arriba a la derecha`;
     $("notifPasos").innerHTML = [
-      `Tocá <strong>Abrir el acceso</strong> e intentá prender Guita. <em>Te lo va a rechazar, y tiene que rechazártelo</em>: ese rechazo es lo que hace aparecer la opción del paso 3.`,
-      `Sin cerrar nada, volvé acá y tocá <strong>Abrir la ficha de Guita</strong>. Hacelo seguido: si dejás pasar mucho rato, la opción se va.`,
-      `En ${donde}, buscá ${comoSeLlama}.`,
-      `Confirmá con tu huella o PIN. No vas a ver ningún cambio en pantalla: es normal, ya quedó.`,
-      `Volvé a <strong>Abrir el acceso</strong> y ahora sí prendé Guita.`
+      `Tocá <strong>Abrir el acceso</strong>, buscá Guita en la lista y prendé el interruptor. Te va a salir <em>"Configuración restringida"</em>: <strong>está bien, tiene que salirte</strong>. Cerrá ese cartel.`,
+      `<strong>Sin cerrar nada más</strong>, volvé acá y tocá <strong>Abrir la ficha de Guita</strong>. Andá en el momento: si dejás pasar un rato, la opción del paso 3 desaparece y hay que empezar de nuevo.`,
+      `En ${donde}, buscá ${comoSeLlama}. Si el menú no la muestra, volvé al paso 1: no llegaste a disparar el bloqueo.`,
+      `Confirmá con tu huella o PIN. No vas a ver ningún cambio en pantalla ni ningún mensaje: es normal, ya quedó hecho.`,
+      `Volvé a <strong>Abrir el acceso</strong> y ahora sí prendé Guita. Te va a pedir una confirmación más y listo.`
     ].map(t=>`<li>${t}</li>`).join("");
   }
   alClick("notifCopiarAdb", ()=>{
