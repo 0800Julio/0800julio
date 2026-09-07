@@ -650,7 +650,63 @@ const pagado = await page.evaluate(()=>{
 });
 ok(pagado===146531, 'pago: seguir adelantando suma al pago anterior', String(pagado));
 
+/* archivo de cambios: se suma a lo que ya tenés, no lo pisa */
+await sembrar(page, {
+  movs:[{id:1,tipo:"gasto",monto:12345,fecha:mkHoy+"-02",categoria:"Comida",
+         descripcion:"Algo que ya tenía",billetera:1}],
+  billeteras:[{id:1,nombre:'Lemon',saldoInicial:500000}],
+  fijos:[], pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],
+  tarjetas:[{id:10,nombre:'Visa Provincia',cierre:13,vto:24,deuda:0,resumenes:{
+    [mkHoy]:{monto:200000,pagadoMonto:0,pagoMinimo:50000,detalle:[]}}}],
+  config:{apiKey:''}, seq:60});
+await page.reload();
+await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+const PARCHE = {
+  app:"guita", parche:1, nota:"Prueba del ida y vuelta",
+  cambios:[
+    {op:"gasto", monto:650000, desc:"Alquiler", categoria:"Hogar", fecha:mkHoy+"-01", billetera:"Lemon"},
+    {op:"fijo", nombre:"Gas", monto:32593.41, dia:24, categoria:"Servicios",
+     esencial:true, tarjeta:"Visa", comercio:"camuzzi gas"},
+    {op:"pagoResumen", tarjeta:"Visa Provincia", mes:mkHoy, monto:80000, billetera:"Lemon"},
+    {op:"config", sueldo:3000000, diaCobro:5},
+    {op:"saldo", billetera:"Lemon", monto:400000},
+    {op:"gasto", monto:0, desc:"Sin monto"},
+    {op:"fijo", nombre:"X", tarjeta:"Tarjeta que no existe"},
+    {op:"loQueSea"}
+  ]};
+await page.evaluate(j=>window.__guitaParche(j), PARCHE);
+await page.waitForTimeout(500);
+ok(await page.isVisible('#parcheLista'), 'parche: muestra qué va a cambiar antes de aplicar');
+const prevTxt = await page.evaluate(()=>document.getElementById('parcheLista').textContent.replace(/\s+/g,' '));
+ok(/Alquiler/.test(prevTxt) && /650\.000/.test(prevTxt), 'parche: lista el gasto nuevo', prevTxt.slice(0,90));
+ok(/Gas/.test(prevTxt) && /Visa Provincia/.test(prevTxt),
+   'parche: resuelve "Visa" contra "Visa Provincia"', prevTxt.slice(0,200));
+ok(/Ajusto Lemon a \$ 400\.000/.test(prevTxt) && /ahora/.test(prevTxt),
+   'parche: al ajustar el saldo dice contra qué compara', prevTxt.slice(-140));
+const errTxt = await page.evaluate(()=>document.getElementById('parcheErrores').textContent);
+ok(/3 cosas/.test(errTxt) && /Tarjeta que no existe/.test(errTxt),
+   'parche: avisa lo que no pudo leer sin frenar el resto', errTxt.replace(/\s+/g,' ').slice(0,160));
+await page.click('#saveParche'); await page.waitForTimeout(700);
+const st13 = await page.evaluate(()=>window.__guitaState());
+ok(st13.movs.some(m=>m.descripcion==='Algo que ya tenía'), 'parche: NO borra lo que ya tenías');
+ok(st13.movs.some(m=>m.descripcion==='Alquiler' && m.monto===650000), 'parche: agrega el gasto');
+const gasFj = st13.fijos.find(f=>f.nombre==='Gas');
+ok(gasFj && gasFj.tarjetaId===10 && gasFj.comercio, 'parche: crea el fijo enganchado a la tarjeta',
+   JSON.stringify(gasFj&&{t:gasFj.tarjetaId,c:gasFj.comercio}));
+ok(st13.tarjetas[0].resumenes[mkHoy].pagadoMonto===80000, 'parche: registra el pago del resumen');
+ok(st13.config.sueldo===3000000 && st13.config.diaCobro===5, 'parche: aplica los ajustes');
+ok(Math.round(await page.evaluate(()=>window.__guitaSaldo(1)))===400000,
+   'parche: el saldo queda donde le dijiste', String(await page.evaluate(()=>window.__guitaSaldo(1))));
+// y se puede deshacer entero
+await page.evaluate(()=>{ const b=document.querySelector('#toast button'); if(b) b.click(); });
+await page.waitForTimeout(600);
+const st14 = await page.evaluate(()=>window.__guitaState());
+ok(!st14.movs.some(m=>m.descripcion==='Alquiler') && st14.movs.length===1,
+   'parche: Deshacer vuelve todo atrás de una', String(st14.movs.length));
+await page.close();
+
 /* ¿adelanto la tarjeta o pongo la plata a rendir? */
+page = await nuevaPagina();
 await sembrar(page, {
   movs:[], billeteras:[{id:1,nombre:'Lemon',saldoInicial:1000000}],
   fijos:[], pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],

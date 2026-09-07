@@ -38,6 +38,12 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <data android:mimeType="application/pdf"/>
       </intent-filter>
+      <!-- respaldos y archivos de cambios compartidos desde WhatsApp, el mail o Drive -->
+      <intent-filter>
+        <action android:name="android.intent.action.SEND"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <data android:mimeType="application/json"/>
+      </intent-filter>
     </activity>
     <service
         android:name=".GuitaNotifListener"

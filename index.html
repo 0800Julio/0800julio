@@ -1164,6 +1164,16 @@
           <button class="g-btn primary" id="saveGuia">Cargar los que puse</button></div>
       </div>
 
+      <div id="phaseParche" hidden>
+        <h3>📥 Cambios para aplicar</h3>
+        <div class="g-note" id="parcheNota"></div>
+        <div id="parcheLista" style="margin-top:10px"></div>
+        <div id="parcheErrores" style="margin-top:8px"></div>
+        <div class="g-note" style="margin-top:10px">Esto se <strong>suma</strong> a lo que ya tenés: no borra nada de lo que cargaste. Si algo sale mal, tenés Deshacer.</div>
+        <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
+          <button class="g-btn primary" id="saveParche">Aplicar</button></div>
+      </div>
+
       <div id="phaseRendir" hidden>
         <h3>🤔 ¿Adelanto la tarjeta o lo pongo a rendir?</h3>
         <div class="g-field"><label class="g-label" for="rdMonto">¿Cuánta plata estás pensando?</label>
@@ -1366,10 +1376,10 @@
         <button class="g-btn" id="notifRevisar" style="flex:none" hidden>🔔 Revisar notificaciones ahora</button>
         <div class="g-row2" style="margin-top:2px">
           <button class="g-btn" id="backupBtn">💾 Guardar respaldo</button>
-          <button class="g-btn" id="restoreBtn">📥 Restaurar</button>
+          <button class="g-btn" id="restoreBtn">📥 Abrir archivo</button>
         </div>
         <input type="file" id="restoreInput" accept="application/json,.json,.guita" hidden>
-        <div class="g-note">El respaldo trae TODO: movimientos, tarjetas con sus resúmenes, billeteras, fijos, metas y ajustes. Guardalo en Drive o mandátelo por WhatsApp — si cambiás de celu, lo restaurás y seguís donde estabas. La API key no se incluye.</div>
+        <div class="g-note">El respaldo trae TODO: movimientos, tarjetas con sus resúmenes, billeteras, fijos, metas y ajustes. Guardalo en Drive o mandátelo por WhatsApp — si cambiás de celu, lo restaurás y seguís donde estabas. La API key no se incluye.<br><br><strong>Abrir archivo</strong> reconoce dos cosas: un <strong>respaldo entero</strong> (pisa todo lo que tengas) o un <strong>archivo de cambios</strong>, que se suma a lo que ya cargaste sin borrar nada. Los archivos de cambios también los podés compartir a Guita desde WhatsApp o el mail.</div>
         <div class="g-field" id="remHoraRow" hidden><label class="g-label" for="cfgRemHora">Hora del recordatorio</label>
           <input id="cfgRemHora" type="time" value="21:30"></div>
         <div class="g-note" id="remNote" hidden>La notificación diaria funciona en la app instalada (APK). En esta vista web te muestro el aviso al abrir la app si todavía no anotaste nada ese día.</div>
@@ -4104,15 +4114,324 @@
     }
   };
   $("restoreBtn").onclick = ()=>{ $("restoreInput").value=""; $("restoreInput").click(); };
+  /* ---------- parches: un archivo con SOLO lo que cambia ---------- */
+  /**
+   * Un respaldo pisa todo; un parche se suma a lo que ya tenés. Las cosas se
+   * referencian por nombre (no por id) porque quien arma el archivo no conoce
+   * los ids de tu celular.
+   */
+  const buscarPorNombre = (lista, nombre) => {
+    if(!nombre) return null;
+    const n = norm(String(nombre));
+    return lista.find(x=>norm(x.nombre)===n)
+        || lista.find(x=>mismoComercio(x.nombre, nombre)) || null;
+  };
+  const fechaValida = f => /^\d{4}-\d{2}-\d{2}$/.test(f||"") ? f : todayISO();
+  /** Resuelve un nombre y deja constancia si no lo encuentra: el parche sigue igual. */
+  const resolver = (lista, nombre, que, avisos) => {
+    if(!nombre) return null;
+    const x = buscarPorNombre(lista, nombre);
+    if(!x) avisos.push(`no encontré ${que} "${nombre}"`);
+    return x;
+  };
+
+  /**
+   * Traduce cada cambio a algo legible y a una función que lo aplica.
+   * Devuelve {nota, ops:[{txt, aplicar}], errores:[]}.
+   */
+  function leerParche(j){
+    const out = {nota: String(j.nota||""), ops: [], errores: []};
+    const cambios = Array.isArray(j.cambios) ? j.cambios : [];
+    for(const c of cambios){
+      const op = String(c.op||"").toLowerCase();
+      try{
+        if(op==="gasto" || op==="ingreso"){
+          const monto = Number(c.monto)||0;
+          if(!(monto>0)){ out.errores.push(`${op} sin monto`); continue; }
+          const bill = resolver(S.billeteras, c.billetera, "la billetera", out.errores);
+          const tj = resolver(S.tarjetas, c.tarjeta, "la tarjeta", out.errores);
+          const fecha = fechaValida(c.fecha);
+          const desc = String(c.desc||c.descripcion||c.categoria||"Movimiento");
+          out.ops.push({
+            txt: `${op==="gasto"?"💸":"💰"} ${op==="gasto"?"Gasto":"Ingreso"}: ${esc(desc)} ` +
+                 `<strong>${fmtMoney(monto)}</strong> · ${fecha.slice(8)}/${fecha.slice(5,7)}` +
+                 (bill?` · ${esc(bill.nombre)}`:tj?` · 💳 ${esc(tj.nombre)}`:""),
+            aplicar(){
+              const m = {id:nid(), fecha, tipo:op, monto, categoria:c.categoria||"Otros",
+                billetera: bill?bill.id:null, tarjetaId: tj?tj.id:undefined,
+                descripcion:desc, origen:"parche"};
+              if(op==="ingreso" && c.adelanto) m.adelanto = true;
+              S.movs.push(m);
+            }});
+        }
+        else if(op==="fijo"){
+          const nombre = String(c.nombre||"").trim();
+          if(!nombre){ out.errores.push("fijo sin nombre"); continue; }
+          // por nombre, o por el comercio: así renombrar "Provincia Vida" a "Seguro de
+          // vida" actualiza el que ya estaba en vez de crear un duplicado
+          const ya = buscarPorNombre(S.fijos, nombre)
+                  || (c.comercio ? S.fijos.find(f=>esteFijo(f, c.comercio)) : null);
+          const tj = resolver(S.tarjetas, c.tarjeta, "la tarjeta", out.errores);
+          const bill = resolver(S.billeteras, c.billetera, "la billetera", out.errores);
+          const monto = Number(c.monto)||0;
+          out.ops.push({
+            txt: `${ya?"✏️ Actualizo":"➕ Nuevo"} gasto fijo: <strong>${esc(nombre)}</strong>` +
+                 (monto?` ${fmtMoney(monto)}`:"") + (c.dia?` · vence el ${c.dia}`:"") +
+                 (tj?` · 💳 ${esc(tj.nombre)}`:bill?` · 👛 ${esc(bill.nombre)}`:""),
+            aplicar(){
+              const datos = {nombre, activo:true};
+              if(monto>0) datos.monto = monto;
+              if(c.dia) datos.dia = Math.min(31, Math.max(1, c.dia|0));
+              if(c.categoria) datos.categoria = c.categoria;
+              if(c.esencial!=null) datos.esencial = !!c.esencial;
+              if(c.comercio) datos.comercio = claveComercio(c.comercio);
+              if(c.moneda) datos.moneda = c.moneda;
+              if(tj){ datos.viaTarjeta = true; datos.tarjetaId = tj.id; datos.billetera = undefined; }
+              else if(bill){ datos.viaTarjeta = false; datos.tarjetaId = undefined; datos.billetera = bill.id; }
+              if(ya) Object.assign(ya, datos);
+              else S.fijos.push(Object.assign({id:nid(), monto:0, dia:10, categoria:"Servicios"}, datos));
+            }});
+        }
+        else if(op==="billetera"){
+          const nombre = String(c.nombre||"").trim();
+          if(!nombre){ out.errores.push("billetera sin nombre"); continue; }
+          const ya = buscarPorNombre(S.billeteras, nombre);
+          if(ya){ out.errores.push(`"${nombre}" ya existe`); continue; }
+          out.ops.push({
+            txt: `➕ Billetera nueva: <strong>${esc(nombre)}</strong>` +
+                 (c.saldo?` con ${fmtMoney(Number(c.saldo)||0)}`:""),
+            aplicar(){ S.billeteras.push({id:nid(), nombre, saldoInicial:Number(c.saldo)||0,
+              inversion: !!c.inversion}); }});
+        }
+        else if(op==="saldo"){
+          const bill = buscarPorNombre(S.billeteras, c.billetera);
+          if(!bill){ out.errores.push(`no encuentro la billetera "${c.billetera}"`); continue; }
+          const real = Number(c.monto);
+          if(!isFinite(real)){ out.errores.push("saldo sin monto"); continue; }
+          const actual = saldoBilletera(bill.id);
+          out.ops.push({
+            txt: `⚖️ Ajusto <strong>${esc(bill.nombre)}</strong> a ${fmtMoney(real)} ` +
+                 `<span style="color:var(--muted)">(ahora ${fmtMoney(actual)})</span>`,
+            aplicar(){
+              // el saldo se mide recién acá: los cambios de arriba ya lo movieron
+              const delta = real - saldoBilletera(bill.id);
+              if(Math.abs(delta)>0.005)
+                S.ajustes.push({id:nid(), billetera:bill.id, delta, fecha:todayISO(), nota:"Ajuste del parche"});
+            }});
+        }
+        else if(op==="tarjeta"){
+          const nombre = String(c.nombre||"").trim();
+          if(!nombre){ out.errores.push("tarjeta sin nombre"); continue; }
+          const ya = buscarPorNombre(S.tarjetas, nombre);
+          out.ops.push({
+            txt: `${ya?"✏️ Actualizo":"➕ Nueva"} tarjeta: <strong>${esc(nombre)}</strong>` +
+                 (c.cierre?` · cierra el ${c.cierre}`:"") + (c.vto?` · vence el ${c.vto}`:""),
+            aplicar(){
+              const datos = {nombre};
+              if(c.cierre) datos.cierre = Math.min(28, Math.max(1, c.cierre|0));
+              if(c.vto) datos.vto = Math.min(28, Math.max(1, c.vto|0));
+              if(c.deuda!=null) datos.deuda = Number(c.deuda)||0;
+              if(ya) Object.assign(ya, datos);
+              else S.tarjetas.push(Object.assign({id:nid(), cierre:20, vto:5, deuda:0, resumenes:{}}, datos));
+            }});
+        }
+        else if(op==="prestamo"){
+          const nombre = String(c.nombre||"").trim();
+          if(!nombre){ out.errores.push("préstamo sin nombre"); continue; }
+          const ya = buscarPorNombre(S.prestamos||[], nombre);
+          const bill = buscarPorNombre(S.billeteras, c.billetera);
+          out.ops.push({
+            txt: `${ya?"✏️ Actualizo":"➕ Nuevo"} préstamo: <strong>${esc(nombre)}</strong>` +
+                 (c.cuota?` · cuota ${fmtMoney(Number(c.cuota)||0)}`:"") +
+                 (c.cuotas?` · ${c.cuotas} cuotas`:"") +
+                 (c.proxima?` · próxima el ${c.proxima}`:""),
+            aplicar(){
+              const datos = {nombre};
+              if(c.cuota) datos.cuota = Number(c.cuota)||0;
+              if(c.cuotas) datos.cuotas = c.cuotas|0;
+              if(c.dia) datos.dia = Math.min(31, Math.max(1, c.dia|0));
+              if(c.proxima && /^\d{4}-\d{2}-\d{2}$/.test(c.proxima)) datos.proxima = c.proxima;
+              if(c.pagadas!=null) datos.pagadasIni = Math.max(0, c.pagadas|0);
+              if(bill) datos.billetera = bill.id;
+              S.prestamos = S.prestamos || [];
+              if(ya) Object.assign(ya, datos);
+              else S.prestamos.push(Object.assign({id:nid(), pagos:[], pagadasIni:0, dia:10}, datos));
+            }});
+        }
+        else if(op==="pagoprestamo"){
+          const pr = buscarPorNombre(S.prestamos||[], c.prestamo);
+          if(!pr){ out.errores.push(`no encuentro el préstamo "${c.prestamo}"`); continue; }
+          const monto = Number(c.monto)||pr.cuota||0;
+          const fecha = fechaValida(c.fecha);
+          const bill = buscarPorNombre(S.billeteras, c.billetera) ||
+                       S.billeteras.find(b=>b.id===pr.billetera) || null;
+          out.ops.push({
+            txt: `✅ Cuota de <strong>${esc(pr.nombre)}</strong> ${fmtMoney(monto)} · ` +
+                 `${fecha.slice(8)}/${fecha.slice(5,7)}${bill?` · ${esc(bill.nombre)}`:""}`,
+            aplicar(){
+              const mov = {id:nid(), fecha, tipo:"gasto", monto, categoria:"Otros",
+                billetera: bill?bill.id:null, descripcion:"Cuota "+pr.nombre,
+                origen:"parche", prestamo:pr.id};
+              S.movs.push(mov);
+              pr.pagos = pr.pagos || [];
+              pr.pagos.push({fecha, monto, movId:mov.id});
+              if(pr.proxima){
+                const d = new Date(pr.proxima+"T12:00:00");
+                pr.proxima = isoDe(diaDelMes(d.getFullYear(), d.getMonth()+1, pr.dia||d.getDate()));
+              }
+            }});
+        }
+        else if(op==="pagoresumen"){
+          const tj = buscarPorNombre(S.tarjetas, c.tarjeta);
+          if(!tj){ out.errores.push(`no encuentro la tarjeta "${c.tarjeta}"`); continue; }
+          const ks = Object.keys(tj.resumenes||{}).sort();
+          const mes = c.mes && (tj.resumenes||{})[c.mes] ? c.mes : ks[ks.length-1];
+          if(!mes){ out.errores.push(`${tj.nombre} no tiene resúmenes cargados`); continue; }
+          const monto = Number(c.monto)||0;
+          if(!(monto>0)){ out.errores.push("pago sin monto"); continue; }
+          const bill = buscarPorNombre(S.billeteras, c.billetera);
+          const r = tj.resumenes[mes];
+          const ya = resPagado(r);
+          out.ops.push({
+            txt: `💳 Pago a <strong>${esc(tj.nombre)}</strong> ${fmtMoney(monto)} ` +
+                 `<span style="color:var(--muted)">(${monthKeyLabel(mes)}; llevabas ${fmtMoney(ya)})</span>` +
+                 (bill?` · ${esc(bill.nombre)}`:""),
+            aplicar(){
+              const total = ya>0 ? ya+monto : monto;
+              r.pagadoMonto = total;
+              r.pagado = total >= r.monto - 0.01;
+              if(bill){
+                const mov = {id:nid(), fecha:fechaValida(c.fecha), tipo:"gasto", monto,
+                  categoria:"Tarjeta", billetera:bill.id,
+                  descripcion:"Pago resumen "+tj.nombre, origen:"parche"};
+                S.movs.push(mov);
+                r.pagadoMovId = mov.id;
+                tj.billetera = bill.id;
+              }
+            }});
+        }
+        else if(op==="resumen"){
+          const tj = buscarPorNombre(S.tarjetas, c.tarjeta);
+          if(!tj){ out.errores.push(`no encuentro la tarjeta "${c.tarjeta}"`); continue; }
+          const mes = /^\d{4}-\d{2}$/.test(c.mes||"") ? c.mes : monthKey(new Date());
+          const det = Array.isArray(c.detalle) ? c.detalle.filter(d=>d && d.desc) : [];
+          const pisa = !!(tj.resumenes||{})[mes];
+          out.ops.push({
+            txt: `📄 ${pisa?"Reemplazo el":"Cargo el"} resumen de <strong>${esc(tj.nombre)}</strong> ` +
+                 `de ${monthKeyLabel(mes)}: ${fmtMoney(Number(c.monto)||0)}` +
+                 (det.length?` · ${det.length} consumos`:""),
+            aplicar(){
+              tj.resumenes = tj.resumenes || {};
+              tj.resumenes[mes] = {
+                monto: Number(c.monto)||0, pagado:false,
+                saldoAnterior: c.saldoAnterior!=null ? Number(c.saldoAnterior) : null,
+                pagos: Number(c.pagos)||0,
+                impuestos: c.impuestos!=null ? Number(c.impuestos) : null,
+                pagoMinimo: Number(c.pagoMinimo)||0,
+                usd: Number(c.usd)||0, totalUsd: Number(c.totalUsd)||0,
+                pagadoMonto: Number(c.pagado)||0,
+                detalle: det.map(d=>({desc:String(d.desc), monto:Number(d.monto)||0,
+                  categoria:d.categoria||"Otros", sub:!!d.sub,
+                  moneda: d.moneda==="USD" ? "USD" : undefined}))
+              };
+              actualizarFijosDesde(tj, mes);
+            }});
+        }
+        else if(op==="meta"){
+          const nombre = String(c.nombre||"").trim();
+          if(!nombre){ out.errores.push("meta sin nombre"); continue; }
+          const ya = buscarPorNombre(S.metas||[], nombre);
+          out.ops.push({
+            txt: `🎯 ${ya?"Actualizo":"Nueva"} meta: <strong>${esc(nombre)}</strong>` +
+                 (c.objetivo?` · ${fmtMoney(Number(c.objetivo)||0)}`:""),
+            aplicar(){
+              const datos = {nombre};
+              if(c.objetivo) datos.objetivo = Number(c.objetivo)||0;
+              if(c.guardado!=null) datos.guardado = Number(c.guardado)||0;
+              if(c.fecha) datos.fecha = c.fecha;
+              if(c.icono) datos.icono = c.icono;
+              S.metas = S.metas || [];
+              if(ya) Object.assign(ya, datos);
+              else S.metas.push(Object.assign({id:nid(), guardado:0}, datos));
+            }});
+        }
+        else if(op==="config"){
+          const campos = [];
+          if(c.sueldo!=null) campos.push(`sueldo ${fmtMoney(Number(c.sueldo)||0)}`);
+          if(c.diaCobro!=null) campos.push(`cobrás el ${c.diaCobro}`);
+          if(c.dolar!=null) campos.push(`dólar a ${fmtMoney(Number(c.dolar)||0)}`);
+          if(!campos.length){ out.errores.push("config sin nada que cambiar"); continue; }
+          out.ops.push({
+            txt: `⚙️ Ajustes: ${campos.join(" · ")}`,
+            aplicar(){
+              if(c.sueldo!=null) S.config.sueldo = Math.max(0, Number(c.sueldo)||0);
+              if(c.diaCobro!=null) S.config.diaCobro = Math.min(28, Math.max(0, c.diaCobro|0));
+              if(c.dolar!=null) S.config.dolar = Math.max(0, Number(c.dolar)||0);
+            }});
+        }
+        else if(op==="borrarmov"){
+          const desc = String(c.desc||c.descripcion||"");
+          const monto = Number(c.monto)||0;
+          const cand = S.movs.filter(m=>
+            (!desc || norm(m.descripcion||"").includes(norm(desc))) &&
+            (!monto || Math.abs(m.monto-monto)<0.5) &&
+            (!c.fecha || m.fecha===c.fecha));
+          if(!cand.length){ out.errores.push(`no encuentro el movimiento "${desc}"`); continue; }
+          out.ops.push({
+            txt: `🗑 Borro ${cand.length} movimiento${cand.length===1?"":"s"}: ` +
+                 `<strong>${esc(cand[0].descripcion||"")}</strong> ${fmtMoney(cand[0].monto)}`,
+            aplicar(){ const ids = new Set(cand.map(m=>m.id)); S.movs = S.movs.filter(m=>!ids.has(m.id)); }});
+        }
+        else out.errores.push(`no entiendo la operación "${op}"`);
+      }catch(err){ out.errores.push(`error en "${op}": ${err.message}`); }
+    }
+    return out;
+  }
+
+  let parcheActual = null;
+  function mostrarParche(j){
+    const p = leerParche(j);
+    parcheActual = p;
+    $("parcheNota").textContent = p.nota || "Cambios para aplicar sobre lo que ya tenés.";
+    $("parcheLista").innerHTML = p.ops.length
+      ? p.ops.map((o,i)=>`<div class="g-tip" style="--d:${Math.min(i,10)*0.03}s">
+          <span class="ic">${i+1}</span><div>${o.txt}</div></div>`).join("")
+      : `<div class="g-note">No hay nada para aplicar.</div>`;
+    $("parcheErrores").innerHTML = p.errores.length
+      ? `<div class="g-note" style="color:var(--danger)">⚠️ ${p.errores.length} cosa${p.errores.length===1?"":"s"} que no pude leer:<br>` +
+        p.errores.map(e=>"· "+esc(e)).join("<br>") + `</div>`
+      : "";
+    $("saveParche").hidden = !p.ops.length;
+    $("saveParche").textContent = `Aplicar ${p.ops.length} cambio${p.ops.length===1?"":"s"}`;
+    openSheet("parche");
+  }
+  alClick("saveParche", ()=>{
+    if(!parcheActual || !parcheActual.ops.length) return;
+    const antes = JSON.stringify(S);
+    let n = 0;
+    for(const o of parcheActual.ops){
+      try{ o.aplicar(); n++; }catch(err){}
+    }
+    const total = parcheActual.ops.length;
+    parcheActual = null;
+    save(); closeSheet(); renderAll();
+    toast(`Apliqué ${n} de ${total} cambio${total===1?"":"s"} ✔`, ()=>{
+      try{ S = JSON.parse(antes); }catch(err){ return; }
+      save(); renderAll(); toast("Volví a tus datos anteriores");
+    });
+  });
+
   $("restoreInput").addEventListener("change", async e=>{
     const f = e.target.files && e.target.files[0];
     if(!f) return;
-    let datos = null;
+    let datos = null, j = null;
     try{
-      const j = JSON.parse(await f.text());
+      j = JSON.parse(await f.text());
       datos = (j && j.app==="guita" && j.datos) ? j.datos : (j && j.movs ? j : null);
     }catch(err){}
-    if(!datos || !Array.isArray(datos.movs)){ toast("Ese archivo no es un respaldo de Guita"); return; }
+    // un archivo de cambios se aplica encima; un respaldo completo pisa todo
+    if(j && Array.isArray(j.cambios)){ mostrarParche(j); return; }
+    if(!datos || !Array.isArray(datos.movs)){ toast("Ese archivo no es un respaldo ni un archivo de cambios"); return; }
     const resumen = `${(datos.movs||[]).length} movimientos, ${(datos.tarjetas||[]).length} tarjetas y ${(datos.billeteras||[]).length} billeteras`;
     // restaurar pisa todo: primero guardamos lo actual para poder volver atrás
     const antes = JSON.stringify(S);
@@ -4502,7 +4821,7 @@
 
   /* ---------- sheet ---------- */
   const sheet=$("sheet"), scrim=$("scrim");
-  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte","Alcanza","Simu","Reparto","Rendir","Compartido","Fijos","FijosGuia","Prestamo","PagoPrestamo","Rec"];
+  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte","Alcanza","Simu","Reparto","Rendir","Parche","Compartido","Fijos","FijosGuia","Prestamo","PagoPrestamo","Rec"];
   const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]),' +
     ' textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
   const focoVisibles = () => Array.from(sheet.querySelectorAll(FOCUSABLE))
@@ -6043,6 +6362,17 @@
     if(!d || !d.b64) return;
     try{ compartido = fileDeB64(d.b64, d.mime, d.nombre); }
     catch(e){ toast("No pude leer lo que compartiste"); return; }
+    // un JSON no es una captura: es un respaldo o un archivo de cambios
+    if(/json/i.test(compartido.type) || /\.(json|guita)$/i.test(compartido.name||"")){
+      const f = compartido; compartido = null;
+      f.text().then(txt=>{
+        let j = null;
+        try{ j = JSON.parse(txt); }catch(e){}
+        if(j && Array.isArray(j.cambios)){ mostrarParche(j); return; }
+        toast("Para restaurar un respaldo entero, entrá por ⚙ Ajustes → Restaurar");
+      }).catch(()=>toast("No pude leer ese archivo"));
+      return;
+    }
     const esPdf = /pdf/i.test(compartido.type);
     $("compNota").textContent = esPdf
       ? "Un PDF. Casi seguro es un resumen de tarjeta, pero decime vos."
@@ -6707,6 +7037,7 @@
   window.__guitaState = () => JSON.parse(JSON.stringify(S));
   window.__guitaSaldo = id => saldoBilletera(id);
   window.__guitaDiaDelMes = (a,m,d) => diaDelMes(a,m,d);
+  window.__guitaParche = j => mostrarParche(j);
   window.__guitaToast = () => ({busy: toastBusy, pend: toastQ.length, txt: toastEl.textContent});
   window.__guitaNotif = n => parseNotif(n);
   window.__guitaBackup = () => armarBackup();

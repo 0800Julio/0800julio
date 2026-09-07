@@ -162,6 +162,21 @@ categoría y lo anota. Después ves el resumen del mes y lo exportás a una plan
   Plata; las tarjetas y los préstamos, dentro de Deudas.
 - ⬅️ **El botón atrás del celu** (v2.5) cierra lo que tengas abierto o te
   devuelve al inicio, en vez de cerrar la app de una.
+- 🔄 **Archivo de cambios** (v3.5): además del respaldo entero, la app abre un
+  archivo de *parche* que se **suma** a lo que ya tenés sin borrar nada. Muestra qué
+  va a cambiar antes de aplicar y deja Deshacer. Las cosas se nombran, no se
+  referencian por id, así que el archivo se puede escribir sin conocer tu celular.
+  El formato está en [PARCHES.md](PARCHES.md). También se comparte a la app desde
+  WhatsApp o el mail.
+- 📌 **Enganchar el resumen a tus gastos de siempre** (v3.4): un chip en cada consumo
+  del resumen lo convierte en gasto fijo con **tu** nombre ("Gas", "Seguro del auto"),
+  guardando aparte el comercio original para que el vínculo aguante el renombre y el
+  monto se actualice solo mes a mes.
+- 🤔 **¿Adelanto la tarjeta o lo pongo a rendir?** (v3.4): compara la tasa real que
+  sale de tus resúmenes contra el rendimiento que consigas, y te dice cuál gana y por
+  cuánto, a 3, 6 y 12 meses.
+- 📥 **Compartir con Guita** (v3.3): capturas, PDFs y archivos de cambios entran
+  compartiéndolos desde cualquier app, sin pasar por el explorador de archivos.
 - ✅ **El mínimo pagado libera la prioridad** (v3.1): si cubriste el pago mínimo, el
   resumen deja de figurar como urgencia y lo que falta pasa a Deudas y al próximo
   resumen. Si te quedaste corto, te dice **exactamente cuánto faltó**.
