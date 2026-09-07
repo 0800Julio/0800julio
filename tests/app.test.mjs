@@ -1197,7 +1197,8 @@ page = await nuevaPagina();
       {id:4,tipo:'gasto',monto:500000,categoria:'Tarjeta',fecha:iso(lun),descripcion:'Pago resumen',
        billetera:1,origen:'tarjeta'},
       {id:5,tipo:'gasto',monto:118242,categoria:'Otros',fecha:iso(lun),descripcion:'Cuota',billetera:1,prestamo:1},
-      {id:6,tipo:'gasto',monto:80000,categoria:'Comida',fecha:iso(lun),descripcion:'Con tarjeta',tarjetaId:10}],
+      // una compra con tarjeta SÍ cuenta: la consumiste igual
+      {id:6,tipo:'gasto',monto:20000,categoria:'Comida',fecha:iso(lun),descripcion:'Con tarjeta',tarjetaId:10}],
     billeteras:[{id:1,nombre:'Lemon',saldoInicial:2000000}],
     tarjetas:[], fijos:[], pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],
     presu:{porDia:20000, desde:iso(lunAnt), previstos:[], ajustes:[]},
@@ -1208,15 +1209,16 @@ page = await nuevaPagina();
   const B = await page.evaluate(()=>window.__guitaPresu());
   ok(B.base === 140000, 'sobre: el presupuesto de la semana es 7 días', String(B.base));
   ok(B.arrastre === 40000, 'sobre: lo que sobró la semana pasada se arrastra', String(B.arrastre));
-  ok(B.gastado === 30000, 'sobre: sólo cuenta el gasto del día a día (ni tarjeta, ni cuota, ni resumen)',
+  ok(B.gastado === 50000, 'sobre: no cuenta ni el pago de resumen ni la cuota del préstamo',
      String(B.gastado));
-  ok(B.queda === 150000, 'sobre: te queda presupuesto + arrastre - gastado', String(B.queda));
+  ok(B.gastado === 50000, 'sobre: pero una compra con tarjeta sí, porque la consumiste');
+  ok(B.queda === 130000, 'sobre: te queda presupuesto + arrastre - gastado', String(B.queda));
   ok(B.historial.length === 1 && B.historial[0].saldo === 40000,
      'sobre: la semana cerrada queda en el historial con su saldo');
 
   await page.click('[data-view="plata"]');
   await page.waitForTimeout(300);
-  ok(/150\.000/.test(await page.evaluate(()=>document.getElementById('presuQueda').textContent)),
+  ok(/130\.000/.test(await page.evaluate(()=>document.getElementById('presuQueda').textContent)),
      'sobre: la tarjeta de Plata muestra lo que queda');
 
   // un gasto previsto se aparta y baja lo disponible por día
@@ -1228,7 +1230,7 @@ page = await nuevaPagina();
   await page.waitForTimeout(300);
   const conPrev = await page.evaluate(()=>window.__guitaPresu());
   ok(conPrev.reservado === 45000, 'sobre: el gasto previsto queda apartado', String(conPrev.reservado));
-  ok(conPrev.queda === 105000, 'sobre: y sale de lo que te queda para gastar', String(conPrev.queda));
+  ok(conPrev.queda === 85000, 'sobre: y sale de lo que te queda para gastar', String(conPrev.queda));
 
   // plata extra que entra al sobre
   await page.click('#presuAjBtn');
@@ -1237,7 +1239,7 @@ page = await nuevaPagina();
   await page.fill('#ajMonto','60.000');
   await page.click('#ajGuardar');
   await page.waitForTimeout(300);
-  ok((await page.evaluate(()=>window.__guitaPresu())).queda === 165000,
+  ok((await page.evaluate(()=>window.__guitaPresu())).queda === 145000,
      'sobre: un ingreso extra sumado a mano agranda la semana');
 
   // pasarse deja el saldo en rojo y se arrastra

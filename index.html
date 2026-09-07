@@ -4141,13 +4141,16 @@
     return set;
   }
   /**
-   * Lo que sale de tu bolsillo día a día: sin lo que va con tarjeta (eso lo paga el
-   * resumen), sin cuotas de préstamo y sin gastos fijos, que ya tienen su lugar.
+   * Lo que consumiste día a día, hayas pagado como hayas pagado. Una compra con
+   * tarjeta cuenta igual: la consumiste, y el sobre es para medir el consumo —
+   * si no, poner la comida en la tarjeta lo vuelve inútil justo cuando más sirve.
+   * Quedan afuera los pagos de resumen, las cuotas de préstamo y los gastos
+   * fijos, que ya tienen su lugar en la app y no son decisiones del día a día.
    */
   function movsDelSobre(desdeISO, hastaISO){
     const fijos = movsDeFijos();
     return S.movs.filter(m=>m.tipo==="gasto" && m.fecha>=desdeISO && m.fecha<=hastaISO
-      && !m.tarjetaId && m.origen!=="tarjeta" && m.prestamo==null && !fijos.has(m.id));
+      && m.origen!=="tarjeta" && m.categoria!=="Tarjeta" && m.prestamo==null && !fijos.has(m.id));
   }
   const gastoDelSobre = (a,b) => movsDelSobre(a,b).reduce((s,m)=>s+m.monto, 0);
 
