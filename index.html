@@ -144,7 +144,9 @@
   .g-hero-top > div{flex:1; min-width:0}
   /* el botón de la esquina no le come ancho al número */
   .g-hero-top > .g-icobtn{position:absolute; top:14px; right:14px}
-  .g-hero .g-label{padding-right:44px}
+  /* el absolute necesita un ancla: sin esto el botón se iba a la esquina de la página */
+  #presuCard{position:relative}
+  .g-hero .g-label, #presuCard .g-label{padding-right:44px}
   .g-hero .num{font-size:var(--num-hero); font-weight:800; letter-spacing:-.03em;
     font-variant-numeric:tabular-nums; line-height:1.05; margin-top:2px; white-space:nowrap}
   .g-hero .num.deuda, .g-hero .num.gasto{color:var(--expense)}
@@ -819,6 +821,24 @@
         <div class="g-note" id="diarioLbl" hidden></div>
         <div class="g-heroactions"><button class="g-btn" id="alcanzaBtn" style="flex:none">🤔 ¿Me alcanza para…?</button></div>
       </section>
+      <section class="g-card" id="presuCard" style="margin-top:var(--gap)" aria-label="Presupuesto de la semana">
+        <div class="g-hero-top">
+          <div style="min-width:0">
+            <div class="g-label" id="presuLbl">Esta semana te queda</div>
+            <div class="num" id="presuQueda" style="font-size:var(--num-sub)">$ 0</div>
+          </div>
+          <button class="g-icobtn" id="presuBtn" aria-label="Ajustar el presupuesto">⚙️</button>
+        </div>
+        <div class="g-bar" id="presuBar" style="grid-template-columns:1fr auto" hidden>
+          <span class="track"><span class="fill" id="presuFill"></span></span>
+          <span class="amt" id="presuDias"></span>
+        </div>
+        <div class="sub" id="presuNota"></div>
+        <div class="g-heroactions">
+          <button class="g-btn" id="presuPrevBtn">📌 Un gasto que viene</button>
+          <button class="g-btn" id="presuAjBtn">➕ Sumar al sobre</button>
+        </div>
+      </section>
       <input type="file" id="capturaInput" accept="image/*,application/pdf,.pdf" hidden>
       <div class="g-card" id="walletList" hidden style="margin-top:var(--gap)"></div>
       <div class="g-empty g-card" id="walletEmpty" hidden>
@@ -1209,6 +1229,43 @@
           <button class="g-btn primary" id="repCalcular">Repartir</button></div>
       </div>
 
+      <div id="phasePresu" hidden>
+        <h3>🗓️ Tu semana</h3>
+        <div class="g-note">La semana va de lunes a domingo. Lo que no gastás se suma a la que viene; si te pasás, también se descuenta. Así el número dice la verdad.</div>
+        <div class="g-field"><label class="g-label" for="psDia">¿Cuánto querés gastar por día?</label>
+          <input id="psDia" type="text" inputmode="decimal" data-money></div>
+        <div class="g-note" id="psSugerido"></div>
+        <div class="g-stsum" id="psEstado" hidden></div>
+        <div id="psPrevistos"></div>
+        <div id="psHistorial"></div>
+        <div class="g-actions"><button class="g-btn" data-close>Cerrar</button>
+          <button class="g-btn primary" id="psGuardar">Guardar</button></div>
+      </div>
+
+      <div id="phasePrevisto" hidden>
+        <h3>📌 Un gasto que ya sabés que viene</h3>
+        <div class="g-note">Lo aparto del sobre para que lo que te queda por día sea real. Cuando lo gastes de verdad, cargalo como gasto normal y borrá este.</div>
+        <div class="g-field"><label class="g-label" for="pvDesc">¿Qué es?</label>
+          <input id="pvDesc" type="text" placeholder="Cumpleaños, nafta, farmacia…"></div>
+        <div class="g-field"><label class="g-label" for="pvMonto">¿Cuánto?</label>
+          <input id="pvMonto" type="text" inputmode="decimal" data-money></div>
+        <div class="g-field"><label class="g-label" for="pvFecha">¿Cuándo?</label>
+          <input id="pvFecha" type="date"></div>
+        <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
+          <button class="g-btn primary" id="pvGuardar">Anotarlo</button></div>
+      </div>
+
+      <div id="phaseAjSobre" hidden>
+        <h3>➕ Sumar o restar del sobre</h3>
+        <div class="g-note">Para lo que no es un gasto: te entró plata extra y la querés para la semana, o apartaste algo y no lo querés contar. Poné el monto en negativo para restar.</div>
+        <div class="g-field"><label class="g-label" for="ajDesc">¿De qué es?</label>
+          <input id="ajDesc" type="text" placeholder="Changa, devolución, aparté para…"></div>
+        <div class="g-field"><label class="g-label" for="ajMonto">¿Cuánto?</label>
+          <input id="ajMonto" type="text" inputmode="decimal" data-money></div>
+        <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
+          <button class="g-btn primary" id="ajGuardar">Sumar al sobre</button></div>
+      </div>
+
       <div id="phaseSalida" hidden>
         <h3>🚪 Tu plan de salida</h3>
         <div class="g-note">Una tarjeta no llega a cero: la luz, el seguro y las suscripciones caen ahí todos los meses. Salir es <strong>pagar el resumen entero</strong> — ahí esos gastos dejan de costarte intereses y la tarjeta vuelve a ser una forma de pagar, no una deuda.</div>
@@ -1516,7 +1573,8 @@
   const blankConfig = () => ({apiKey:"", modeloIA:"eco", presupuestos:{}, alertaGrande:0,
     recordatorio:{on:false, hora:"21:30"}, notificaciones:false, diaCobro:0, sueldo:0, dolar:0});
   const blankState = () => ({movs:[], billeteras:[], tarjetas:[], fijos:[], pagosFijos:{}, transf:[], ajustes:[],
-    metas:[], prestamos:[], config:blankConfig(), seq:0});
+    metas:[], prestamos:[], presu:blankPresu(), config:blankConfig(), seq:0});
+  const blankPresu = () => ({porDia:0, desde:"", previstos:[], ajustes:[]});
 
   function loadState(){
     if(!persistent) return memory || (memory = blankState());
@@ -1526,6 +1584,7 @@
         const st = Object.assign(blankState(), JSON.parse(v2));
         st.config = Object.assign(blankConfig(), st.config||{});
         st.config.recordatorio = Object.assign({on:false, hora:"21:30"}, st.config.recordatorio||{});
+        st.presu = Object.assign(blankPresu(), st.presu||{});
         return st;
       }
       const v1 = localStorage.getItem(OLDKEY);
@@ -4063,6 +4122,81 @@
     return {meses, pagado, intereses: pagado-deuda, interesMes: interesMes1};
   }
 
+  /* ---------- el sobre de la semana ----------
+     La semana va de lunes a domingo. Lo que no gastaste se suma a la que viene;
+     lo que te pasaste, también se descuenta. Arrastrar sólo lo bueno sería
+     mentirte: el número tiene que doler cuando corresponde. */
+  const lunesDe = d => {
+    const x = new Date(d); x.setHours(12,0,0,0);
+    x.setDate(x.getDate() - ((x.getDay()+6)%7));
+    return x;
+  };
+  const masDias = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+
+  /** Los ids de movimiento que son pago de un gasto fijo: esos no son del día a día. */
+  function movsDeFijos(){
+    const set = new Set();
+    for(const mk in (S.pagosFijos||{}))
+      for(const f in S.pagosFijos[mk]) set.add(S.pagosFijos[mk][f]);
+    return set;
+  }
+  /**
+   * Lo que sale de tu bolsillo día a día: sin lo que va con tarjeta (eso lo paga el
+   * resumen), sin cuotas de préstamo y sin gastos fijos, que ya tienen su lugar.
+   */
+  function movsDelSobre(desdeISO, hastaISO){
+    const fijos = movsDeFijos();
+    return S.movs.filter(m=>m.tipo==="gasto" && m.fecha>=desdeISO && m.fecha<=hastaISO
+      && !m.tarjetaId && m.origen!=="tarjeta" && m.prestamo==null && !fijos.has(m.id));
+  }
+  const gastoDelSobre = (a,b) => movsDelSobre(a,b).reduce((s,m)=>s+m.monto, 0);
+
+  /**
+   * Cómo venís esta semana. Devuelve null si todavía no pusiste un presupuesto.
+   * Todo se deriva de los movimientos: no hay un saldo guardado que se pueda desfasar.
+   */
+  function presupuesto(){
+    const P = S.presu || {};
+    if(!(P.porDia>0)) return null;
+    const hoy = new Date(); hoy.setHours(12,0,0,0);
+    const hoyISO = isoDe(hoy);
+    const semLun = lunesDe(hoy);
+    const arranque = P.desde ? lunesDe(new Date(P.desde+"T12:00:00")) : semLun;
+    const ajustesEntre = (a,b) => (P.ajustes||[])
+      .filter(x=>x.fecha>=a && x.fecha<=b).reduce((s,x)=>s+x.monto, 0);
+
+    // semanas ya cerradas: cada saldo, para bien o para mal, se arrastra
+    const historial = [];
+    let arrastre = 0;
+    for(let d = new Date(arranque); d < semLun; d = masDias(d, 7)){
+      const a = isoDe(d), b = isoDe(masDias(d, 6));
+      const presu = P.porDia*7 + ajustesEntre(a, b);
+      const gastado = gastoDelSobre(a, b);
+      arrastre += presu - gastado;
+      historial.push({desde:a, hasta:b, presu, gastado, saldo: presu-gastado});
+    }
+
+    const a = isoDe(semLun), b = isoDe(masDias(semLun, 6));
+    const base = P.porDia*7, ajuste = ajustesEntre(a, b);
+    // lo que ya sabés que viene y todavía no gastaste: se aparta, no se puede gastar dos veces
+    const previstos = (P.previstos||[]).filter(x=>x.fecha>=hoyISO && x.fecha<=b);
+    const reservado = previstos.reduce((s,x)=>s+x.monto, 0);
+    const gastado = gastoDelSobre(a, b);
+    const total = base + ajuste + arrastre;
+    const queda = total - gastado - reservado;
+    const diasQuedan = 7 - ((hoy.getDay()+6)%7);
+    const diasPasados = 7 - diasQuedan + 1;
+    const ritmo = gastado / diasPasados;
+    return {porDia:P.porDia, desde:a, hasta:b, base, ajuste, arrastre, reservado, previstos,
+      gastado, total, queda, diasQuedan, diasPasados, ritmo,
+      porDiaReal: diasQuedan>0 ? queda/diasQuedan : queda,
+      // si seguís a este ritmo, así terminás el domingo
+      proyectado: total - reservado - ritmo*7,
+      historial: historial.slice(-8),
+      // lo que viene más adelante, para que no te agarre desprevenido
+      siguientes: (P.previstos||[]).filter(x=>x.fecha>b).sort((x,y)=>x.fecha<y.fecha?-1:1).slice(0,4)};
+  }
+
   /** Lo que gastás por día, promedio real de los últimos 30 días (comida, salidas, transporte). */
   function gastoDiarioProm(){
     const desde = new Date(); desde.setDate(desde.getDate()-30);
@@ -4541,6 +4675,29 @@
               if(c.dolar!=null) S.config.dolar = Math.max(0, Number(c.dolar)||0);
             }});
         }
+        else if(op==="presupuesto"){
+          const porDia = Math.max(0, Number(c.porDia)||0);
+          if(!(porDia>0)){ out.errores.push("presupuesto sin monto por día"); continue; }
+          out.ops.push({
+            txt: `🗓️ Presupuesto: ${fmtMoney(porDia)} por día (${fmtMoney(porDia*7)} por semana)`,
+            aplicar(){
+              S.presu = Object.assign(blankPresu(), S.presu||{});
+              S.presu.porDia = porDia;
+              if(!S.presu.desde) S.presu.desde = isoDe(lunesDe(new Date()));
+            }});
+        }
+        else if(op==="previsto"){
+          const monto = Math.max(0, Number(c.monto)||0);
+          const desc = (c.desc||"").trim();
+          if(!desc || !(monto>0)){ out.errores.push("gasto previsto incompleto"); continue; }
+          const fecha = /^\d{4}-\d{2}-\d{2}$/.test(c.fecha||"") ? c.fecha : todayISO();
+          out.ops.push({
+            txt: `📌 Apartar ${fmtMoney(monto)} para ${esc(desc)} (${fmtDay(fecha)})`,
+            aplicar(){
+              S.presu = Object.assign(blankPresu(), S.presu||{});
+              S.presu.previstos.push({id:nid(), desc, monto, fecha});
+            }});
+        }
         else if(op==="borrarmov"){
           const desc = String(c.desc||c.descripcion||"");
           const monto = Number(c.monto)||0;
@@ -4726,7 +4883,7 @@
 
   alClick("salidaBtn", ()=>{
     $("slSueldo").value = fmtNum(Math.round(S.config.sueldo||0));
-    $("slDia").value = fmtNum(Math.round(gastoDiarioProm()));
+    $("slDia").value = fmtNum(Math.round((S.presu && S.presu.porDia>0) ? S.presu.porDia : gastoDiarioProm()));
     $("slAhora").value = fmtNum(Math.round(Math.max(0, plataDisponible().enMano)));
     $("slResumen").hidden = true;
     $("slCards").innerHTML = $("slMeses").innerHTML = $("slCierre").innerHTML = "";
@@ -5015,7 +5172,160 @@
     $("notifTip").hidden = true;
     toast("Lo tenés igual en \u2699 Ajustes cuando quieras");
   };
-  function renderAll(){ renderHome(); renderVencimientos(); renderPagos(); renderPanel(); renderDiario(); renderAnalisis(); renderTarjetas(); renderPrestamos(); renderBilleteras(); renderPlan(); }
+  /* ---------- el sobre de la semana: pantalla ---------- */
+  function renderPresu(){
+    const P = presupuesto();
+    const card = $("presuCard");
+    if(!P){
+      $("presuLbl").textContent = "Presupuesto de la semana";
+      $("presuQueda").textContent = "Sin poner";
+      $("presuQueda").className = "num";
+      $("presuBar").hidden = true;
+      $("presuNota").innerHTML = "Poné cuánto querés gastar por día y te llevo la cuenta semana a semana: " +
+        "lo que te sobra se suma a la que viene, y los gastos que ya sabés que vienen los aparto.";
+      $("presuPrevBtn").hidden = true;
+      $("presuAjBtn").hidden = true;
+      return;
+    }
+    $("presuPrevBtn").hidden = false;
+    $("presuAjBtn").hidden = false;
+    const rojo = P.queda < 0;
+    $("presuLbl").textContent = rojo ? "Esta semana te pasaste" : "Esta semana te queda";
+    $("presuQueda").textContent = fmtMoney(Math.abs(P.queda));
+    $("presuQueda").className = "num " + (rojo ? "gasto" : "tiene");
+
+    const usado = P.total>0 ? Math.min(1, Math.max(0, (P.gastado+P.reservado)/P.total)) : 1;
+    $("presuBar").hidden = false;
+    $("presuFill").style.width = (usado*100).toFixed(1)+"%";
+    $("presuFill").style.background = rojo ? "var(--expense)"
+      : usado>0.85 ? "var(--c-salidas, var(--expense))" : "var(--brand)";
+    $("presuDias").textContent = P.diasQuedan===1 ? "último día" : P.diasQuedan+" días";
+
+    const linea = [];
+    linea.push(`Gastaste <strong>${fmtMoney(P.gastado)}</strong> de ${fmtMoney(P.total)}` +
+      (P.reservado>0 ? ` y tenés ${fmtMoney(P.reservado)} apartados` : "") + ".");
+    linea.push(rojo ? "Se descuenta de la semana que viene."
+      : `Te quedan <strong>${fmtMoney(P.porDiaReal)} por día</strong> hasta el domingo.`);
+    if(Math.abs(P.arrastre) > 1)
+      linea.push(P.arrastre>0
+        ? `Incluye ${fmtMoney(P.arrastre)} que te sobraron antes 👏`
+        : `Incluye ${fmtMoney(-P.arrastre)} que te pasaste antes.`);
+    const extra = [];
+    if(!rojo && P.diasQuedan>1 && P.proyectado < -1)
+      extra.push(`<div style="color:var(--expense);margin-top:6px">⚠️ A este ritmo (${fmtMoney(P.ritmo)} por día) ` +
+        `terminás el domingo ${fmtMoney(-P.proyectado)} en rojo.</div>`);
+    if(P.previstos.length)
+      extra.push(`<div style="margin-top:6px">📌 Apartado: ` +
+        P.previstos.map(x=>esc(x.desc)+" "+fmtMoney(x.monto)).join(" · ") + `</div>`);
+    if(P.siguientes.length)
+      extra.push(`<div style="margin-top:6px">Después viene: ` +
+        P.siguientes.map(x=>esc(x.desc)+" "+fmtMoney(x.monto)+" el "+
+          new Date(x.fecha+"T12:00:00").getDate()).join(" · ") + `</div>`);
+    $("presuNota").innerHTML = linea.join(" ") + extra.join("");
+  }
+
+  alClick("presuBtn", ()=>abrirPresu());
+  $("presuCard").addEventListener("click", e=>{
+    if(e.target.closest("button")) return;
+    abrirPresu();
+  });
+
+  function abrirPresu(){
+    const P = S.presu || blankPresu();
+    $("psDia").value = P.porDia>0 ? fmtNum(Math.round(P.porDia)) : "";
+    const prom = gastoDiarioProm();
+    $("psSugerido").innerHTML = prom>0
+      ? `En los últimos 30 días venís gastando <strong>${fmtMoney(prom)}</strong> por día.`
+      : "";
+    renderPresuSheet();
+    openSheet("presu");
+  }
+
+  function renderPresuSheet(){
+    const P = presupuesto();
+    if(!P){ $("psEstado").hidden = true; $("psPrevistos").innerHTML = $("psHistorial").innerHTML = ""; return; }
+    $("psEstado").hidden = false;
+    $("psEstado").innerHTML =
+      `<div class="r"><span>Presupuesto de la semana</span><span>${fmtMoney(P.base)}</span></div>` +
+      (Math.abs(P.arrastre)>1 ? `<div class="r ${P.arrastre>0?"pos":"neg"}"><span>${P.arrastre>0?"Te sobró antes":"Te pasaste antes"}</span><span>${fmtMoney(P.arrastre)}</span></div>` : "") +
+      (Math.abs(P.ajuste)>1 ? `<div class="r ${P.ajuste>0?"pos":"neg"}"><span>Sumado a mano</span><span>${fmtMoney(P.ajuste)}</span></div>` : "") +
+      `<div class="r neg"><span>Gastaste</span><span>${fmtMoney(P.gastado)}</span></div>` +
+      (P.reservado>0 ? `<div class="r"><span>Apartado para lo que viene</span><span>${fmtMoney(P.reservado)}</span></div>` : "") +
+      `<div class="r tot"><span>Te queda</span><span>${fmtMoney(P.queda)}</span></div>`;
+
+    const prev = (S.presu.previstos||[]).slice().sort((a,b)=>a.fecha<b.fecha?-1:1);
+    $("psPrevistos").innerHTML = prev.length
+      ? `<div class="g-grouphead">Gastos apartados<span class="tot">${fmtMoney(prev.reduce((s,x)=>s+x.monto,0))}</span></div>` +
+        prev.map(x=>`<div class="g-mrow"><div class="t"><span class="m">${esc(x.desc)}</span>` +
+          `<span class="d">${fmtMoney(x.monto)}</span></div>` +
+          `<div class="s">${fmtDay(x.fecha)} · <button class="g-linkbtn" data-prev="${x.id}">ya lo gasté / borrar</button></div></div>`).join("")
+      : "";
+
+    const h = P.historial.slice().reverse();
+    $("psHistorial").innerHTML = h.length
+      ? `<div class="g-grouphead">Semanas anteriores<span class="tot">saldo</span></div>` +
+        h.map(w=>`<div class="g-mrow"><div class="t">` +
+          `<span class="m">${new Date(w.desde+"T12:00:00").getDate()} al ${new Date(w.hasta+"T12:00:00").getDate()}</span>` +
+          `<span class="d" style="color:var(--${w.saldo>=0?"income":"expense"})">${w.saldo>=0?"+":""}${fmtMoney(w.saldo)}</span></div>` +
+          `<div class="s">gastaste ${fmtMoney(w.gastado)} de ${fmtMoney(w.presu)}</div></div>`).join("")
+      : "";
+  }
+
+  $("psPrevistos").addEventListener("click", e=>{
+    const b = e.target.closest("[data-prev]");
+    if(!b) return;
+    const id = b.dataset.prev;
+    const x = (S.presu.previstos||[]).find(p=>String(p.id)===id);
+    if(!x) return;
+    borrarConUndo(`Saqué "${x.desc}" de lo apartado`, ()=>{
+      S.presu.previstos = S.presu.previstos.filter(p=>String(p.id)!==id);
+      save(); renderPresuSheet(); renderPresu();
+    });
+  });
+
+  alClick("psGuardar", ()=>{
+    const dia = numVal($("psDia").value)||0;
+    if(!(dia>0)){ $("psDia").focus(); toast("¿Cuánto por día?"); return; }
+    S.presu = Object.assign(blankPresu(), S.presu||{});
+    const nuevo = !(S.presu.porDia>0);
+    S.presu.porDia = dia;
+    // el arrastre arranca desde la semana en que lo configurás, no desde el principio de los tiempos
+    if(!S.presu.desde) S.presu.desde = isoDe(lunesDe(new Date()));
+    save(); closeSheet(); renderAll();
+    toast(nuevo ? `Listo: ${fmtMoney(dia*7)} para esta semana ✔` : "Presupuesto actualizado ✔");
+  });
+
+  alClick("presuPrevBtn", ()=>{
+    $("pvDesc").value = ""; $("pvMonto").value = "";
+    $("pvFecha").value = todayISO();
+    openSheet("previsto");
+  });
+  alClick("pvGuardar", ()=>{
+    const desc = $("pvDesc").value.trim();
+    const monto = numVal($("pvMonto").value)||0;
+    if(!desc){ $("pvDesc").focus(); toast("¿Qué gasto es?"); return; }
+    if(!(monto>0)){ $("pvMonto").focus(); toast("¿De cuánto?"); return; }
+    S.presu = Object.assign(blankPresu(), S.presu||{});
+    S.presu.previstos.push({id:nid(), desc, monto, fecha: $("pvFecha").value || todayISO()});
+    save(); closeSheet(); renderAll();
+    toast(`Aparté ${fmtMoney(monto)} para ${desc} ✔`);
+  });
+
+  alClick("presuAjBtn", ()=>{
+    $("ajDesc").value = ""; $("ajMonto").value = "";
+    openSheet("ajsobre");
+  });
+  alClick("ajGuardar", ()=>{
+    const desc = $("ajDesc").value.trim() || "Ajuste";
+    const monto = numVal($("ajMonto").value)||0;
+    if(!monto){ $("ajMonto").focus(); toast("¿Cuánto?"); return; }
+    S.presu = Object.assign(blankPresu(), S.presu||{});
+    S.presu.ajustes.push({id:nid(), desc, monto, fecha: todayISO()});
+    save(); closeSheet(); renderAll();
+    toast(monto>0 ? `Sumé ${fmtMoney(monto)} al sobre ✔` : `Resté ${fmtMoney(-monto)} del sobre ✔`);
+  });
+
+  function renderAll(){ renderHome(); renderVencimientos(); renderPagos(); renderPanel(); renderDiario(); renderPresu(); renderAnalisis(); renderTarjetas(); renderPrestamos(); renderBilleteras(); renderPlan(); }
 
   /* ---------- navegación ---------- */
   const tabs = document.querySelectorAll(".g-tab");
@@ -5096,7 +5406,7 @@
 
   /* ---------- sheet ---------- */
   const sheet=$("sheet"), scrim=$("scrim");
-  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte","Alcanza","Simu","Reparto","Rendir","Parche","Compartido","Fijos","FijosGuia","Prestamo","PagoPrestamo","Rec","Salida"];
+  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte","Alcanza","Simu","Reparto","Rendir","Parche","Compartido","Fijos","FijosGuia","Prestamo","PagoPrestamo","Rec","Salida","Presu","Previsto","AjSobre"];
   const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]),' +
     ' textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
   const focoVisibles = () => Array.from(sheet.querySelectorAll(FOCUSABLE))
@@ -7314,6 +7624,7 @@
   window.__guitaDiaDelMes = (a,m,d) => diaDelMes(a,m,d);
   window.__guitaParche = j => mostrarParche(j);
   window.__guitaPlan = o => planSalida(o);
+  window.__guitaPresu = () => presupuesto();
   window.__guitaProy = id => proyeccionTarjeta(S.tarjetas.find(t=>t.id===id));
   window.__guitaToast = () => ({busy: toastBusy, pend: toastQ.length, txt: toastEl.textContent});
   window.__guitaNotif = n => parseNotif(n);

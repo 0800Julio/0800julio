@@ -1178,6 +1178,107 @@ ok(/Dejás de financiar/.test(salTxt), 'salida: la hoja dice en qué mes dejás 
 ok(/no desaparecen nunca/.test(salTxt), 'salida: y aclara que los fijos de la tarjeta siguen');
 await page.close();
 
+/* ══ el sobre de la semana ══ */
+page = await nuevaPagina();
+{
+  const h = new Date(); h.setHours(12,0,0,0);
+  const lun = new Date(h); lun.setDate(lun.getDate()-((lun.getDay()+6)%7));
+  const mas = (d,n)=>{ const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+  const iso = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const lunAnt = mas(lun,-7);
+  await sembrar(page, {
+    movs:[
+      // semana pasada: 140.000 de presupuesto, gastó 100.000 → sobran 40.000
+      {id:1,tipo:'gasto',monto:60000,categoria:'Comida',fecha:iso(mas(lunAnt,1)),descripcion:'Súper',billetera:1},
+      {id:2,tipo:'gasto',monto:40000,categoria:'Salidas',fecha:iso(mas(lunAnt,4)),descripcion:'Cena',billetera:1},
+      // esta semana
+      {id:3,tipo:'gasto',monto:30000,categoria:'Comida',fecha:iso(lun),descripcion:'Verdulería',billetera:1},
+      // nada de esto es del día a día
+      {id:4,tipo:'gasto',monto:500000,categoria:'Tarjeta',fecha:iso(lun),descripcion:'Pago resumen',
+       billetera:1,origen:'tarjeta'},
+      {id:5,tipo:'gasto',monto:118242,categoria:'Otros',fecha:iso(lun),descripcion:'Cuota',billetera:1,prestamo:1},
+      {id:6,tipo:'gasto',monto:80000,categoria:'Comida',fecha:iso(lun),descripcion:'Con tarjeta',tarjetaId:10}],
+    billeteras:[{id:1,nombre:'Lemon',saldoInicial:2000000}],
+    tarjetas:[], fijos:[], pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],
+    presu:{porDia:20000, desde:iso(lunAnt), previstos:[], ajustes:[]},
+    config:{apiKey:'', sueldo:3000000, diaCobro:5}, seq:50});
+  await page.reload();
+  await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+
+  const B = await page.evaluate(()=>window.__guitaPresu());
+  ok(B.base === 140000, 'sobre: el presupuesto de la semana es 7 días', String(B.base));
+  ok(B.arrastre === 40000, 'sobre: lo que sobró la semana pasada se arrastra', String(B.arrastre));
+  ok(B.gastado === 30000, 'sobre: sólo cuenta el gasto del día a día (ni tarjeta, ni cuota, ni resumen)',
+     String(B.gastado));
+  ok(B.queda === 150000, 'sobre: te queda presupuesto + arrastre - gastado', String(B.queda));
+  ok(B.historial.length === 1 && B.historial[0].saldo === 40000,
+     'sobre: la semana cerrada queda en el historial con su saldo');
+
+  await page.click('[data-view="plata"]');
+  await page.waitForTimeout(300);
+  ok(/150\.000/.test(await page.evaluate(()=>document.getElementById('presuQueda').textContent)),
+     'sobre: la tarjeta de Plata muestra lo que queda');
+
+  // un gasto previsto se aparta y baja lo disponible por día
+  await page.click('#presuPrevBtn');
+  await page.waitForTimeout(200);
+  await page.fill('#pvDesc','Cumpleaños');
+  await page.fill('#pvMonto','45.000');
+  await page.click('#pvGuardar');
+  await page.waitForTimeout(300);
+  const conPrev = await page.evaluate(()=>window.__guitaPresu());
+  ok(conPrev.reservado === 45000, 'sobre: el gasto previsto queda apartado', String(conPrev.reservado));
+  ok(conPrev.queda === 105000, 'sobre: y sale de lo que te queda para gastar', String(conPrev.queda));
+
+  // plata extra que entra al sobre
+  await page.click('#presuAjBtn');
+  await page.waitForTimeout(200);
+  await page.fill('#ajDesc','Changa');
+  await page.fill('#ajMonto','60.000');
+  await page.click('#ajGuardar');
+  await page.waitForTimeout(300);
+  ok((await page.evaluate(()=>window.__guitaPresu())).queda === 165000,
+     'sobre: un ingreso extra sumado a mano agranda la semana');
+
+  // pasarse deja el saldo en rojo y se arrastra
+  await page.evaluate(f=>{
+    const S = JSON.parse(localStorage.getItem('guita:v2'));
+    S.movs.push({id:99,tipo:'gasto',monto:400000,categoria:'Comida',fecha:f,descripcion:'Zafarrancho',billetera:1});
+    localStorage.setItem('guita:v2', JSON.stringify(S));
+  }, iso(lun));
+  await page.reload();
+  await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+  const rojo = await page.evaluate(()=>window.__guitaPresu());
+  ok(rojo.queda < 0, 'sobre: pasarse deja el saldo en rojo', String(rojo.queda));
+  await page.click('[data-view="plata"]');
+  await page.waitForTimeout(300);
+  ok(/te pasaste/i.test(await page.evaluate(()=>document.getElementById('presuLbl').textContent)),
+     'sobre: y la tarjeta lo dice sin vueltas');
+}
+await page.close();
+
+/* sin presupuesto puesto, la tarjeta invita a ponerlo y no rompe */
+page = await nuevaPagina();
+await sembrar(page, {movs:[], billeteras:[{id:1,nombre:'Lemon',saldoInicial:100000}], tarjetas:[],
+  fijos:[], pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],
+  config:{apiKey:''}, seq:5});
+await page.reload();
+await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+ok(await page.evaluate(()=>window.__guitaPresu()===null), 'sobre: sin presupuesto puesto devuelve null');
+await page.click('[data-view="plata"]');
+await page.waitForTimeout(300);
+ok(/Sin poner/.test(await page.evaluate(()=>document.getElementById('presuQueda').textContent)),
+   'sobre: y la tarjeta invita a ponerlo');
+await page.click('#presuBtn');
+await page.waitForTimeout(200);
+await page.fill('#psDia','20.000');
+await page.click('#psGuardar');
+await page.waitForTimeout(300);
+const nuevoP = await page.evaluate(()=>window.__guitaPresu());
+ok(nuevoP && nuevoP.base === 140000, 'sobre: se puede configurar desde cero');
+ok(nuevoP.arrastre === 0, 'sobre: arranca sin arrastre, no desde el principio de los tiempos');
+await page.close();
+
 await browser.close();
 server.close();
 console.log(fail ? `\n${fail} FALLARON` : '\nTODO OK');

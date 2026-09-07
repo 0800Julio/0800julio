@@ -101,6 +101,15 @@ los gastos fijos enganchados a esa tarjeta. `pagoResumen` **suma** al pago anter
 pago avanza sola un mes. `pagadas` son las cuotas que ya venías pagando antes de
 cargar el préstamo (no toca los pagos ya registrados).
 
+### `presupuesto` · `previsto`
+```json
+{"op":"presupuesto", "porDia":20000}
+{"op":"previsto", "desc":"Cumpleaños", "monto":45000, "fecha":"2026-09-13"}
+```
+`presupuesto` fija el sobre semanal (`porDia` × 7). Si es la primera vez, el arrastre
+arranca el lunes de esta semana: no se inventa historia vieja. `previsto` aparta plata
+para un gasto que ya se sabe que viene, así lo que queda por día no miente.
+
 ### `meta` · `config`
 ```json
 {"op":"meta", "nombre":"Viaje", "objetivo":1200000, "guardado":200000,
