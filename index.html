@@ -3002,15 +3002,17 @@
     const tarjeta = res.reduce((s,r)=>s+r.monto,0);
     const conRes = {};
     for(const t of S.tarjetas) if((t.resumenes||{})[mk]) conRes[t.id] = true;
-    let propio = 0, ingreso = 0;
+    let propio = 0, enTarjeta = 0, ingreso = 0;
     for(const m of S.movs){
       if(m.fecha.slice(0,7)!==mk) continue;
       if(m.tipo==="ingreso"){ ingreso += m.monto; continue; }
       if(tarjeta>0 && m.categoria==="Tarjeta") continue;   // lo cubre el resumen
       if(m.tarjetaId && conRes[m.tarjetaId]) continue;     // ídem
-      propio += m.monto;
+      // un gasto con tarjeta no salió de tu plata aunque el resumen no haya llegado:
+      // el sillón que comprás hoy va a la tarjeta, no a la billetera
+      if(m.tarjetaId) enTarjeta += m.monto; else propio += m.monto;
     }
-    return {propio, tarjeta, total: propio+tarjeta, ingreso};
+    return {propio, tarjeta: tarjeta + enTarjeta, total: propio + tarjeta + enTarjeta, ingreso};
   }
 
   /** Todo lo que debés, con el costo real de arrastrarlo. */
@@ -3171,8 +3173,12 @@
                              : `el ${v.fecha.getDate()}`;
     $("dueSub").innerHTML = `<strong>${esc(v.nombre)}</strong> · ${cuando} (${cuandoDia})`
       + (est && est.faltaMinimo>0
-          ? `<br>Pagaste ${fmtMoney(est.pagado)} de ${fmtMoney(est.total)}: te faltaron ` +
-            `<strong style="color:var(--danger)">${fmtMoney(est.faltaMinimo)}</strong> para llegar al mínimo.`
+          ? (est.pagado>0
+              // ya pagaste algo pero no llegaste: lo que importa es cuánto falta
+              ? `<br>Pagaste ${fmtMoney(est.pagado)} de ${fmtMoney(est.total)}: te faltan ` +
+                `<strong style="color:var(--danger)">${fmtMoney(est.faltaMinimo)}</strong> para llegar al mínimo.`
+              // todavía no pagaste nada: el dato útil es el mínimo, no un "te faltó"
+              : `<br>El mínimo es <strong>${fmtMoney(est.minimo)}</strong> de ${fmtMoney(est.total)}.`)
           : "");
     $("dueRecordar").hidden = false;
     $("dueRecordar").textContent = recordatorioActivo(v) ? "🔔" : "🔕";
