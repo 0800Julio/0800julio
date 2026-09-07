@@ -1290,6 +1290,81 @@ ok(nuevoP && nuevoP.base === 140000, 'sobre: se puede configurar desde cero');
 ok(nuevoP.arrastre === 0, 'sobre: arranca sin arrastre, no desde el principio de los tiempos');
 await page.close();
 
+/* ══ la boleta que pagás vos pero va con tarjeta ══ */
+page = await nuevaPagina();
+{
+  const h = new Date();
+  const mk = `${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,'0')}`;
+  const diaHoy2 = h.getDate();
+  const diaFuturo = Math.min(28, diaHoy2 + 3);
+  await sembrar(page, {
+    movs:[], billeteras:[{id:1,nombre:'Lemon',saldoInicial:900000}],
+    fijos:[
+      // la pagás vos: tiene vencimiento propio
+      {id:1,nombre:'Gas',monto:32593.41,dia:diaFuturo,categoria:'Servicios',esencial:true,
+       viaTarjeta:true,tarjetaId:10,avisar:true,comercio:'camuzzi gas',activo:true},
+      // ésta la cobra la tarjeta sola: no tiene por qué avisarte
+      {id:2,nombre:'Netflix',monto:30598.47,dia:diaFuturo,categoria:'Salidas',esencial:false,
+       viaTarjeta:true,tarjetaId:10,avisar:false,comercio:'netflix',activo:true}],
+    pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],
+    tarjetas:[{id:10,nombre:'Visa',cierre:13,vto:24,deuda:0,resumenes:{}}],
+    config:{apiKey:'', diaCobro:5, sueldo:3000000}, seq:20});
+  await page.reload();
+  await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+
+  const lista = await page.evaluate(()=>document.getElementById('dueList').textContent
+    + ' ' + document.getElementById('dueTotal').textContent
+    + ' ' + document.getElementById('dueSub').textContent);
+  ok(/Gas/.test(lista), 'boleta: la que pagás vos aparece en lo próximo que vence', lista.slice(0,120));
+  ok(!/Netflix/.test(lista), 'boleta: la que cobra la tarjeta sola no aparece');
+
+  // no descuenta de tu plata: la paga el resumen
+  const antes = await page.evaluate(()=>window.__guitaSaldo(1));
+  const comp = await page.evaluate(()=>{
+    const d = window.__guitaPlata ? window.__guitaPlata() : null;
+    return d ? d.comprometido : -1;
+  });
+  ok(comp === 0, 'boleta: no cuenta como plata comprometida (la paga el resumen)', String(comp));
+
+  // pagarla la saca de la lista y sigue sin tocar la billetera
+  await page.evaluate(()=>{
+    const it = document.querySelector('#dueList [data-comp]');
+    if(it) it.click();
+  });
+  await page.waitForTimeout(300);
+  const hayPagar = await page.evaluate(()=>!!document.querySelector('#dueAcciones button, #phasePay'));
+  ok(hayPagar, 'boleta: se puede abrir para pagarla');
+  await page.evaluate(()=>{
+    const b = Array.from(document.querySelectorAll('#dueAcciones button'))
+      .find(x=>/pagar/i.test(x.textContent));
+    if(b) b.click();
+  });
+  await page.waitForTimeout(300);
+  if(await page.locator('#phasePay').isVisible()){
+    ok(await page.locator('#pyBillRow').isHidden(),
+       'boleta: al pagarla no te pide billetera, porque no sale de tu plata');
+    await page.click('#confirmPay');
+    await page.waitForTimeout(400);
+    const despues = await page.evaluate(()=>window.__guitaSaldo(1));
+    ok(Math.round(despues) === Math.round(antes),
+       'boleta: pagarla no mueve el saldo de la billetera', `${antes} → ${despues}`);
+    // la del mes que viene sigue estando; la de este mes tiene que quedar saldada
+    const compGas = await page.evaluate(()=>window.__guitaComp(0).find(o=>o.nombre==='Gas'));
+    ok(compGas && compGas.pagado === true, 'boleta: queda saldada la de este mes',
+       JSON.stringify(compGas && {p:compGas.pagado}));
+    const st = await page.evaluate(()=>window.__guitaState());
+    ok(st.movs.some(m=>m.descripcion==='Gas' && m.tarjetaId===10),
+       'boleta: el gasto queda anotado en la tarjeta');
+    ok(st.pagosFijos[mk] && st.pagosFijos[mk]['1'], 'boleta: y marcado como pagado este mes');
+    // y la proyección no lo cuenta dos veces
+    const pr = await page.evaluate(()=>window.__guitaProy(10));
+    ok(!pr || pr.sumaNuevos === 0,
+       'proyección: el pago del fijo no se suma otra vez como consumo nuevo',
+       String(pr && pr.sumaNuevos));
+  }
+}
+await page.close();
+
 await browser.close();
 server.close();
 console.log(fail ? `\n${fail} FALLARON` : '\nTODO OK');

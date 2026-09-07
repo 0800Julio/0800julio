@@ -985,6 +985,9 @@
           Es un gasto que sí o sí pago todos los meses</label>
         <div class="g-note">Alquiler, luz, gas, teléfono, seguro. Los separo de las suscripciones, que son las que podrías cortar.</div>
         <div class="g-note" id="fjViaNote" hidden>Este fijo va incluido en el resumen de la tarjeta: no se paga aparte, se cuenta cuando pagás el resumen.</div>
+        <label class="g-switch" id="fjAvisarRow" hidden style="padding:2px 0"><input type="checkbox" id="fjAvisar">
+          La boleta la pago yo — avisame cuando vence</label>
+        <div class="g-note" id="fjAvisarNote" hidden>Para el gas, la luz o el agua: los pagás con la tarjeta pero tienen su propio vencimiento. Aparecen en "lo próximo que vence" y no descuentan de tu plata, porque te los cobra el resumen.</div>
         <div class="g-actions"><button class="g-btn danger" id="delFijo" hidden>Eliminar</button>
           <button class="g-btn" data-close>Cancelar</button>
           <button class="g-btn primary" id="saveFijo">Guardar</button></div>
@@ -1098,7 +1101,7 @@
         <div class="g-field"><label class="g-label" for="pyMonto">Monto a pagar</label>
           <input id="pyMonto" type="text" inputmode="decimal" data-money></div>
         <div class="g-row2">
-          <div class="g-field"><label class="g-label" for="pyBill">Desde la billetera</label><select id="pyBill"></select></div>
+          <div class="g-field" id="pyBillRow"><label class="g-label" for="pyBill">Desde la billetera</label><select id="pyBill"></select></div>
           <div class="g-field"><label class="g-label" for="pyFecha">Fecha</label><input id="pyFecha" type="date"></div>
         </div>
         <div class="g-note" id="payNote"></div>
@@ -2077,7 +2080,10 @@
     // lo único que NO vuelve: compras de una sola vez (no se proyectan)
     const unicos = (r.detalle||[]).filter(d=>enPesos(d)>0 && !cuotaDe(d.desc) && !esRecurrente(d))
       .map(d=>({desc:d.desc, monto:d.monto, categoria:d.categoria}));
-    const nuevos = S.movs.filter(m=>m.tarjetaId===t.id && m.tipo==="gasto" && !(t.resumenes||{})[m.fecha.slice(0,7)]);
+    // los pagos de un gasto fijo ya están contados en fijosVia: no van otra vez como consumo nuevo
+    const yaFijos = movsDeFijos();
+    const nuevos = S.movs.filter(m=>m.tarjetaId===t.id && m.tipo==="gasto"
+      && !(t.resumenes||{})[m.fecha.slice(0,7)] && !yaFijos.has(m.id));
     const cargosArr = keys.map(k=>cargosMes(t, k)).filter(c=>c!=null && c>0);
     const cargoProm = cargosArr.length ? cargosArr.reduce((a,b)=>a+b,0)/cargosArr.length : 0;
     // cuánto solés pagar: promedio de lo pagado sobre el total, de los resúmenes ya saldados
@@ -2157,7 +2163,7 @@
     for(const desp of [0,1]){
       const base = new Date(hoy.getFullYear(), hoy.getMonth()+desp, 1, 12);
       for(const o of compromisos(desp)){
-        if(o.cobra!=="billetera" || o.pagado || !o.pagable) continue;
+        if((o.cobra!=="billetera" && !o.avisa) || o.pagado || !o.pagable) continue;
         // el día exacto si el compromiso lo trae (préstamos con fecha propia), si no el del mes
         const fecha = o.fecha || diaDelMes(base.getFullYear(), base.getMonth(), o.dia);
         out.push({kind: o.tipo==="resumen" ? "tarjeta" : o.tipo, ref:o.ref, comp:o,
@@ -3175,10 +3181,13 @@
       if(f.activo===false) continue;
       const t = f.viaTarjeta ? S.tarjetas.find(x=>x.id===f.tarjetaId) : null;
       const bill = !f.viaTarjeta && f.billetera ? S.billeteras.find(b=>b.id===f.billetera) : null;
+      // un fijo que va por tarjeta pero lo pagás vos (la boleta del gas, la luz) tiene
+      // vencimiento propio: si te lo pasás te cobra el servicio, no la tarjeta
+      const aMano = !!(f.viaTarjeta && f.avisar && t);
       push({tipo:"fijo", ref:f, id:"f"+f.id, nombre:f.nombre, monto:enPesos(f),
         categoria:f.categoria, dia:f.dia, editable:true, esencial: esEsencial(f),
-        cobra: f.viaTarjeta ? "tarjeta" : "billetera",
-        pagable: !f.viaTarjeta, pagado: !desp && !f.viaTarjeta && !!pagosMes[f.id],
+        cobra: f.viaTarjeta ? "tarjeta" : "billetera", avisa: aMano,
+        pagable: !f.viaTarjeta || aMano, pagado: !desp && !!pagosMes[f.id],
         huerfano: !!(f.viaTarjeta && !t),
         via: t ? "💳 "+t.nombre
           : f.viaTarjeta ? "💳 ⚠️ tarjeta que ya no existe"
@@ -3326,7 +3335,8 @@
     } else if(v.kind==="prestamo"){
       abrirPagoPrestamo(v.ref);
     } else {
-      openPay({kind:"fijo", ref:v.ref, nombre:v.nombre, monto:v.monto});
+      // el compromiso viaja con el pago: es lo que dice si sale de tu plata o de la tarjeta
+      openPay({kind:"fijo", ref:v.ref, nombre:v.nombre, monto:v.monto, comp:v.comp});
     }
   }
 
@@ -4495,7 +4505,8 @@
               if(c.esencial!=null) datos.esencial = !!c.esencial;
               if(c.comercio) datos.comercio = claveComercio(c.comercio);
               if(c.moneda) datos.moneda = c.moneda;
-              if(tj){ datos.viaTarjeta = true; datos.tarjetaId = tj.id; datos.billetera = undefined; }
+              if(tj){ datos.viaTarjeta = true; datos.tarjetaId = tj.id; datos.billetera = undefined;
+                      if(c.avisar!=null) datos.avisar = !!c.avisar; }
               else if(bill){ datos.viaTarjeta = false; datos.tarjetaId = undefined; datos.billetera = bill.id; }
               if(ya) Object.assign(ya, datos);
               else S.fijos.push(Object.assign({id:nid(), monto:0, dia:10, categoria:"Servicios"}, datos));
@@ -5668,6 +5679,15 @@
 
   /* ---------- fijos ---------- */
   let fijoEdit = null, fijoVinculo = null;
+  /** El switch de "la boleta la pago yo" sólo tiene sentido si el fijo va por tarjeta. */
+  function fijoAvisarVis(){
+    const conTarjeta = !!parseBillSel($("fjBill").value).tarjetaId;
+    $("fjAvisarRow").hidden = !conTarjeta;
+    $("fjAvisarNote").hidden = !conTarjeta || !$("fjAvisar").checked;
+    if(!conTarjeta) $("fjAvisar").checked = false;
+  }
+  $("fjBill").addEventListener("change", fijoAvisarVis);
+  $("fjAvisar").addEventListener("change", fijoAvisarVis);
   $("addFijoBtn").onclick = ()=>{
     fijoEdit = null; fijoVinculo = null;
     $("fijoTitle").textContent = "Nuevo gasto fijo";
@@ -5677,6 +5697,7 @@
     fillCats($("fjCat"), false); $("fjCat").value="Hogar";
     fillWalletSelect($("fjBill"), true, true); $("fjBill").value = "";
     $("fjEsencial").checked = true;   // lo que cargás a mano suele ser de los que sí o sí
+    $("fjAvisar").checked = false; fijoAvisarVis();
     openSheet("fijo");
   };
   /* ---------- el detalle de los fijos, a un toque del inicio ---------- */
@@ -5822,6 +5843,7 @@
     const bs = parseBillSel($("fjBill").value);
     const datos = {nombre, monto, dia, categoria:$("fjCat").value, esencial: $("fjEsencial").checked,
       viaTarjeta: !!bs.tarjetaId, tarjetaId: bs.tarjetaId || undefined,
+      avisar: !!bs.tarjetaId && $("fjAvisar").checked,
       billetera: bs.tarjetaId ? undefined : (bs.billetera ?? undefined)};
     // el comercio original del resumen: renombrar el fijo no rompe el vínculo
     if(fijoVinculo){
@@ -5855,6 +5877,7 @@
     fillWalletSelect($("fjBill"), true, true);
     $("fjBill").value = f.viaTarjeta && f.tarjetaId ? "t"+f.tarjetaId : (f.billetera ?? "");
     $("fjEsencial").checked = esEsencial(f);
+    $("fjAvisar").checked = !!f.avisar; fijoAvisarVis();
     openSheet("fijo");
   }
 
@@ -6145,6 +6168,7 @@
     fillCats($("fjCat"), false); $("fjCat").value = d.categoria || "Servicios";
     fillWalletSelect($("fjBill"), true, true);
     if(card) $("fjBill").value = "t"+card.id;
+    $("fjAvisar").checked = false; fijoAvisarVis();
     $("fjEsencial").checked = true;
     openSheet("fijo");
     setTimeout(()=>{ $("fjNombre").focus(); $("fjNombre").select(); }, 250);
@@ -6905,12 +6929,17 @@
   let payCtx = null;
   function openPay(ctx){
     payCtx = ctx;
+    const conTarjeta = ctx.kind==="fijo" && ctx.comp && ctx.comp.avisa;
     $("payTitle").textContent = "Pagar "+ctx.nombre;
     $("pyMonto").value = fmtNum(ctx.monto);
-    $("payNote").textContent = fmtMoney(ctx.monto)+(ctx.kind==="tarjeta"
+    $("payNote").textContent = fmtMoney(ctx.monto) + (ctx.kind==="tarjeta"
       ? " es lo que falta pagar — si pagás menos, el resto queda financiado para el próximo resumen."
-      : " — se anota como gasto y descuenta de la billetera que elijas.");
-    fillWalletSelect($("pyBill"), true);
+      : conTarjeta
+        ? ` — lo pagás con ${ctx.comp.via.replace(/^💳\s*/,"")}, así que no sale de tu plata: te lo va a cobrar el resumen.`
+        : " — se anota como gasto y descuenta de la billetera que elijas.");
+    // si va con tarjeta no hay billetera que elegir: el que paga es el resumen
+    $("pyBillRow").hidden = conTarjeta;
+    if(!conTarjeta) fillWalletSelect($("pyBill"), true);
     $("pyFecha").value = todayISO();
     openSheet("pay");
   }
@@ -6918,13 +6947,15 @@
     if(!payCtx) return;
     const monto = Math.max(0, numVal($("pyMonto").value) || payCtx.monto);
     if(!monto){ $("pyMonto").focus(); toast("Falta el monto"); return; }
-    const bill = $("pyBill").value ? Number($("pyBill").value) : null;
+    const conTarjeta = payCtx.kind==="fijo" && payCtx.comp && payCtx.comp.avisa;
+    const bill = (!conTarjeta && $("pyBill").value) ? Number($("pyBill").value) : null;
     const fecha = $("pyFecha").value || todayISO();
     const mk = monthKey(new Date(fecha+"T12:00:00"));
     const mov = {
       id: nid(), fecha, tipo:"gasto", monto,
       categoria: payCtx.kind==="tarjeta" ? "Tarjeta" : payCtx.ref.categoria,
       billetera: bill,
+      tarjetaId: conTarjeta ? payCtx.ref.tarjetaId : undefined,
       descripcion: payCtx.nombre,
       origen: payCtx.kind
     };
@@ -7645,6 +7676,8 @@
   window.__guitaParche = j => mostrarParche(j);
   window.__guitaPlan = o => planSalida(o);
   window.__guitaPresu = () => presupuesto();
+  window.__guitaPlata = () => plataDisponible();
+  window.__guitaComp = d => compromisos(d);
   window.__guitaProy = id => proyeccionTarjeta(S.tarjetas.find(t=>t.id===id));
   window.__guitaToast = () => ({busy: toastBusy, pend: toastQ.length, txt: toastEl.textContent});
   window.__guitaNotif = n => parseNotif(n);

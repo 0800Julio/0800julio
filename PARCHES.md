@@ -62,6 +62,13 @@ Crea o actualiza un gasto fijo. Si existe uno con ese nombre —o enganchado a e
 aunque el fijo se llame distinto. `esencial:true` = de los que sí o sí.
 `moneda:"USD"` si el monto está en dólares.
 
+`avisar:true` (sólo con `tarjeta`) es para las boletas que **pagás vos** aunque el
+medio de pago sea la tarjeta: el gas, la luz, el agua. Aparecen en "lo próximo que
+vence" con su fecha propia, porque si te pasás te recarga el servicio, no el banco.
+No cuentan como plata comprometida —los cobra el resumen— y al marcarlos pagados
+el gasto queda anotado en la tarjeta, no en la billetera. Sin `avisar`, un fijo con
+tarjeta no se muestra: lo debita la tarjeta sola (Netflix, Spotify).
+
 ### `billetera` · `saldo`
 ```json
 {"op":"billetera", "nombre":"Naranja X", "saldo":50000, "inversion":false}
