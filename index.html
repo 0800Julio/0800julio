@@ -416,6 +416,16 @@
   .g-stsum .r.pos span:last-child{color:var(--income)}
   .g-stsum .r.neg span:last-child{color:var(--expense)}
   .g-stsum .r.tot{border-top:1px solid var(--line); margin-top:3px; padding-top:7px}
+  /* plan de salida: una fila por mes, en dos líneas para que nada se aplaste */
+  .g-mrow{padding:10px 2px; border-top:1px solid var(--line); font-variant-numeric:tabular-nums}
+  .g-mrow .t{display:flex; align-items:baseline; justify-content:space-between; gap:10px; font-size:14px}
+  .g-mrow .m{min-width:0; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .g-mrow .d{flex:none; font-weight:700}
+  .g-mrow .s{margin-top:2px; font-size:12px; color:var(--muted); line-height:1.45}
+  .g-mrow.hit{background:var(--brand-soft); border-radius:12px; padding:10px; border-top-color:transparent}
+  .g-mrow.hit .m, .g-mrow.hit .d{color:var(--brand)}
+  .g-mfree{font-size:12px; color:var(--brand); padding:0 2px 10px; line-height:1.45}
+  .g-mfree.warn{color:var(--expense)}
   .g-stsum .r.tot span{font-weight:800; color:var(--ink); font-size:14.5px}
   .g-strow{display:grid; grid-template-columns:38px 1fr 104px 24px; gap:8px; align-items:center;
     padding:7px 0; border-bottom:1px solid var(--line); animation:itemIn .3s var(--ease) both;
@@ -750,6 +760,7 @@
         <div class="g-heroactions">
           <button class="g-btn" id="repartoBtn" hidden>💸 ¿Cómo reparto?</button>
           <button class="g-btn" id="rendirBtn" hidden>🤔 ¿Adelanto o guardo?</button>
+          <button class="g-btn" id="salidaBtn" hidden>🚪 Plan de salida</button>
           <button class="g-btn" id="simuBtn" hidden>🧮 ¿Cómo salgo?</button>
         </div>
       </section>
@@ -1196,6 +1207,24 @@
         <div id="repDetalle"></div>
         <div class="g-actions"><button class="g-btn" data-close>Cerrar</button>
           <button class="g-btn primary" id="repCalcular">Repartir</button></div>
+      </div>
+
+      <div id="phaseSalida" hidden>
+        <h3>🚪 Tu plan de salida</h3>
+        <div class="g-note">Una tarjeta no llega a cero: la luz, el seguro y las suscripciones caen ahí todos los meses. Salir es <strong>pagar el resumen entero</strong> — ahí esos gastos dejan de costarte intereses y la tarjeta vuelve a ser una forma de pagar, no una deuda.</div>
+        <div class="g-field"><label class="g-label" for="slSueldo">¿Cuánto cobrás por mes?</label>
+          <input id="slSueldo" type="text" inputmode="decimal" data-money></div>
+        <div class="g-field"><label class="g-label" for="slDia">¿Cuánto gastás por día? (comida, nafta, salidas)</label>
+          <input id="slDia" type="text" inputmode="decimal" data-money></div>
+        <div class="g-field"><label class="g-label" for="slAhora">¿Cuánta plata tenés hoy?</label>
+          <input id="slAhora" type="text" inputmode="decimal" data-money></div>
+        <div class="g-note" id="slBase"></div>
+        <div class="g-stsum" id="slResumen" hidden></div>
+        <div id="slCards"></div>
+        <div id="slMeses"></div>
+        <div class="g-note" id="slCierre"></div>
+        <div class="g-actions"><button class="g-btn" data-close>Cerrar</button>
+          <button class="g-btn primary" id="slCalcular">Ver el plan</button></div>
       </div>
 
       <div id="phaseAlcanza" hidden>
@@ -1808,6 +1837,11 @@
     }
     return mejor+"-"+String(m).padStart(2,"0");
   }
+  const MESES_CORTOS = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+  const monthKeyCorto = mk => {
+    const [y,m] = mk.split("-").map(Number);
+    return MESES_CORTOS[m-1] + " " + String(y).slice(2);
+  };
   const monthKeyLabel = mk => {
     const [y,m] = mk.split("-").map(Number);
     return fmtMonth(new Date(y, m-1, 1));
@@ -1974,13 +2008,16 @@
       if(a<b) cuotasSiguen.push({desc, monto:d.monto, prox:(a+1)+"/"+b, ultima:a+1===b, categoria:d.categoria});
       else cuotasTerminan.push({desc, monto:d.monto, categoria:d.categoria});
     }
-    // gastos que vuelven todos los meses (servicios, seguros, suscripciones), sin las cuotas
-    const recurrentes = (r.detalle||[]).filter(d=>enPesos(d)>0 && !cuotaDe(d.desc) && esRecurrente(d))
+    const fijosVia = S.fijos.filter(f=>f.viaTarjeta && f.tarjetaId===t.id && f.activo!==false);
+    // gastos que vuelven todos los meses (servicios, seguros, suscripciones), sin las cuotas.
+    // Los que ya tenés cargados como gasto fijo de esta tarjeta se saltean: si no, Camuzzi
+    // entraba dos veces —una detectada del resumen y otra como fijo— e inflaba la proyección.
+    const recurrentes = (r.detalle||[]).filter(d=>enPesos(d)>0 && !cuotaDe(d.desc) && esRecurrente(d)
+        && !fijosVia.some(f=>esteFijo(f, d.desc)))
       .map(d=>({desc:d.desc, monto:d.monto, categoria:d.categoria}));
     // lo único que NO vuelve: compras de una sola vez (no se proyectan)
     const unicos = (r.detalle||[]).filter(d=>enPesos(d)>0 && !cuotaDe(d.desc) && !esRecurrente(d))
       .map(d=>({desc:d.desc, monto:d.monto, categoria:d.categoria}));
-    const fijosVia = S.fijos.filter(f=>f.viaTarjeta && f.tarjetaId===t.id && f.activo!==false);
     const nuevos = S.movs.filter(m=>m.tarjetaId===t.id && m.tipo==="gasto" && !(t.resumenes||{})[m.fecha.slice(0,7)]);
     const cargosArr = keys.map(k=>cargosMes(t, k)).filter(c=>c!=null && c>0);
     const cargoProm = cargosArr.length ? cargosArr.reduce((a,b)=>a+b,0)/cargosArr.length : 0;
@@ -4026,6 +4063,135 @@
     return {meses, pagado, intereses: pagado-deuda, interesMes: interesMes1};
   }
 
+  /** Lo que gastás por día, promedio real de los últimos 30 días (comida, salidas, transporte). */
+  function gastoDiarioProm(){
+    const desde = new Date(); desde.setDate(desde.getDate()-30);
+    const iso = isoDe(desde);
+    const cats = ["Comida","Salidas","Transporte"];
+    const suma = S.movs.filter(m=>m.tipo==="gasto" && m.fecha>=iso && cats.includes(m.categoria))
+      .reduce((s,m)=>s+m.monto, 0);
+    return suma/30;
+  }
+
+  /** Los gastos fijos que NO caen en una tarjeta: el alquiler y compañía. */
+  const fijosDeMano = () => S.fijos.filter(f=>!f.viaTarjeta && f.activo!==false)
+    .reduce((s,f)=>s+enPesos(f), 0);
+
+  /**
+   * Plan de salida: mes a mes, quién te cobra qué y cuándo dejás de financiar.
+   *
+   * Una tarjeta nunca llega a saldo cero: la luz, el seguro y las suscripciones caen
+   * ahí todos los meses. Así que salir no es "deber cero", es **pagar el resumen
+   * entero**: mientras lo pagues completo esos gastos no te cuestan un peso de
+   * interés y la tarjeta pasa a ser un medio de pago, no una deuda.
+   */
+  function planSalida(o){
+    o = o || {};
+    const HOR = 36;
+    const porMes = Math.max(0, o.porMes||0);
+    const ahora = Math.max(0, o.ahora||0);      // lo que tenés hoy: es el presupuesto del primer mes
+    const hoy = new Date(); hoy.setHours(12,0,0,0);
+    const pano = panoramaDeuda();
+    const tasaBase = (o.tasa!=null ? o.tasa : (pano.tasa||8.5))/100;
+
+    const cards = [];
+    for(const t of S.tarjetas){
+      const ks = Object.keys(t.resumenes||{}).sort();
+      if(!ks.length) continue;
+      const r = t.resumenes[ks[ks.length-1]];
+      const fijosVia = S.fijos.filter(f=>f.viaTarjeta && f.tarjetaId===t.id && f.activo!==false);
+      const cuotas = [];
+      for(const d of (r.detalle||[])){
+        const c = cuotaDe(d.desc);
+        if(!c || c.a>=c.b || !(enPesos(d)>0)) continue;
+        cuotas.push({desc:c.limpio, monto:enPesos(d), quedan:c.b-c.a});
+      }
+      // mismo cuidado que en la proyección: un fijo cargado a mano no se cuenta otra vez
+      const recur = (r.detalle||[]).filter(d=>enPesos(d)>0 && !cuotaDe(d.desc) && esRecurrente(d)
+        && !fijosVia.some(f=>esteFijo(f, d.desc)));
+      const fijos = fijosVia.reduce((s,f)=>s+enPesos(f),0) + recur.reduce((s,d)=>s+enPesos(d),0);
+      const rs = ks.map(k=>t.resumenes[k]).filter(x=>x.pagoMinimo>0 && x.monto>0).map(x=>x.pagoMinimo/x.monto);
+      const tt = tasaTarjeta(t);
+      cards.push({id:t.id, nombre:t.nombre, arr:resFinanciado(r), fijos, cuotas, interes:0, libre:null,
+        tasa: tt!=null ? tt/100 : tasaBase,
+        ratioMin: rs.length ? rs.reduce((a,b)=>a+b,0)/rs.length : 0.17});
+    }
+    if(!cards.length) return null;
+
+    const mkHoy = monthKey(hoy);
+    const prest = (S.prestamos||[]).map(p=>{
+      const e = estadoPrestamo(p);
+      // si la próxima cuota es de un mes más adelante, ese mes no se cobra todavía
+      const desde = e.proxima ? Math.max(0, (e.proxima.getFullYear()-hoy.getFullYear())*12
+        + (e.proxima.getMonth()-hoy.getMonth())) : 0;
+      return {nombre:p.nombre, cuota:p.cuota||0, quedan:e.quedan, desde};
+    }).filter(x=>x.quedan>0 && x.cuota>0);
+
+    const fijosT = cards.reduce((s,c)=>s+c.fijos, 0);
+
+    /* Una corrida completa. `soloMin` = el escenario de no hacer nada, para comparar. */
+    const correr = soloMin => {
+      const cs = cards.map(c=>Object.assign({}, c, {interes:0, libre:null,
+        cuotas:c.cuotas.map(q=>Object.assign({}, q))}));
+      const ps = prest.map(p=>Object.assign({}, p));
+      const filas = [];
+      let interes = 0, corto = 0, libreMk = null;
+      for(let m=0; m<HOR; m++){
+        const mk = monthKey(new Date(hoy.getFullYear(), hoy.getMonth()+m, 1, 12));
+        const cuotaPrest = ps.reduce((s,p)=>s+(p.quedan>0 && m>=p.desde ? p.cuota : 0), 0);
+        // el primer mes jugás con lo que tenés hoy —el sueldo de este mes ya entró y
+        // es parte de eso—; recién del siguiente en adelante entra el flujo mensual
+        let bolsa = Math.max(0, (m===0 ? ahora : porMes) - cuotaPrest);
+        const pide = cs.map(c=>{
+          const int = c.arr*c.tasa;
+          const cuo = c.cuotas.reduce((s,q)=>s+(q.quedan>0?q.monto:0), 0);
+          const total = c.arr + int + cuo + c.fijos;
+          return {c, int, total, min: Math.min(total, total*c.ratioMin), pago:0};
+        });
+        // 1) el mínimo de cada una primero, que es lo que evita punitorios
+        for(const p of pide){ const x = Math.min(bolsa, p.min); p.pago = x; bolsa -= x; }
+        // 2) todo lo que sobre, entero a la más cara; a igual tasa, a la más chica
+        if(!soloMin){
+          for(const p of pide.slice().sort((a,b)=>(b.c.tasa-a.c.tasa)||(a.total-b.total))){
+            const x = Math.min(bolsa, Math.max(0, p.total-p.pago));
+            p.pago += x; bolsa -= x;
+          }
+        }
+        let falta = 0, deuda = 0, pagado = cuotaPrest;
+        for(const p of pide){
+          interes += p.int; p.c.interes += p.int; pagado += p.pago;
+          if(p.pago < p.min-0.5) falta += p.min - p.pago;
+          p.c.arr = Math.max(0, p.total - p.pago);
+          deuda += p.c.arr;
+          p.c.libre = p.c.arr<=0.5 ? (p.c.libre || mk) : null;
+        }
+        if(falta>0.5) corto++;
+        const terminan = [];
+        for(const c of cs) for(const q of c.cuotas)
+          if(q.quedan>0 && --q.quedan===0) terminan.push({desc:q.desc, monto:q.monto});
+        for(const p of ps)
+          if(p.quedan>0 && m>=p.desde && --p.quedan===0) terminan.push({desc:p.nombre, monto:p.cuota, prestamo:true});
+        filas.push({mk, pagado, deuda, falta, terminan,
+          detalle: pide.map(p=>({nombre:p.c.nombre, pago:p.pago, resto:p.c.arr}))});
+        if(deuda<=0.5){ libreMk = mk; break; }
+      }
+      // lo que te queda libre por mes una vez que salís: los fijos y las cuotas
+      // que sigan vivas se siguen pagando, pero ya sin intereses encima
+      const vivas = cs.reduce((s,c)=>s+c.cuotas.reduce((a,q)=>a+(q.quedan>0?q.monto:0),0), 0)
+        + ps.reduce((s,p)=>s+(p.quedan>0?p.cuota:0), 0);
+      return {filas, interes, corto, libreMk, cards:cs, sobra: porMes - fijosT - vivas};
+    };
+
+    const plan = correr(false), min = correr(true);
+    const minimos = cards.reduce((s,c)=>{
+      const total = c.arr + c.arr*c.tasa + c.cuotas.reduce((a,q)=>a+q.monto,0) + c.fijos;
+      return s + Math.min(total, total*c.ratioMin);
+    }, 0) + prest.reduce((s,p)=>s+p.cuota, 0);
+    return {plan, min, cards, porMes, ahora, fijosT, minimos,
+      deuda: cards.reduce((s,c)=>s+c.arr, 0),
+      interesMes: cards.reduce((s,c)=>s+c.arr*c.tasa, 0)};
+  }
+
   $("addPrestamoBtn").onclick = ()=>abrirPrestamo(null);
   $("addPrestamoBtn2").onclick = ()=>abrirPrestamo(null);
   $("savePrestamo").onclick = ()=>{
@@ -4543,6 +4709,108 @@
       `<div style="margin-top:8px">Dejate siempre un colchón para los gastos del mes: adelantar todo y después pagar con la misma tarjeta no sirve de nada.</div>`;
   });
 
+  /* ---------- plan de salida ---------- */
+  function slBase(){
+    const sueldo = numVal($("slSueldo").value)||0;
+    const dia = numVal($("slDia").value)||0;
+    const mano = fijosDeMano();
+    const diario = dia*30.4;
+    const porMes = sueldo - mano - diario;
+    $("slBase").innerHTML = sueldo>0
+      ? `De ${fmtMoney(sueldo)} se van ${fmtMoney(mano)} de gastos fijos que no pasan por tarjeta` +
+        (dia>0 ? ` y ${fmtMoney(diario)} de gasto diario` : "") +
+        `. De acá en adelante te quedan <strong>${fmtMoney(Math.max(0,porMes))}</strong> por mes para tarjetas y préstamos; este mes jugás con lo que ya tenés.`
+      : "Poné cuánto cobrás y cuánto gastás por día y te digo en qué mes dejás de pagar intereses.";
+    return porMes;
+  }
+
+  alClick("salidaBtn", ()=>{
+    $("slSueldo").value = fmtNum(Math.round(S.config.sueldo||0));
+    $("slDia").value = fmtNum(Math.round(gastoDiarioProm()));
+    $("slAhora").value = fmtNum(Math.round(Math.max(0, plataDisponible().enMano)));
+    $("slResumen").hidden = true;
+    $("slCards").innerHTML = $("slMeses").innerHTML = $("slCierre").innerHTML = "";
+    slBase();
+    openSheet("salida");
+  });
+  for(const id of ["slSueldo","slDia","slAhora"]){
+    const el = $(id); if(el) el.addEventListener("input", slBase);
+  }
+
+  alClick("slCalcular", ()=>{
+    const porMes = slBase();
+    if(!(porMes>0)){
+      $("slSueldo").focus();
+      toast("Con lo que ponés, no queda nada para las tarjetas");
+      return;
+    }
+    const R = planSalida({porMes, ahora: numVal($("slAhora").value)||0});
+    if(!R){ toast("Cargá algún resumen primero"); return; }
+    const {plan, min} = R;
+
+    $("slResumen").hidden = false;
+    $("slResumen").innerHTML =
+      `<div class="r"><span>Estás financiando</span><span>${fmtMoney(R.deuda)}</span></div>` +
+      `<div class="r neg"><span>Intereses por mes</span><span>${fmtMoney(R.interesMes)}</span></div>` +
+      `<div class="r"><span>Le podés poner</span><span>${fmtMoney(porMes)} por mes</span></div>` +
+      (R.ahora>0 ? `<div class="r pos"><span>Este mes, con lo que tenés</span><span>${fmtMoney(R.ahora)}</span></div>` : "") +
+      `<div class="r tot"><span>${plan.libreMk ? "Dejás de financiar" : "Con esto no salís"}</span>` +
+        `<span>${plan.libreMk ? monthKeyLabel(plan.libreMk) : "—"}</span></div>`;
+
+    // en qué mes queda al día cada tarjeta
+    $("slCards").innerHTML = `<div class="g-grouphead">Tarjeta por tarjeta<span class="tot">queda al día</span></div>` +
+      plan.cards.map(c=>{
+        const cuando = c.libre ? monthKeyLabel(c.libre) : "no llega en 3 años";
+        const sub = c.fijos>0
+          ? `${fmtMoney(c.fijos)} por mes de gastos fijos van a seguir cayendo acá — a partir de ahí, sin intereses.`
+          : `Sin gastos fijos enganchados: una vez saldada, sólo te cobra lo que gastes.`;
+        return `<div class="g-mrow"><div class="t"><span class="m">${esc(c.nombre)}</span>` +
+          `<span class="d">${esc(cuando)}</span></div><div class="s">${sub}</div></div>`;
+      }).join("");
+
+    // el mes a mes
+    const verMeses = plan.filas.slice(0, 18);
+    const filas = verMeses.map(f=>{
+      const hit = f.deuda<=0.5;
+      const extra = f.terminan.length
+        ? `<div class="g-mfree">🎉 termina ${f.terminan.map(x=>esc(x.desc)+" ("+fmtMoney(x.monto)+")").join(" · ")}</div>`
+        : "";
+      const corto = f.falta>0.5
+        ? `<div class="g-mfree warn">⚠️ te faltan ${fmtMoney(f.falta)} para cubrir los mínimos</div>` : "";
+      return `<div class="g-mrow${hit?" hit":""}"><div class="t">` +
+        `<span class="m">${monthKeyCorto(f.mk)}</span>` +
+        `<span class="d">${hit ? "al día ✔" : fmtMoney(f.deuda)}</span></div>` +
+        `<div class="s">pagás ${fmtMoney(f.pagado)}</div></div>` + corto + extra;
+    }).join("");
+    const mas = plan.filas.length > verMeses.length
+      ? `<div class="g-mfree warn">…y ${plan.filas.length-verMeses.length} meses más sin llegar a cero.</div>` : "";
+    $("slMeses").innerHTML = `<div class="g-grouphead">Mes a mes<span class="tot">te queda debiendo</span></div>${filas}${mas}`;
+
+    // el costo de no hacer nada
+    const ahorro = min.interes - plan.interes;
+    const cierre = [];
+    if(plan.libreMk){
+      cierre.push(`En <strong>${monthKeyLabel(plan.libreMk)}</strong> pagás el último resumen entero. ` +
+        `Hasta ahí vas a haber puesto ${fmtMoney(plan.interes)} de intereses.`);
+      if(plan.sobra>0) cierre.push(`A partir de ese mes te sobran <strong>${fmtMoney(plan.sobra)}</strong> ` +
+        `libres por mes. Ese es el número con el que podés empezar a guardar.`);
+    } else {
+      cierre.push(`Con ${fmtMoney(porMes)} por mes no salís: los intereses crecen más rápido de lo que pagás. ` +
+        `Necesitás bajar el gasto diario o poner más plata.`);
+    }
+    if(plan.corto>0) cierre.push(`⚠️ Hay ${plan.corto} ${plan.corto===1?"mes":"meses"} en que ni siquiera llegás al mínimo. ` +
+      `Eso son punitorios: revisá el gasto por día.`);
+    if(min.libreMk && ahorro>1)
+      cierre.push(`Pagando sólo los mínimos saldrías recién en ${monthKeyLabel(min.libreMk)} y pondrías ` +
+        `${fmtMoney(min.interes)} de intereses. Este plan te ahorra <strong>${fmtMoney(ahorro)}</strong>.`);
+    else if(!min.libreMk && plan.libreMk)
+      cierre.push(`Pagando sólo los mínimos no salís nunca: los intereses le ganan a lo que pagás. ` +
+        `En tres años habrías puesto ${fmtMoney(min.interes)} de intereses y seguirías debiendo lo mismo.`);
+    cierre.push(`Ojo: los gastos fijos de tus tarjetas (${fmtMoney(R.fijosT)} por mes) no desaparecen nunca. ` +
+      `Estar al día no es deber cero, es que esos ${fmtMoney(R.fijosT)} no paguen intereses.`);
+    $("slCierre").innerHTML = cierre.map(x=>`<div style="margin-top:8px">${x}</div>`).join("");
+  });
+
   alClick("repartoBtn", ()=>{
     const d = plataDisponible();
     $("repMonto").value = fmtNum(Math.round(Math.max(0, d.enMano)));
@@ -4688,6 +4956,7 @@
     });
     $("simuBtn").hidden = !conSaldo.length;
     $("repartoBtn").hidden = conSaldo.length < 2;   // con una sola tarjeta no hay nada que repartir
+    $("salidaBtn").hidden = !conSaldo.length;      // sin nada financiado no hay de qué salir
     $("rendirBtn").hidden = !conSaldo.length;
     if(!libs.length) return;
     const max = Math.max(...libs.map(l=>l.libera));
@@ -4827,7 +5096,7 @@
 
   /* ---------- sheet ---------- */
   const sheet=$("sheet"), scrim=$("scrim");
-  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte","Alcanza","Simu","Reparto","Rendir","Parche","Compartido","Fijos","FijosGuia","Prestamo","PagoPrestamo","Rec"];
+  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte","Alcanza","Simu","Reparto","Rendir","Parche","Compartido","Fijos","FijosGuia","Prestamo","PagoPrestamo","Rec","Salida"];
   const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]),' +
     ' textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
   const focoVisibles = () => Array.from(sheet.querySelectorAll(FOCUSABLE))
@@ -7044,6 +7313,8 @@
   window.__guitaSaldo = id => saldoBilletera(id);
   window.__guitaDiaDelMes = (a,m,d) => diaDelMes(a,m,d);
   window.__guitaParche = j => mostrarParche(j);
+  window.__guitaPlan = o => planSalida(o);
+  window.__guitaProy = id => proyeccionTarjeta(S.tarjetas.find(t=>t.id===id));
   window.__guitaToast = () => ({busy: toastBusy, pend: toastQ.length, txt: toastEl.textContent});
   window.__guitaNotif = n => parseNotif(n);
   window.__guitaBackup = () => armarBackup();

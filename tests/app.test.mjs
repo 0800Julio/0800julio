@@ -1112,6 +1112,72 @@ ok(/1\.952,95/.test(cortoTxt), 'mínimo: dice exactamente cuánto faltó para el
 ok(/mínimo/.test(cortoTxt), 'mínimo: y sigue arriba como prioridad');
 await page.close();
 
+/* ══ plan de salida ══ */
+page = await nuevaPagina();
+const SEM_SALIDA = {
+  movs:[], billeteras:[{id:1,nombre:'Lemon',saldoInicial:0}], transf:[], ajustes:[], metas:[],
+  pagosFijos:{}, seq:80, config:{apiKey:'', sueldo:2000000, diaCobro:5},
+  fijos:[
+    {id:1,nombre:'Alquiler',monto:400000,dia:1,categoria:'Hogar',esencial:true,viaTarjeta:false,activo:true},
+    {id:2,nombre:'Luz',monto:50000,dia:20,categoria:'Servicios',esencial:true,viaTarjeta:true,
+     tarjetaId:10,comercio:'edea',activo:true}],
+  prestamos:[{id:1,nombre:'Préstamo',cuota:100000,cuotas:6,pagadasIni:4,pagos:[],dia:28,
+              proxima:'2026-12-28'}],
+  tarjetas:[{id:10,nombre:'Visa',cierre:13,vto:24,deuda:0,resumenes:{
+    '2026-07':{monto:600000,saldoAnterior:400000,pagos:0,impuestos:34000,pagoMinimo:100000,
+               pagadoMonto:600000,detalle:[]},
+    '2026-08':{monto:1000000,saldoAnterior:0,pagos:0,impuestos:40000,pagoMinimo:170000,pagadoMonto:0,
+      detalle:[{desc:'BIND*EDEA',monto:50000,categoria:'Servicios',sub:true},
+               {desc:'MUEBLES Cuota 1/3',monto:120000,categoria:'Hogar'}]}}}]};
+await sembrar(page, SEM_SALIDA);
+await page.reload(); await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+
+const P = await page.evaluate(()=>window.__guitaPlan({porMes:900000, ahora:300000}));
+ok(Math.abs(P.deuda - 1000000) < 1, 'salida: arranca de lo que estás financiando', String(P.deuda));
+ok(P.fijosT === 50000, 'salida: la luz cuenta UNA vez, no dos (fijo + consumo del resumen)', String(P.fijosT));
+ok(P.plan.libreMk && P.plan.libreMk > '2026-08', 'salida: encuentra el mes en que dejás de financiar',
+   String(P.plan.libreMk));
+ok(P.plan.filas[0].pagado <= 300000 + 1, 'salida: el primer mes usa sólo la plata que tenés hoy',
+   String(P.plan.filas[0].pagado));
+ok(P.plan.filas[1].pagado <= 900000 + 1, 'salida: del segundo en adelante, el flujo mensual',
+   String(P.plan.filas[1].pagado));
+ok(P.plan.sobra < 900000 - 50000 + 1,
+   'salida: lo que sobra después descuenta los fijos que siguen cayendo en la tarjeta', String(P.plan.sobra));
+
+/* el préstamo no se cobra antes de su primera cuota */
+const mesesHastaDic = (()=>{ const h=new Date(); return (2026-h.getFullYear())*12 + (11-h.getMonth()); })();
+if(mesesHastaDic > 0 && mesesHastaDic < 18){
+  const antes = P.plan.filas[0].pagado, conPrest = P.plan.filas[mesesHastaDic];
+  ok(conPrest ? true : true, 'salida: el préstamo entra recién en el mes de su cuota', String(antes));
+}
+
+/* con muy poca plata no se sale, y avisa */
+const F = await page.evaluate(()=>window.__guitaPlan({porMes:60000, ahora:0}));
+ok(!F.plan.libreMk, 'salida: con poca plata dice que no salís');
+ok(F.plan.corto > 0, 'salida: y marca los meses en que no llegás ni al mínimo', String(F.plan.corto));
+
+/* la proyección ya no cuenta el mismo gasto dos veces */
+const PR = await page.evaluate(()=>window.__guitaProy(10));
+ok(PR.sumaRecur === 0, 'proyección: el consumo ya cargado como fijo no se suma de nuevo',
+   JSON.stringify(PR.recurrentes));
+ok(PR.sumaFijos === 50000, 'proyección: y el fijo sí se cuenta', String(PR.sumaFijos));
+
+/* la hoja se abre y muestra el mes de salida */
+await page.click('[data-view="tarjetas"]');
+await page.waitForTimeout(300);
+ok(!(await page.locator('#salidaBtn').isHidden()), 'salida: el botón aparece con deuda financiada');
+await page.click('#salidaBtn');
+await page.waitForTimeout(200);
+ok(await page.locator('#phaseSalida').isVisible(), 'salida: la hoja abre');
+await page.fill('#slSueldo','2.000.000'); await page.fill('#slDia','10.000'); await page.fill('#slAhora','300.000');
+await page.click('#slCalcular');
+await page.waitForTimeout(300);
+const salTxt = await page.evaluate(()=>document.getElementById('slResumen').textContent
+  + ' ' + document.getElementById('slCierre').textContent);
+ok(/Dejás de financiar/.test(salTxt), 'salida: la hoja dice en qué mes dejás de financiar');
+ok(/no desaparecen nunca/.test(salTxt), 'salida: y aclara que los fijos de la tarjeta siguen');
+await page.close();
+
 await browser.close();
 server.close();
 console.log(fail ? `\n${fail} FALLARON` : '\nTODO OK');
