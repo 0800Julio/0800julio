@@ -4678,6 +4678,23 @@
               if(c.dolar!=null) S.config.dolar = Math.max(0, Number(c.dolar)||0);
             }});
         }
+        else if(op==="plantarjeta"){
+          const t = resolver(S.tarjetas, c.tarjeta, "tarjeta", out.errores);
+          if(!t) continue;
+          const modo = String(c.plan||"").toLowerCase();
+          if(!["todo","minimo","monto","historico"].includes(modo)){
+            out.errores.push(`plan "${c.plan}" no existe (todo, minimo, monto o historico)`); continue;
+          }
+          const monto = Math.max(0, Number(c.monto)||0);
+          if(modo==="monto" && !(monto>0)){ out.errores.push("el plan por monto necesita cuánto vas a pagar"); continue; }
+          const como = modo==="todo" ? "el resumen entero"
+            : modo==="minimo" ? "sólo el mínimo"
+            : modo==="monto" ? fmtMoney(monto)+" por mes"
+            : "lo que venís pagando";
+          out.ops.push({
+            txt: `📊 ${esc(t.nombre)}: proyectar pagando ${como}`,
+            aplicar(){ t.planPago = modo; if(modo==="monto") t.planMonto = monto; }});
+        }
         else if(op==="presupuesto"){
           const porDia = Math.max(0, Number(c.porDia)||0);
           if(!(porDia>0)){ out.errores.push("presupuesto sin monto por día"); continue; }

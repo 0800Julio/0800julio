@@ -101,6 +101,15 @@ los gastos fijos enganchados a esa tarjeta. `pagoResumen` **suma** al pago anter
 pago avanza sola un mes. `pagadas` son las cuotas que ya venías pagando antes de
 cargar el préstamo (no toca los pagos ya registrados).
 
+### `planTarjeta`
+```json
+{"op":"planTarjeta", "tarjeta":"Mercado Pago", "plan":"monto", "monto":310689}
+```
+Con qué criterio proyectar el próximo resumen de esa tarjeta: `todo` (lo pagás
+entero), `minimo`, `monto` (lo que digas) o `historico` (lo que venís pagando,
+que es el que viene por defecto). No paga nada: sólo hace que la estimación
+del próximo resumen refleje lo que pensás hacer.
+
 ### `presupuesto` · `previsto`
 ```json
 {"op":"presupuesto", "porDia":20000}

@@ -670,6 +670,10 @@ const PARCHE = {
     {op:"pagoResumen", tarjeta:"Visa Provincia", mes:mkHoy, monto:80000, billetera:"Lemon"},
     {op:"config", sueldo:3000000, diaCobro:5},
     {op:"saldo", billetera:"Lemon", monto:400000},
+    {op:"presupuesto", porDia:20000},
+    {op:"previsto", desc:"Cumpleaños", monto:45000},
+    {op:"planTarjeta", tarjeta:"Visa", plan:"monto", monto:310689},
+    {op:"planTarjeta", tarjeta:"Visa", plan:"loQueSea"},
     {op:"gasto", monto:0, desc:"Sin monto"},
     {op:"fijo", nombre:"X", tarjeta:"Tarjeta que no existe"},
     {op:"loQueSea"}
@@ -684,7 +688,7 @@ ok(/Gas/.test(prevTxt) && /Visa Provincia/.test(prevTxt),
 ok(/Ajusto Lemon a \$ 400\.000/.test(prevTxt) && /ahora/.test(prevTxt),
    'parche: al ajustar el saldo dice contra qué compara', prevTxt.slice(-140));
 const errTxt = await page.evaluate(()=>document.getElementById('parcheErrores').textContent);
-ok(/3 cosas/.test(errTxt) && /Tarjeta que no existe/.test(errTxt),
+ok(/4 cosas/.test(errTxt) && /Tarjeta que no existe/.test(errTxt),
    'parche: avisa lo que no pudo leer sin frenar el resto', errTxt.replace(/\s+/g,' ').slice(0,160));
 await page.click('#saveParche'); await page.waitForTimeout(700);
 const st13 = await page.evaluate(()=>window.__guitaState());
@@ -697,6 +701,11 @@ ok(st13.tarjetas[0].resumenes[mkHoy].pagadoMonto===80000, 'parche: registra el p
 ok(st13.config.sueldo===3000000 && st13.config.diaCobro===5, 'parche: aplica los ajustes');
 ok(Math.round(await page.evaluate(()=>window.__guitaSaldo(1)))===400000,
    'parche: el saldo queda donde le dijiste', String(await page.evaluate(()=>window.__guitaSaldo(1))));
+ok(st13.presu && st13.presu.porDia===20000, 'parche: deja puesto el presupuesto semanal');
+ok(st13.presu.previstos.length===1 && st13.presu.previstos[0].monto===45000,
+   'parche: y el gasto apartado');
+ok(st13.tarjetas[0].planPago==='monto' && st13.tarjetas[0].planMonto===310689,
+   'parche: fija con qué criterio proyectar la tarjeta');
 // y se puede deshacer entero
 await page.evaluate(()=>{ const b=document.querySelector('#toast button'); if(b) b.click(); });
 await page.waitForTimeout(600);
