@@ -117,6 +117,16 @@ entero), `minimo`, `monto` (lo que digas) o `historico` (lo que venís pagando,
 que es el que viene por defecto). No paga nada: sólo hace que la estimación
 del próximo resumen refleje lo que pensás hacer.
 
+### `pagoFijo`
+```json
+{"op":"pagoFijo", "fijo":"Gas", "monto":52692.53, "fecha":"2026-09-10"}
+{"op":"pagoFijo", "fijo":"Luz", "monto":167479.34, "tarjeta":"Mercado Pago"}
+```
+Registra que pagaste un gasto fijo: lo anota como gasto y lo marca como saldado ese
+mes, así sale de "lo próximo que vence". Sin `monto` usa el del fijo. Sale de donde
+sale el fijo —la tarjeta o la billetera que tenga—, salvo que le pases `tarjeta` o
+`billetera` para ese pago en particular.
+
 ### `presupuesto` · `previsto`
 ```json
 {"op":"presupuesto", "porDia":20000}

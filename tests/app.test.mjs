@@ -674,6 +674,8 @@ const PARCHE = {
     {op:"previsto", desc:"Cumpleaños", monto:45000},
     {op:"planTarjeta", tarjeta:"Visa", plan:"monto", monto:310689},
     {op:"planTarjeta", tarjeta:"Visa", plan:"loQueSea"},
+    {op:"pagoFijo", fijo:"Gas", monto:52692.53, fecha:mkHoy+"-10"},
+    {op:"pagoFijo", fijo:"Un fijo que no existe"},
     {op:"gasto", monto:0, desc:"Sin monto"},
     {op:"fijo", nombre:"X", tarjeta:"Tarjeta que no existe"},
     {op:"loQueSea"}
@@ -688,7 +690,7 @@ ok(/Gas/.test(prevTxt) && /Visa Provincia/.test(prevTxt),
 ok(/Ajusto Lemon a \$ 400\.000/.test(prevTxt) && /ahora/.test(prevTxt),
    'parche: al ajustar el saldo dice contra qué compara', prevTxt.slice(-140));
 const errTxt = await page.evaluate(()=>document.getElementById('parcheErrores').textContent);
-ok(/4 cosas/.test(errTxt) && /Tarjeta que no existe/.test(errTxt),
+ok(/5 cosas/.test(errTxt) && /Tarjeta que no existe/.test(errTxt),
    'parche: avisa lo que no pudo leer sin frenar el resto', errTxt.replace(/\s+/g,' ').slice(0,160));
 await page.click('#saveParche'); await page.waitForTimeout(700);
 const st13 = await page.evaluate(()=>window.__guitaState());
@@ -706,6 +708,13 @@ ok(st13.presu.previstos.length===1 && st13.presu.previstos[0].monto===45000,
    'parche: y el gasto apartado');
 ok(st13.tarjetas[0].planPago==='monto' && st13.tarjetas[0].planMonto===310689,
    'parche: fija con qué criterio proyectar la tarjeta');
+const movGas = st13.movs.find(m=>m.descripcion==='Gas' && m.monto===52692.53);
+ok(movGas && movGas.tarjetaId===10 && !movGas.billetera,
+   'parche: el pago de un fijo con tarjeta no toca la billetera', JSON.stringify(movGas&&{t:movGas.tarjetaId,b:movGas.billetera}));
+ok(st13.pagosFijos[mkHoy] && st13.pagosFijos[mkHoy][gasFj.id]===movGas.id,
+   'parche: y queda marcado como pagado ese mes');
+ok(movGas && movGas.tarjetaId===10,
+   'parche: pagar un fijo que el mismo parche acaba de crear va a la tarjeta correcta');
 // y se puede deshacer entero
 await page.evaluate(()=>{ const b=document.querySelector('#toast button'); if(b) b.click(); });
 await page.waitForTimeout(600);

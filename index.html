@@ -4689,6 +4689,43 @@
               if(c.dolar!=null) S.config.dolar = Math.max(0, Number(c.dolar)||0);
             }});
         }
+        else if(op==="pagofijo"){
+          const nom = String(c.fijo || c.nombre || "").trim();
+          let f = buscarPorNombre(S.fijos, nom);
+          // puede referirse a un fijo que crea o actualiza este mismo parche, unas
+          // líneas más arriba: todavía no existe cuando leemos, pero va a existir
+          const loCreaEsteParche = !f && cambios.some(x =>
+            String(x.op||"").toLowerCase()==="fijo" && mismoComercio(x.nombre||"", nom));
+          if(!f && !loCreaEsteParche){
+            out.errores.push(`no encontré el gasto fijo "${nom||"(sin nombre)"}"`);
+            continue;
+          }
+          const monto = Number(c.monto)>0 ? Number(c.monto) : (f ? enPesos(f) : 0);
+          if(!(monto>0)){ out.errores.push(`${nom} sin monto`); continue; }
+          const fecha = fechaValida(c.fecha);
+          const tjTxt = resolver(S.tarjetas, c.tarjeta, "la tarjeta", out.errores)
+            || (f && f.viaTarjeta ? S.tarjetas.find(x=>x.id===f.tarjetaId) : null);
+          out.ops.push({
+            txt: `🧾 Pagué ${esc(f ? f.nombre : nom)}: <strong>${fmtMoney(monto)}</strong> · ` +
+                 `${fecha.slice(8)}/${fecha.slice(5,7)}` + (tjTxt ? ` · 💳 ${esc(tjTxt.nombre)}` : ""),
+            aplicar(){
+              // de dónde sale se decide ACÁ: si el parche le cambió la tarjeta unas
+              // líneas antes, el pago tiene que ir a la nueva, no a la vieja
+              const fx = f || buscarPorNombre(S.fijos, nom);
+              if(!fx) return;
+              const tj = (c.tarjeta ? buscarPorNombre(S.tarjetas, c.tarjeta) : null)
+                || (fx.viaTarjeta ? S.tarjetas.find(x=>x.id===fx.tarjetaId) : null);
+              const bill = tj ? null
+                : ((c.billetera ? buscarPorNombre(S.billeteras, c.billetera) : null)
+                   || S.billeteras.find(b=>b.id===fx.billetera) || null);
+              const m = {id:nid(), fecha, tipo:"gasto", monto, categoria:fx.categoria||"Servicios",
+                billetera: bill?bill.id:null, tarjetaId: tj?tj.id:undefined,
+                descripcion:fx.nombre, origen:"fijo"};
+              S.movs.push(m);
+              const mk = fecha.slice(0,7);
+              (S.pagosFijos[mk] = S.pagosFijos[mk]||{})[fx.id] = m.id;
+            }});
+        }
         else if(op==="plantarjeta"){
           const t = resolver(S.tarjetas, c.tarjeta, "tarjeta", out.errores);
           if(!t) continue;
