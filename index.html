@@ -1200,6 +1200,8 @@
 
       <div id="phaseParche" hidden>
         <h3>📥 Cambios para aplicar</h3>
+        <div class="g-note" id="parcheRepe" hidden
+          style="color:var(--danger); border:1px solid var(--danger); border-radius:12px; padding:10px; margin-bottom:10px"></div>
         <div class="g-note" id="parcheNota"></div>
         <div id="parcheLista" style="margin-top:10px"></div>
         <div id="parcheErrores" style="margin-top:8px"></div>
@@ -1576,8 +1578,9 @@
   const blankConfig = () => ({apiKey:"", modeloIA:"eco", presupuestos:{}, alertaGrande:0,
     recordatorio:{on:false, hora:"21:30"}, notificaciones:false, diaCobro:0, sueldo:0, dolar:0});
   const blankState = () => ({movs:[], billeteras:[], tarjetas:[], fijos:[], pagosFijos:{}, transf:[], ajustes:[],
-    metas:[], prestamos:[], presu:blankPresu(), config:blankConfig(), seq:0});
+    metas:[], prestamos:[], presu:blankPresu(), parches:[], config:blankConfig(), seq:0});
   const blankPresu = () => ({porDia:0, desde:"", previstos:[], ajustes:[]});
+  // qué archivos de cambios ya aplicaste: para no cargar dos veces lo mismo
 
   function loadState(){
     if(!persistent) return memory || (memory = blankState());
@@ -4804,10 +4807,31 @@
   }
 
   let parcheActual = null;
+  /**
+   * Una huella del archivo, para reconocerlo si vuelve. Si trae `id` propio manda
+   * ese; si no, sale del contenido, así dos archivos distintos nunca se confunden
+   * y el mismo archivo se reconoce aunque lo bajes de nuevo.
+   */
+  function parcheId(j){
+    if(j && j.id) return String(j.id).slice(0,64);
+    const base = JSON.stringify(j && j.cambios || []) + "|" + String(j && j.nota || "");
+    let h = 5381;
+    for(let i=0; i<base.length; i++) h = (((h<<5) + h) ^ base.charCodeAt(i)) >>> 0;
+    return "h" + h.toString(36) + "-" + base.length.toString(36);
+  }
+
   function mostrarParche(j){
     const p = leerParche(j);
+    p.id = parcheId(j);
+    p.yaAplicado = (S.parches||[]).find(x=>x.id===p.id) || null;
     parcheActual = p;
     $("parcheNota").textContent = p.nota || "Cambios para aplicar sobre lo que ya tenés.";
+    $("parcheRepe").hidden = !p.yaAplicado;
+    if(p.yaAplicado){
+      $("parcheRepe").innerHTML = `<strong>Este archivo ya lo aplicaste ${esc(fmtDay(p.yaAplicado.fecha))}.</strong><br>` +
+        `Si lo volvés a aplicar se duplica todo: los gastos se cuentan dos veces y los saldos quedan mal. ` +
+        `Salvo que sepas que lo deshiciste, cerrá esta ventana.`;
+    }
     $("parcheLista").innerHTML = p.ops.length
       ? p.ops.map((o,i)=>`<div class="g-tip" style="--d:${Math.min(i,10)*0.03}s">
           <span class="ic">${i+1}</span><div>${o.txt}</div></div>`).join("")
@@ -4817,7 +4841,11 @@
         p.errores.map(e=>"· "+esc(e)).join("<br>") + `</div>`
       : "";
     $("saveParche").hidden = !p.ops.length;
-    $("saveParche").textContent = `Aplicar ${p.ops.length} cambio${p.ops.length===1?"":"s"}`;
+    $("saveParche").classList.toggle("danger", !!p.yaAplicado);
+    $("saveParche").classList.toggle("primary", !p.yaAplicado);
+    $("saveParche").textContent = p.yaAplicado
+      ? `Aplicar igual (${p.ops.length})`
+      : `Aplicar ${p.ops.length} cambio${p.ops.length===1?"":"s"}`;
     openSheet("parche");
   }
   alClick("saveParche", ()=>{
@@ -4828,6 +4856,12 @@
       try{ o.aplicar(); n++; }catch(err){}
     }
     const total = parcheActual.ops.length;
+    // queda anotado para reconocerlo si el archivo vuelve; Deshacer lo borra solo,
+    // porque restaura el estado entero
+    S.parches = S.parches || [];
+    if(!S.parches.some(x=>x.id===parcheActual.id))
+      S.parches.push({id: parcheActual.id, fecha: todayISO(), nota: parcheActual.nota || "", n});
+    if(S.parches.length > 60) S.parches = S.parches.slice(-60);
     parcheActual = null;
     save(); closeSheet(); renderAll();
     toast(`Apliqué ${n} de ${total} cambio${total===1?"":"s"} ✔`, ()=>{

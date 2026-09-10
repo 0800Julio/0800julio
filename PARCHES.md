@@ -25,10 +25,16 @@ restaurar se las borra. Por eso los cambios van como parche.
 {
   "app": "guita",
   "parche": 1,
+  "id": "guita-septiembre-2026-09-10",
   "nota": "Septiembre: alquiler, sueldo y el pago de Visa",
   "cambios": [ ... ]
 }
 ```
+
+El `id` es opcional pero conviene ponerlo: la app anota los archivos que ya aplicaste
+y, si abrís uno repetido, avisa en rojo antes de duplicarte todo. Sin `id` la huella
+sale del contenido, así que un archivo idéntico igual se reconoce. Deshacer también
+borra esa marca: el archivo vuelve a quedar sin aplicar.
 
 Todo lo que se refiere a algo que ya existe —tarjetas, billeteras, préstamos, fijos,
 metas— **se nombra, no se referencia por id**. La app resuelve el nombre con la misma

@@ -723,6 +723,24 @@ ok(st13.transf.length===1 && st13.transf[0].monto===50000,
    JSON.stringify(st13.transf));
 ok(movGas && movGas.tarjetaId===10,
    'parche: pagar un fijo que el mismo parche acaba de crear va a la tarjeta correcta');
+/* aplicar el mismo archivo dos veces avisa antes de duplicar todo */
+ok(st13.parches && st13.parches.length===1, 'parche: queda anotado que este archivo ya se aplicó',
+   JSON.stringify(st13.parches));
+await page.evaluate(j=>window.__guitaParche(j), PARCHE);
+await page.waitForTimeout(400);
+ok(!(await page.locator('#parcheRepe').isHidden()), 'parche: la segunda vez avisa que ya lo aplicaste');
+ok(/ya lo aplicaste/i.test(await page.evaluate(()=>document.getElementById('parcheRepe').textContent)),
+   'parche: y explica que se duplicaría');
+ok(/Aplicar igual/.test(await page.evaluate(()=>document.getElementById('saveParche').textContent)),
+   'parche: el botón deja de ser el camino obvio pero no se bloquea');
+/* uno distinto no se confunde con el anterior */
+await page.evaluate(j=>window.__guitaParche(j),
+  {app:"guita", parche:1, nota:"Otro", cambios:[{op:"gasto", monto:1000, desc:"Café", categoria:"Comida"}]});
+await page.waitForTimeout(300);
+ok(await page.locator('#parcheRepe').isHidden(), 'parche: un archivo distinto no se marca como repetido');
+await page.evaluate(()=>document.querySelector('#sheet [data-close]').click());
+await page.waitForTimeout(300);
+
 // y se puede deshacer entero
 await page.evaluate(()=>{ const b=document.querySelector('#toast button'); if(b) b.click(); });
 await page.waitForTimeout(600);
