@@ -77,6 +77,13 @@ tarjeta no se muestra: lo debita la tarjeta sola (Netflix, Spotify).
 `saldo` no reemplaza el historial: calcula la diferencia contra el saldo actual y
 anota un ajuste, igual que "ajustar saldo real" en la app.
 
+### `transferencia`
+```json
+{"op":"transferencia", "de":"Lemon", "a":"Mercado Pago", "monto":211664, "fecha":"2026-09-10"}
+```
+Plata que se mueve entre billeteras tuyas. No es un gasto ni un ingreso: baja de una
+y sube en la otra, y el total no cambia.
+
 ### `tarjeta` · `resumen` · `pagoResumen`
 ```json
 {"op":"tarjeta", "nombre":"Visa Provincia", "cierre":13, "vto":24}

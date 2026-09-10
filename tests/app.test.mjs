@@ -654,7 +654,7 @@ ok(pagado===146531, 'pago: seguir adelantando suma al pago anterior', String(pag
 await sembrar(page, {
   movs:[{id:1,tipo:"gasto",monto:12345,fecha:mkHoy+"-02",categoria:"Comida",
          descripcion:"Algo que ya tenía",billetera:1}],
-  billeteras:[{id:1,nombre:'Lemon',saldoInicial:500000}],
+  billeteras:[{id:1,nombre:'Lemon',saldoInicial:500000},{id:2,nombre:'Ahorro',saldoInicial:0}],
   fijos:[], pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],
   tarjetas:[{id:10,nombre:'Visa Provincia',cierre:13,vto:24,deuda:0,resumenes:{
     [mkHoy]:{monto:200000,pagadoMonto:0,pagoMinimo:50000,detalle:[]}}}],
@@ -669,6 +669,8 @@ const PARCHE = {
      esencial:true, tarjeta:"Visa", comercio:"camuzzi gas"},
     {op:"pagoResumen", tarjeta:"Visa Provincia", mes:mkHoy, monto:80000, billetera:"Lemon"},
     {op:"config", sueldo:3000000, diaCobro:5},
+    {op:"transferencia", de:"Lemon", a:"Ahorro", monto:50000},
+    {op:"transferencia", de:"Lemon", a:"Lemon", monto:1000},
     {op:"saldo", billetera:"Lemon", monto:400000},
     {op:"presupuesto", porDia:20000},
     {op:"previsto", desc:"Cumpleaños", monto:45000},
@@ -693,7 +695,7 @@ ok(/Pagué Gas/.test(prevTxt) && /Visa Provincia/.test(prevTxt),
 ok(/Ajusto Lemon a \$ 400\.000/.test(prevTxt) && /ahora/.test(prevTxt),
    'parche: al ajustar el saldo dice contra qué compara', prevTxt.slice(-140));
 const errTxt = await page.evaluate(()=>document.getElementById('parcheErrores').textContent);
-ok(/5 cosas/.test(errTxt) && /Tarjeta que no existe/.test(errTxt),
+ok(/6 cosas/.test(errTxt) && /Tarjeta que no existe/.test(errTxt),
    'parche: avisa lo que no pudo leer sin frenar el resto', errTxt.replace(/\s+/g,' ').slice(0,160));
 await page.click('#saveParche'); await page.waitForTimeout(700);
 const st13 = await page.evaluate(()=>window.__guitaState());
@@ -716,6 +718,9 @@ ok(movGas && movGas.tarjetaId===10 && !movGas.billetera,
    'parche: el pago de un fijo con tarjeta no toca la billetera', JSON.stringify(movGas&&{t:movGas.tarjetaId,b:movGas.billetera}));
 ok(st13.pagosFijos[mkHoy] && st13.pagosFijos[mkHoy][gasFj.id]===movGas.id,
    'parche: y queda marcado como pagado ese mes');
+ok(st13.transf.length===1 && st13.transf[0].monto===50000,
+   'parche: la transferencia entre billeteras se registra una sola vez',
+   JSON.stringify(st13.transf));
 ok(movGas && movGas.tarjetaId===10,
    'parche: pagar un fijo que el mismo parche acaba de crear va a la tarjeta correcta');
 // y se puede deshacer entero

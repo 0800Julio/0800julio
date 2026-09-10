@@ -4689,6 +4689,19 @@
               if(c.dolar!=null) S.config.dolar = Math.max(0, Number(c.dolar)||0);
             }});
         }
+        else if(op==="transferencia" || op==="transferir"){
+          const de = resolver(S.billeteras, c.de || c.desde, "la billetera de origen", out.errores);
+          const a  = resolver(S.billeteras, c.a || c.hacia, "la billetera de destino", out.errores);
+          if(!de || !a) continue;
+          if(de.id === a.id){ out.errores.push("la transferencia sale y entra en la misma billetera"); continue; }
+          const monto = Number(c.monto)||0;
+          if(!(monto>0)){ out.errores.push("transferencia sin monto"); continue; }
+          const fecha = fechaValida(c.fecha);
+          out.ops.push({
+            txt: `🔁 Paso <strong>${fmtMoney(monto)}</strong> de ${esc(de.nombre)} a ${esc(a.nombre)} · ` +
+                 `${fecha.slice(8)}/${fecha.slice(5,7)}`,
+            aplicar(){ S.transf.push({id:nid(), de:de.id, a:a.id, monto, fecha}); }});
+        }
         else if(op==="pagofijo"){
           const nom = String(c.fijo || c.nombre || "").trim();
           let f = buscarPorNombre(S.fijos, nom);
