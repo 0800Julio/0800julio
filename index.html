@@ -4239,7 +4239,11 @@
     o = o || {};
     const HOR = 36;
     const porMes = Math.max(0, o.porMes||0);
-    const ahora = Math.max(0, o.ahora||0);      // lo que tenés hoy: es el presupuesto del primer mes
+    // lo que tenés hoy es el presupuesto del primer mes, pero neto de lo que este mes
+    // todavía sale de tu plata y no es tarjeta: el alquiler que no pagaste aún, etc.
+    const deMano = compromisos(0).filter(x=>x.tipo==="fijo" && x.cobra==="billetera" && !x.pagado)
+      .reduce((s,x)=>s+x.monto, 0);
+    const ahora = Math.max(0, (o.ahora||0) - deMano);
     const hoy = new Date(); hoy.setHours(12,0,0,0);
     const pano = panoramaDeuda();
     const tasaBase = (o.tasa!=null ? o.tasa : (pano.tasa||8.5))/100;
@@ -4262,7 +4266,9 @@
       const fijos = fijosVia.reduce((s,f)=>s+enPesos(f),0) + recur.reduce((s,d)=>s+enPesos(d),0);
       const rs = ks.map(k=>t.resumenes[k]).filter(x=>x.pagoMinimo>0 && x.monto>0).map(x=>x.pagoMinimo/x.monto);
       const tt = tasaTarjeta(t);
+      const est = estadoResumen(r);
       cards.push({id:t.id, nombre:t.nombre, arr:resFinanciado(r), fijos, cuotas, interes:0, libre:null,
+        yaCubierta: est.cubreMinimo,   // este mes ya pagaste el mínimo: no se pide dos veces
         tasa: tt!=null ? tt/100 : tasaBase,
         ratioMin: rs.length ? rs.reduce((a,b)=>a+b,0)/rs.length : 0.17});
     }
@@ -4296,7 +4302,8 @@
           const int = c.arr*c.tasa;
           const cuo = c.cuotas.reduce((s,q)=>s+(q.quedan>0?q.monto:0), 0);
           const total = c.arr + int + cuo + c.fijos;
-          return {c, int, total, min: Math.min(total, total*c.ratioMin), pago:0};
+          const min = (m===0 && c.yaCubierta) ? 0 : Math.min(total, total*c.ratioMin);
+          return {c, int, total, min, pago:0};
         });
         // 1) el mínimo de cada una primero, que es lo que evita punitorios
         for(const p of pide){ const x = Math.min(bolsa, p.min); p.pago = x; bolsa -= x; }
@@ -4337,7 +4344,7 @@
       const total = c.arr + c.arr*c.tasa + c.cuotas.reduce((a,q)=>a+q.monto,0) + c.fijos;
       return s + Math.min(total, total*c.ratioMin);
     }, 0) + prest.reduce((s,p)=>s+p.cuota, 0);
-    return {plan, min, cards, porMes, ahora, fijosT, minimos,
+    return {plan, min, cards, porMes, ahora, deMano, fijosT, minimos,
       deuda: cards.reduce((s,c)=>s+c.arr, 0),
       interesMes: cards.reduce((s,c)=>s+c.arr*c.tasa, 0)};
   }
@@ -5031,6 +5038,7 @@
       `<div class="r neg"><span>Intereses por mes</span><span>${fmtMoney(R.interesMes)}</span></div>` +
       `<div class="r"><span>Le podés poner</span><span>${fmtMoney(porMes)} por mes</span></div>` +
       (R.ahora>0 ? `<div class="r pos"><span>Este mes, con lo que tenés</span><span>${fmtMoney(R.ahora)}</span></div>` : "") +
+      (R.deMano>0 ? `<div class="r"><span>(ya descontado lo que falta pagar de tu plata)</span><span>−${fmtMoney(R.deMano)}</span></div>` : "") +
       `<div class="r tot"><span>${plan.libreMk ? "Dejás de financiar" : "Con esto no salís"}</span>` +
         `<span>${plan.libreMk ? monthKeyLabel(plan.libreMk) : "—"}</span></div>`;
 
