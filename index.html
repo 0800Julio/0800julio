@@ -4703,7 +4703,12 @@
           const monto = Number(c.monto)>0 ? Number(c.monto) : (f ? enPesos(f) : 0);
           if(!(monto>0)){ out.errores.push(`${nom} sin monto`); continue; }
           const fecha = fechaValida(c.fecha);
+          // para la previsualización: si este mismo parche le cambia la tarjeta al fijo,
+          // mostrar la nueva — si no, decía una tarjeta y el pago iba a otra
+          const cambioFijo = cambios.find(x => String(x.op||"").toLowerCase()==="fijo"
+            && mismoComercio(x.nombre||"", nom) && x.tarjeta);
           const tjTxt = resolver(S.tarjetas, c.tarjeta, "la tarjeta", out.errores)
+            || (cambioFijo ? buscarPorNombre(S.tarjetas, cambioFijo.tarjeta) : null)
             || (f && f.viaTarjeta ? S.tarjetas.find(x=>x.id===f.tarjetaId) : null);
           out.ops.push({
             txt: `🧾 Pagué ${esc(f ? f.nombre : nom)}: <strong>${fmtMoney(monto)}</strong> · ` +

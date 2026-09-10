@@ -687,6 +687,9 @@ const prevTxt = await page.evaluate(()=>document.getElementById('parcheLista').t
 ok(/Alquiler/.test(prevTxt) && /650\.000/.test(prevTxt), 'parche: lista el gasto nuevo', prevTxt.slice(0,90));
 ok(/Gas/.test(prevTxt) && /Visa Provincia/.test(prevTxt),
    'parche: resuelve "Visa" contra "Visa Provincia"', prevTxt.slice(0,200));
+ok(/Pagué Gas/.test(prevTxt) && /Visa Provincia/.test(prevTxt),
+   'parche: la previsualización nombra la tarjeta a la que va a ir el pago',
+   (prevTxt.match(/Pagué Gas[^0-9]*[^·]*·[^·]*·[^0-9]*/)||[''])[0]);
 ok(/Ajusto Lemon a \$ 400\.000/.test(prevTxt) && /ahora/.test(prevTxt),
    'parche: al ajustar el saldo dice contra qué compara', prevTxt.slice(-140));
 const errTxt = await page.evaluate(()=>document.getElementById('parcheErrores').textContent);
