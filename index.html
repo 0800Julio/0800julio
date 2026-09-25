@@ -2082,7 +2082,15 @@
       if(a<b) cuotasSiguen.push({desc, monto:d.monto, prox:(a+1)+"/"+b, ultima:a+1===b, categoria:d.categoria});
       else cuotasTerminan.push({desc, monto:d.monto, categoria:d.categoria});
     }
-    const fijosVia = S.fijos.filter(f=>f.viaTarjeta && f.tarjetaId===t.id && f.activo!==false);
+    // un fijo que este mes pagaste con OTRA tarjeta no va a caer acá: se proyecta donde lo pagaste
+    const mkAhora = monthKey(new Date());
+    const pagadoEn = f => {
+      const id = (S.pagosFijos[mkAhora]||{})[f.id];
+      const m = id && S.movs.find(x=>x.id===id);
+      return m ? m.tarjetaId : undefined;
+    };
+    const fijosVia = S.fijos.filter(f=>f.viaTarjeta && f.tarjetaId===t.id && f.activo!==false
+      && !(pagadoEn(f) && pagadoEn(f)!==t.id));
     // gastos que vuelven todos los meses (servicios, seguros, suscripciones), sin las cuotas.
     // Los que ya tenés cargados como gasto fijo de esta tarjeta se saltean: si no, Camuzzi
     // entraba dos veces —una detectada del resumen y otra como fijo— e inflaba la proyección.
@@ -2097,8 +2105,11 @@
     const yaFijos = movsDeFijos();
     const [ly, lmes] = lastK.split("-").map(Number);
     const cierreISO = isoDe(diaDelMes(ly, lmes-1, t.cierre||28));
+    // el pago de un fijo cuenta acá sólo si el fijo NO es de esta tarjeta (lo pagaste acá
+    // por excepción, como la luz con Visa): si es de esta tarjeta ya está en fijosVia
+    const esMio = m => fijosVia.some(f=>(S.pagosFijos[mkAhora]||{})[f.id]===m.id);
     const nuevos = S.movs.filter(m=>m.tarjetaId===t.id && m.tipo==="gasto"
-      && m.fecha > cierreISO && !yaFijos.has(m.id));
+      && m.fecha > cierreISO && (!yaFijos.has(m.id) || !esMio(m)));
     const cargosArr = keys.map(k=>cargosMes(t, k)).filter(c=>c!=null && c>0);
     const cargoProm = cargosArr.length ? cargosArr.reduce((a,b)=>a+b,0)/cargosArr.length : 0;
     // cuánto solés pagar: promedio de lo pagado sobre el total, de los resúmenes ya saldados

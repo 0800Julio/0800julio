@@ -25,8 +25,8 @@ cp -r ../icons "$OUT/assets/icons"
   --java "$OUT/gen" \
   --min-sdk-version 24 \
   --target-sdk-version 34 \
-  --version-code 32 \
-  --version-name 3.11 \
+  --version-code 33 \
+  --version-name 3.12 \
   "$OUT/res.zip"
 
 javac --release 11 -Xlint:-options \
