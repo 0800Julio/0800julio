@@ -668,6 +668,9 @@ const PARCHE = {
     {op:"fijo", nombre:"Gas", monto:32593.41, dia:24, categoria:"Servicios",
      esencial:true, tarjeta:"Visa", comercio:"camuzzi gas"},
     {op:"pagoResumen", tarjeta:"Visa Provincia", mes:mkHoy, monto:80000, billetera:"Lemon"},
+    // un resumen creado por el mismo archivo y su pago, en ese orden: el pago tiene que ir a ESE mes
+    {op:"resumen", tarjeta:"Visa", mes:"2025-01", monto:100000, pagoMinimo:15000, pagado:0, detalle:[]},
+    {op:"pagoResumen", tarjeta:"Visa", mes:"2025-01", monto:15000},
     {op:"config", sueldo:3000000, diaCobro:5},
     {op:"transferencia", de:"Lemon", a:"Ahorro", monto:50000},
     {op:"transferencia", de:"Lemon", a:"Lemon", monto:1000},
@@ -705,6 +708,9 @@ const gasFj = st13.fijos.find(f=>f.nombre==='Gas');
 ok(gasFj && gasFj.tarjetaId===10 && gasFj.comercio, 'parche: crea el fijo enganchado a la tarjeta',
    JSON.stringify(gasFj&&{t:gasFj.tarjetaId,c:gasFj.comercio}));
 ok(st13.tarjetas[0].resumenes[mkHoy].pagadoMonto===80000, 'parche: registra el pago del resumen');
+ok(st13.tarjetas[0].resumenes['2025-01'] && st13.tarjetas[0].resumenes['2025-01'].pagadoMonto===15000,
+   'parche: el pago de un resumen creado en el mismo archivo va a ese mes, no al anterior',
+   JSON.stringify(st13.tarjetas[0].resumenes['2025-01'] && st13.tarjetas[0].resumenes['2025-01'].pagadoMonto));
 ok(st13.config.sueldo===3000000 && st13.config.diaCobro===5, 'parche: aplica los ajustes');
 ok(Math.round(await page.evaluate(()=>window.__guitaSaldo(1)))===400000,
    'parche: el saldo queda donde le dijiste', String(await page.evaluate(()=>window.__guitaSaldo(1))));

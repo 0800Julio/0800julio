@@ -2059,6 +2059,15 @@
     return {a, b, txt:m[0], limpio:(desc||"").replace(m[0],"").replace(/[\s.·-]+$/,"").trim() || "Consumo"};
   }
 
+  /**
+   * "RIO URUGUAY C 0010/18" o "ASOC MUTUAL SAN 10/18" parecen cuotas, pero son el seguro
+   * y la obra social: vuelven todos los meses y no se terminan. Si el consumo está
+   * enganchado a un gasto fijo de esa tarjeta, el fijo manda y no se lee como cuota.
+   */
+  const esFijoDe = (t, desc) => S.fijos.some(f=>f.viaTarjeta && f.tarjetaId===t.id
+    && f.activo!==false && esteFijo(f, desc));
+  const cuotaReal = (t, d) => esFijoDe(t, d.desc) ? null : cuotaDe(d.desc);
+
   function proyeccionTarjeta(t){
     const keys = Object.keys(t.resumenes||{}).sort();
     if(!keys.length) return null;
@@ -2067,7 +2076,7 @@
     const cuotasSiguen = [], cuotasTerminan = [];
     for(const d of (r.detalle||[])){
       if(!(d.monto>0)) continue;
-      const c = cuotaDe(d.desc);
+      const c = cuotaReal(t, d);
       if(!c) continue;
       const {a, b, limpio:desc} = c;
       if(a<b) cuotasSiguen.push({desc, monto:d.monto, prox:(a+1)+"/"+b, ultima:a+1===b, categoria:d.categoria});
@@ -2077,16 +2086,19 @@
     // gastos que vuelven todos los meses (servicios, seguros, suscripciones), sin las cuotas.
     // Los que ya tenés cargados como gasto fijo de esta tarjeta se saltean: si no, Camuzzi
     // entraba dos veces —una detectada del resumen y otra como fijo— e inflaba la proyección.
-    const recurrentes = (r.detalle||[]).filter(d=>enPesos(d)>0 && !cuotaDe(d.desc) && esRecurrente(d)
+    const recurrentes = (r.detalle||[]).filter(d=>enPesos(d)>0 && !cuotaReal(t, d) && esRecurrente(d)
         && !fijosVia.some(f=>esteFijo(f, d.desc)))
       .map(d=>({desc:d.desc, monto:d.monto, categoria:d.categoria}));
     // lo único que NO vuelve: compras de una sola vez (no se proyectan)
-    const unicos = (r.detalle||[]).filter(d=>enPesos(d)>0 && !cuotaDe(d.desc) && !esRecurrente(d))
+    const unicos = (r.detalle||[]).filter(d=>enPesos(d)>0 && !cuotaReal(t, d) && !esRecurrente(d)
+        && !fijosVia.some(f=>esteFijo(f, d.desc)))
       .map(d=>({desc:d.desc, monto:d.monto, categoria:d.categoria}));
     // los pagos de un gasto fijo ya están contados en fijosVia: no van otra vez como consumo nuevo
     const yaFijos = movsDeFijos();
+    const [ly, lmes] = lastK.split("-").map(Number);
+    const cierreISO = isoDe(diaDelMes(ly, lmes-1, t.cierre||28));
     const nuevos = S.movs.filter(m=>m.tarjetaId===t.id && m.tipo==="gasto"
-      && !(t.resumenes||{})[m.fecha.slice(0,7)] && !yaFijos.has(m.id));
+      && m.fecha > cierreISO && !yaFijos.has(m.id));
     const cargosArr = keys.map(k=>cargosMes(t, k)).filter(c=>c!=null && c>0);
     const cargoProm = cargosArr.length ? cargosArr.reduce((a,b)=>a+b,0)/cargosArr.length : 0;
     // cuánto solés pagar: promedio de lo pagado sobre el total, de los resúmenes ya saldados
@@ -2095,9 +2107,12 @@
     // arrastre: lo que quede sin pagar de este resumen, según el plan que elijas
     const plan = t.planPago || "historico";
     const deuda = resFinanciado(r);
+    // lo que todavía vas a pagar de ESTE resumen: el plan descuenta lo ya pagado.
+    // Con el mínimo cubierto, "pago el mínimo" ya no resta nada: arrastra todo lo que falta
+    const yaPago = resPagado(r);
     const fin = plan==="todo" ? 0
-      : plan==="minimo" ? Math.max(0, deuda - (r.pagoMinimo||0))
-      : plan==="monto" ? Math.max(0, deuda - (t.planMonto||0))
+      : plan==="minimo" ? Math.max(0, deuda - Math.max(0, (r.pagoMinimo||0) - yaPago))
+      : plan==="monto" ? Math.max(0, deuda - Math.max(0, (t.planMonto||0) - yaPago))
       : Math.max(0, deuda - deuda*ratioPago);   // histórico
     const sumaCuotas = cuotasSiguen.reduce((s,c)=>s+c.monto,0);
     const sumaRecur = recurrentes.reduce((s,c)=>s+c.monto,0);
@@ -3058,7 +3073,7 @@
       const baseMk = ks[ks.length-1];
       for(const d of (r.detalle||[])){
         if(!(d.monto>0)) continue;
-        const c = cuotaDe(d.desc);
+        const c = cuotaReal(t, d);
         if(!c || c.a>=c.b) continue;
         // la última cuota cae N meses después del resumen actual
         const faltan = c.b - c.a;
@@ -4256,12 +4271,12 @@
       const fijosVia = S.fijos.filter(f=>f.viaTarjeta && f.tarjetaId===t.id && f.activo!==false);
       const cuotas = [];
       for(const d of (r.detalle||[])){
-        const c = cuotaDe(d.desc);
+        const c = cuotaReal(t, d);
         if(!c || c.a>=c.b || !(enPesos(d)>0)) continue;
         cuotas.push({desc:c.limpio, monto:enPesos(d), quedan:c.b-c.a});
       }
       // mismo cuidado que en la proyección: un fijo cargado a mano no se cuenta otra vez
-      const recur = (r.detalle||[]).filter(d=>enPesos(d)>0 && !cuotaDe(d.desc) && esRecurrente(d)
+      const recur = (r.detalle||[]).filter(d=>enPesos(d)>0 && !cuotaReal(t, d) && esRecurrente(d)
         && !fijosVia.some(f=>esteFijo(f, d.desc)));
       const fijos = fijosVia.reduce((s,f)=>s+enPesos(f),0) + recur.reduce((s,d)=>s+enPesos(d),0);
       const rs = ks.map(k=>t.resumenes[k]).filter(x=>x.pagoMinimo>0 && x.monto>0).map(x=>x.pagoMinimo/x.monto);
@@ -4614,19 +4629,29 @@
         else if(op==="pagoresumen"){
           const tj = buscarPorNombre(S.tarjetas, c.tarjeta);
           if(!tj){ out.errores.push(`no encuentro la tarjeta "${c.tarjeta}"`); continue; }
-          const ks = Object.keys(tj.resumenes||{}).sort();
-          const mes = c.mes && (tj.resumenes||{})[c.mes] ? c.mes : ks[ks.length-1];
-          if(!mes){ out.errores.push(`${tj.nombre} no tiene resúmenes cargados`); continue; }
           const monto = Number(c.monto)||0;
           if(!(monto>0)){ out.errores.push("pago sin monto"); continue; }
           const bill = buscarPorNombre(S.billeteras, c.billetera);
-          const r = tj.resumenes[mes];
-          const ya = resPagado(r);
+          // el resumen se resuelve al APLICAR, no al leer: un `resumen` del mismo archivo
+          // puede crearlo recién ahí, y buscarlo ahora mandaba el pago al mes anterior
+          const elMes = () => {
+            const ks = Object.keys(tj.resumenes||{}).sort();
+            return c.mes && (tj.resumenes||{})[c.mes] ? c.mes : ks[ks.length-1];
+          };
+          const loCrea = !!c.mes && cambios.some(x=>String(x.op||"").toLowerCase()==="resumen"
+            && x.mes===c.mes && buscarPorNombre(S.tarjetas, x.tarjeta)===tj);
+          const mesPrev = loCrea ? c.mes : elMes();
+          if(!mesPrev){ out.errores.push(`${tj.nombre} no tiene resúmenes cargados`); continue; }
+          const yaPrev = tj.resumenes[mesPrev] ? resPagado(tj.resumenes[mesPrev]) : 0;
           out.ops.push({
             txt: `💳 Pago a <strong>${esc(tj.nombre)}</strong> ${fmtMoney(monto)} ` +
-                 `<span style="color:var(--muted)">(${monthKeyLabel(mes)}; llevabas ${fmtMoney(ya)})</span>` +
+                 `<span style="color:var(--muted)">(${monthKeyLabel(mesPrev)}; llevabas ${fmtMoney(yaPrev)})</span>` +
                  (bill?` · ${esc(bill.nombre)}`:""),
             aplicar(){
+              const mes = elMes();
+              const r = mes ? tj.resumenes[mes] : null;
+              if(!r) return;
+              const ya = resPagado(r);
               const total = ya>0 ? ya+monto : monto;
               r.pagadoMonto = total;
               r.pagado = total >= r.monto - 0.01;
