@@ -961,6 +961,66 @@
   .j-agempty{text-align:center; padding:34px 16px 10px; color:var(--muted); font-size:14.5px; line-height:1.55; animation:cardIn .5s var(--spring) both}
   .j-agempty .big{font-size:42px; display:block; margin-bottom:8px}
 
+
+  /* Ajustes: secciones separadas, renglones claros, lo extra plegado */
+  #phaseConfig{display:flex; flex-direction:column; gap:22px}
+  #phaseConfig[hidden]{display:none}
+  #phaseConfig > h3{font-size:22px; font-weight:700; letter-spacing:-.02em}
+  .j-set{display:flex; flex-direction:column; gap:8px}
+  .j-seth{display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding:0 4px}
+  .j-seth .ic{font-size:14px; letter-spacing:0}
+  .j-setcard{background:var(--card); border-radius:20px; box-shadow:var(--shadow); padding:2px 16px; display:flex; flex-direction:column}
+  .j-setcard > *{border-top:1px solid var(--line)}
+  .j-setcard > :first-child, .j-setcard > [hidden] + *:not([hidden]):first-of-type{border-top:none}
+  .j-setcard > [hidden]{display:none !important}
+  .j-setrow{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:13px 0; min-height:52px; cursor:default}
+  label.j-setrow{cursor:pointer}
+  .j-setrow.col{flex-direction:column; align-items:stretch; gap:10px}
+  .j-setrow .tx{flex:1; min-width:0}
+  .j-setrow .tx b{display:block; font-size:15px; font-weight:550; line-height:1.3}
+  .j-setrow .tx span{display:block; font-size:12.5px; color:var(--muted); margin-top:2px; line-height:1.4}
+  .j-setrow .lbl{font-size:15px; font-weight:550}
+  .j-in{font:inherit; font-size:15px; color:var(--ink); background:var(--chip); border:none; border-radius:12px; padding:9px 12px;
+    width:auto; max-width:46%; min-width:0; text-align:right; flex:none}
+  .j-in.sm{width:70px}
+  .j-in[type=text]{width:140px}
+  .j-in.wide{max-width:none; width:100%; text-align:left}
+  select.j-in{text-align:left; padding-right:8px}
+  .j-in:focus{outline:2px solid var(--brand); outline-offset:1px}
+  .j-sw{appearance:none; -webkit-appearance:none; flex:none; width:50px; height:30px; border-radius:15px; background:var(--track);
+    position:relative; cursor:pointer; transition:background .22s var(--ease); margin:0}
+  .j-sw::after{content:""; position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:50%; background:#F4F5F7;
+    box-shadow:0 2px 6px rgba(0,0,0,.4); transition:transform .3s var(--spring)}
+  .j-sw:checked{background:var(--brand)}
+  .j-sw:checked::after{transform:translateX(20px); background:#0B0C0E}
+  .j-sw:disabled{opacity:.4}
+  .j-sw:focus-visible{outline:2px solid var(--brand); outline-offset:2px}
+  .j-setbtns{display:flex; gap:8px; padding:12px 0}
+  .j-setrow.col .j-setbtns{padding:0}
+  .j-setbtns .g-btn{font-size:14px; padding:11px 0}
+  .j-setcard > .j-setbtns:first-child{padding-top:14px}
+  .j-estado{font-size:13px; color:var(--muted); line-height:1.45}
+  .j-estado:empty{display:none}
+  .j-setnote{font-size:12.5px; color:var(--muted); line-height:1.45; padding:10px 0}
+  .j-setlink{display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; font:inherit; font-size:15px; font-weight:550;
+    color:var(--brand); background:none; border:none; padding:15px 0; cursor:pointer; text-align:left}
+  .j-setlink:active{opacity:.7}
+  .chev{width:18px; height:18px; flex:none; color:var(--muted); transition:transform .3s var(--spring)}
+  .j-more summary{list-style:none; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 0;
+    font-size:14px; font-weight:550; color:var(--muted); cursor:pointer; -webkit-tap-highlight-color:transparent}
+  .j-more summary::-webkit-details-marker{display:none}
+  .j-more summary .chev{transform:rotate(90deg)}
+  .j-more[open] summary{color:var(--ink)}
+  .j-more[open] summary .chev{transform:rotate(-90deg)}
+  .j-more > div{font-size:13.5px; color:var(--muted); line-height:1.55; padding:0 0 14px; animation:itemIn .3s var(--ease)}
+  .j-more > div strong{color:var(--ink)}
+  .j-setsave{position:sticky; bottom:calc(-22px - env(safe-area-inset-bottom)); margin:0 -20px calc(-22px - env(safe-area-inset-bottom));
+    padding:12px 20px calc(14px + env(safe-area-inset-bottom)); background:linear-gradient(180deg, rgba(14,16,19,0), #0E1013 30%); z-index:2}
+  #avisosCard .j-icons{grid-template-columns:repeat(8,minmax(0,1fr)); gap:6px}
+  #avisosCard .j-icons button{height:40px; border-radius:12px}
+  #avisosCard .j-icons button svg{width:19px; height:19px}
+  #notifBloqueo{margin-top:4px}
+
   /* avisos: ícono y frecuencia */
   .j-icons{display:grid; grid-template-columns:repeat(4,1fr); gap:8px}
   .j-icons button{height:46px; border:none; border-radius:14px; background:var(--chip); color:var(--ink); display:grid; place-items:center;
@@ -1939,64 +1999,94 @@
 
       <div id="phaseConfig" hidden>
         <h3>Ajustes</h3>
-        <div class="g-card g-tips" id="pinCard" style="margin:0 0 4px">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px">
-            <div style="min-width:0"><strong>🔒 Clave para Plata</strong>
-              <div class="g-note" id="pinEstado" style="margin:2px 0 0">Apagada: cualquiera que agarre el celu ve tus números.</div></div>
+
+        <section class="j-set" aria-labelledby="setPriv">
+          <div class="j-seth" id="setPriv"><span class="ic">🔒</span>Privacidad</div>
+          <div class="j-setcard" id="pinCard">
+            <div class="j-setrow"><div class="tx"><b>Clave para Plata</b><span id="pinEstado">Apagada: cualquiera que agarre el celu ve tus números.</span></div></div>
+            <div class="j-setbtns">
+              <button class="g-btn" id="pinActivar">Poner clave</button>
+              <button class="g-btn" id="pinCambiar" hidden>Cambiar</button>
+              <button class="g-btn" id="pinQuitar" hidden>Sacarla</button>
+            </div>
           </div>
-          <div class="g-heroactions" style="margin-top:8px">
-            <button class="g-btn" id="pinActivar">Poner clave</button>
-            <button class="g-btn" id="pinCambiar" hidden>Cambiar</button>
-            <button class="g-btn" id="pinQuitar" hidden>Sacarla</button>
+        </section>
+
+        <section class="j-set" id="avisosCard" aria-labelledby="setAv">
+          <div class="j-seth" id="setAv"><span class="ic">🔔</span>Avisos</div>
+          <div class="j-setcard">
+            <label class="j-setrow"><div class="tx"><b>Avisarme en el celu</b><span>Vencimientos, boletas y la Agenda</span></div>
+              <input type="checkbox" class="j-sw" id="cfgAvisos"></label>
+            <div class="j-setrow col"><span class="lbl">Ícono</span><div class="j-icons" id="avIconos"></div></div>
+            <div class="j-setrow col"><span class="lbl">Vencimientos: cuándo avisarte</span><div class="j-checks" id="avDias"></div></div>
+            <label class="j-setrow" for="avHora"><div class="tx"><b>A qué hora</b><span>También el resumen de la mañana</span></div>
+              <input id="avHora" class="j-in" type="time" value="09:00"></label>
+            <label class="j-setrow" for="avInsistir"><div class="tx"><b>Si no pagaste</b></div>
+              <select id="avInsistir" class="j-in"><option value="0">Una vez</option><option value="2">Cada 2 h</option>
+                <option value="3">Cada 3 h</option><option value="4">Cada 4 h</option></select></label>
+            <label class="j-setrow"><div class="tx"><b>Resumen de la mañana</b><span>Todo lo de la Agenda del día, en una</span></div>
+              <input type="checkbox" class="j-sw" id="avResumen"></label>
+            <label class="j-setrow"><div class="tx"><b>Idea para cocinar</b><span>Una sugerencia por día</span></div>
+              <input type="checkbox" class="j-sw" id="avCena"></label>
+            <label class="j-setrow" id="avCenaHoraRow" for="avCenaHora" hidden><div class="tx"><b>A qué hora la idea</b></div>
+              <input id="avCenaHora" class="j-in" type="time" value="19:30"></label>
+            <div class="j-setrow col">
+              <span class="j-estado" id="avisosEstado"></span>
+              <div class="j-setbtns" id="avisosAcciones">
+                <button class="g-btn" id="avisosPermisoBtn" hidden>🔓 Activar</button>
+                <button class="g-btn" id="avisosProbarBtn">🔔 Probar</button>
+              </div>
+            </div>
           </div>
-        </div>
-        <button class="g-btn solo-desbloq" id="setupBtn" style="flex:none">⚡ Carga rápida: mis billeteras y tarjetas</button>
-        <div class="g-field"><label class="g-label" for="cfgKey">API key de Claude (opcional)</label>
-          <input id="cfgKey" type="password" placeholder="sk-ant-…" autocomplete="off"></div>
-        <div class="g-note">Con tu API key, uso Claude para entender dictados largos con varios gastos y leer mejor los resúmenes de tarjeta y las capturas. La key queda guardada <strong>solo en este dispositivo</strong> y se usa únicamente para hablar con api.anthropic.com. Sin key, todo funciona igual con las reglas locales. Conseguila en platform.claude.com.</div>
-        <div class="g-field"><label class="g-label" for="cfgModelo">Modelo de IA</label>
-          <select id="cfgModelo">
-            <option value="eco">💸 Económico — Claude Haiku (recomendado)</option>
-            <option value="max">✨ Máxima calidad — Claude Opus (~5× más caro)</option>
-          </select></div>
-        <div class="g-note">En modo económico, leer un resumen sale unos <strong>US$&nbsp;0,02–0,05</strong> y un dictado menos de <strong>US$&nbsp;0,01</strong>. Si alguna lectura sale mal, probá esa carga en máxima calidad y volvé a económico.</div>
-        <div class="g-field"><label class="g-label" for="cfgAlerta">Avisarme si un gasto supera</label>
-          <input id="cfgAlerta" type="text" inputmode="decimal" data-money placeholder="Ej: 50000 — vacío para no avisar"></div>
-        <div class="g-card g-tips" id="avisosCard" style="margin:2px 0 4px">
-          <label class="g-switch" style="padding:0"><input type="checkbox" id="cfgAvisos">
-            Avisarme de los vencimientos en el celu</label>
-          <div class="g-note">Tarjetas, préstamos, alquiler, las boletas que pagás vos y todo lo de la Agenda.</div>
-          <div class="g-label" style="margin-top:10px">Ícono de los avisos</div>
-          <div class="j-icons" id="avIconos" style="margin-top:6px"></div>
-          <div class="g-label" style="margin-top:12px">Cuándo avisarte</div>
-          <div class="j-checks" id="avDias" style="margin-top:6px"></div>
-          <div class="g-row2" style="margin-top:10px">
-            <div class="g-field"><label class="g-label" for="avHora">A qué hora</label><input id="avHora" type="time" value="09:00"></div>
-            <div class="g-field"><label class="g-label" for="avInsistir">Si no pagaste</label>
-              <select id="avInsistir"><option value="0">Avisar una vez</option><option value="2">Insistir cada 2 h</option>
-                <option value="3">Insistir cada 3 h</option><option value="4">Insistir cada 4 h</option></select></div>
+        </section>
+
+        <section class="j-set" aria-labelledby="setPlata">
+          <div class="j-seth" id="setPlata"><span class="ic">💸</span>Plata</div>
+          <div class="j-setcard">
+            <label class="j-setrow" for="cfgCobro"><div class="tx"><b>Día que cobrás</b><span>0 si no tenés fecha fija</span></div>
+              <input id="cfgCobro" class="j-in sm" type="number" min="0" max="28" step="1" placeholder="5"></label>
+            <label class="j-setrow" for="cfgSueldo"><div class="tx"><b>Cuánto cobrás</b><span>Por mes; vacío si varía</span></div>
+              <input id="cfgSueldo" class="j-in" type="text" inputmode="decimal" data-money placeholder="3.000.000"></label>
+            <label class="j-setrow" for="cfgDolar"><div class="tx"><b>Dólar</b><span>Para los consumos en US$</span></div>
+              <input id="cfgDolar" class="j-in" type="text" inputmode="decimal" data-money placeholder="1.450"></label>
+            <label class="j-setrow" for="cfgAlerta"><div class="tx"><b>Avisarme si un gasto supera</b><span>Vacío para no avisar</span></div>
+              <input id="cfgAlerta" class="j-in" type="text" inputmode="decimal" data-money placeholder="50.000"></label>
+            <label class="j-setrow"><div class="tx"><b>Recordatorio para anotar gastos</b><span>Uno por día</span></div>
+              <input type="checkbox" class="j-sw" id="cfgRemOn"></label>
+            <label class="j-setrow" id="remHoraRow" for="cfgRemHora" hidden><div class="tx"><b>Hora del recordatorio</b></div>
+              <input id="cfgRemHora" class="j-in" type="time" value="21:30"></label>
+            <div class="j-setnote" id="remNote" hidden>La notificación diaria anda en la app instalada. En la web te lo recuerdo al abrir, si no anotaste nada ese día.</div>
+            <button class="j-setlink solo-desbloq" id="setupBtn"><span>⚡ Carga rápida: billeteras y tarjetas</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+            <details class="j-more"><summary>¿Para qué sirven estos datos?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></summary>
+              <div>Con el día y el monto de cobro te digo cuánto podés gastar por día hasta el próximo sueldo, ya descontando los fijos y resúmenes que faltan pagar. Si pedís un adelanto, marcalo al cargarlo y te lo descuento del próximo cobro.</div></details>
           </div>
-          <label class="g-switch" style="padding:10px 0 0"><input type="checkbox" id="avResumen"> Resumen de la mañana con lo que tenés en la agenda</label>
-          <label class="g-switch" style="padding:6px 0 0"><input type="checkbox" id="avCena"> Sugerirme qué cocinar cada día</label>
-          <div class="g-field" id="avCenaHoraRow" hidden style="margin-top:6px"><label class="g-label" for="avCenaHora">A qué hora</label><input id="avCenaHora" type="time" value="19:30"></div>
-          <div class="g-note" id="avisosEstado" style="margin-top:6px"></div>
-          <div class="g-heroactions" id="avisosAcciones" style="margin-top:8px">
-            <button class="g-btn" id="avisosPermisoBtn" hidden>🔓 Activar notificaciones</button>
-            <button class="g-btn" id="avisosProbarBtn">🔔 Probar</button>
+        </section>
+
+        <section class="j-set" aria-labelledby="setIA">
+          <div class="j-seth" id="setIA"><span class="ic">✨</span>Inteligencia artificial</div>
+          <div class="j-setcard">
+            <div class="j-setrow col"><label class="lbl" for="cfgKey">Tu API key de Claude</label>
+              <input id="cfgKey" class="j-in wide" type="password" placeholder="sk-ant-…" autocomplete="off"></div>
+            <label class="j-setrow" for="cfgModelo"><div class="tx"><b>Modelo</b></div>
+              <select id="cfgModelo" class="j-in">
+                <option value="eco">Económico</option>
+                <option value="max">Máxima calidad</option>
+              </select></label>
+            <details class="j-more"><summary>Para qué la uso y cuánto sale<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></summary>
+              <div>Con tu key uso Claude para entender dictados largos, leer resúmenes y capturas, armar recetas y el asistente. Queda guardada <strong>sólo en este celu</strong>, no viaja en los respaldos y sólo se usa para hablar con api.anthropic.com. Sin key, todo lo demás funciona igual. Conseguila en platform.claude.com.<br><br>
+              En modo económico, leer un resumen sale unos <strong>US$&nbsp;0,02–0,05</strong> y un dictado menos de <strong>US$&nbsp;0,01</strong>. El económico usa Claude Haiku; máxima calidad usa Claude Opus y sale unas 5 veces más: usala sólo si una lectura salió mal.</div></details>
           </div>
-        </div>
-        <label class="g-switch" style="padding:0"><input type="checkbox" id="cfgRemOn">
-          Recordatorio diario para anotar los gastos</label>
-        <div class="g-field"><label class="g-label" for="cfgCobro">¿Qué día del mes cobrás?</label>
-          <input id="cfgCobro" type="number" min="0" max="28" step="1" placeholder="Ej: 5 — 0 si no tenés fecha fija"></div>
-        <div class="g-field"><label class="g-label" for="cfgSueldo">¿Cuánto cobrás por mes?</label>
-          <input id="cfgSueldo" type="text" inputmode="decimal" data-money placeholder="Ej: 3000000 — vacío si varía"></div>
-        <div class="g-field"><label class="g-label" for="cfgDolar">¿A cuánto está el dólar?</label>
-          <input id="cfgDolar" type="text" inputmode="decimal" data-money placeholder="Ej: 1450 — para convertir los consumos en US$"></div>
-        <div class="g-note">Con esto te digo cuánto podés gastar por día hasta el próximo sueldo, ya descontando los fijos y resúmenes que faltan pagar. Si pedís un adelanto, marcalo al cargarlo y te lo descuento del próximo cobro.</div>
-        <label class="g-switch" style="padding:0"><input type="checkbox" id="cfgNotif">
-          Leer las notificaciones de mis billeteras</label>
-        <div class="g-note" id="notifNota">Con esto, cuando Lemon, Mercado Pago o tu banco te avisan de un pago o una transferencia, Guita lo detecta y te lo propone para cargar (siempre te pregunta antes). Anda solo en la app instalada y tenés que darle permiso una vez en los ajustes del celu. Nada sale de tu teléfono.</div>
+        </section>
+
+        <section class="j-set" aria-labelledby="setBill">
+          <div class="j-seth" id="setBill"><span class="ic">📲</span>Avisos de tus billeteras</div>
+          <div class="j-setcard">
+            <label class="j-setrow"><div class="tx"><b>Leer avisos de pagos</b><span>Lemon, Mercado Pago y bancos</span></div>
+              <input type="checkbox" class="j-sw" id="cfgNotif"></label>
+            <button class="j-setlink" id="notifRevisar" hidden><span>🔔 Revisar notificaciones ahora</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+            <details class="j-more"><summary>Cómo funciona<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></summary>
+              <div id="notifNota">Cuando Lemon, Mercado Pago o tu banco te avisan de un pago o una transferencia, lo detecto y te lo propongo para cargar (siempre te pregunto antes). Anda sólo en la app instalada y tenés que darle permiso una vez en los ajustes del celu. Nada sale de tu teléfono.</div></details>
+          </div>
         <div class="g-card g-tips" id="notifBloqueo" hidden style="margin-top:8px">
           <div class="g-tip"><span class="ic">🔒</span><div>
             <strong>Android te lo bloquea.</strong> Como Guita no vino de Play Store,
@@ -2022,17 +2112,23 @@
             <button class="g-linkbtn" id="notifCopiarDiag" style="margin-top:4px">Copiar el diagnóstico</button>
           </div></div>
         </div>
-        <button class="g-btn" id="notifRevisar" style="flex:none" hidden>🔔 Revisar notificaciones ahora</button>
-        <div class="g-row2" style="margin-top:2px">
-          <button class="g-btn" id="backupBtn">💾 Guardar respaldo</button>
-          <button class="g-btn" id="restoreBtn">📥 Abrir archivo</button>
-        </div>
+        </section>
+
+        <section class="j-set" aria-labelledby="setResp">
+          <div class="j-seth" id="setResp"><span class="ic">💾</span>Respaldo</div>
+          <div class="j-setcard">
+            <div class="j-setbtns">
+              <button class="g-btn" id="backupBtn">Guardar respaldo</button>
+              <button class="g-btn" id="restoreBtn">Abrir archivo</button>
+            </div>
+            <details class="j-more"><summary>Qué guarda y qué abre<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></summary>
+              <div>El respaldo trae <strong>todo</strong>: plata, recetas con sus fotos, lo que cocinaste, la agenda y los ajustes (menos la API key). Guardalo en Drive o mandátelo por WhatsApp: si cambiás de celu, lo abrís y seguís donde estabas.<br><br>
+              <strong>Abrir archivo</strong> reconoce dos cosas: un <strong>respaldo entero</strong> (pisa todo lo que tengas) o un <strong>archivo de cambios</strong>, que se suma a lo que ya cargaste sin borrar nada. Esos también los podés compartir a la app desde WhatsApp o el mail.</div></details>
+          </div>
+        </section>
         <input type="file" id="restoreInput" accept="application/json,.json,.guita" hidden>
-        <div class="g-note">El respaldo trae TODO: movimientos, tarjetas con sus resúmenes, billeteras, fijos, metas y ajustes. Guardalo en Drive o mandátelo por WhatsApp — si cambiás de celu, lo restaurás y seguís donde estabas. La API key no se incluye.<br><br><strong>Abrir archivo</strong> reconoce dos cosas: un <strong>respaldo entero</strong> (pisa todo lo que tengas) o un <strong>archivo de cambios</strong>, que se suma a lo que ya cargaste sin borrar nada. Los archivos de cambios también los podés compartir a Guita desde WhatsApp o el mail.</div>
-        <div class="g-field" id="remHoraRow" hidden><label class="g-label" for="cfgRemHora">Hora del recordatorio</label>
-          <input id="cfgRemHora" type="time" value="21:30"></div>
-        <div class="g-note" id="remNote" hidden>La notificación diaria funciona en la app instalada (APK). En esta vista web te muestro el aviso al abrir la app si todavía no anotaste nada ese día.</div>
-        <div class="g-actions"><button class="g-btn" data-close>Cancelar</button>
+
+        <div class="g-actions j-setsave"><button class="g-btn" data-close>Cancelar</button>
           <button class="g-btn primary" id="saveCfg">Guardar</button></div>
       </div>
 
@@ -8147,7 +8243,7 @@
     $("notifRevisar").hidden = !(hayNotif && S.config.notificaciones);
     pintarNotifBloqueo();
     $("notifNota").textContent = hayNotif
-      ? "Cuando Lemon, Mercado Pago o tu banco te avisan de un pago o una transferencia, Guita lo detecta y te lo propone para cargar — siempre te pregunta antes. Nada sale de tu teléfono."
+      ? "Cuando Lemon, Mercado Pago o tu banco te avisan de un pago o una transferencia, lo detecto y te lo propongo para cargar (siempre te pregunto antes). Nada sale de tu teléfono."
       : "Esto anda solo en la app instalada (APK). En el navegador no se pueden leer las notificaciones de otras apps.";
     openSheet("config");
   };
