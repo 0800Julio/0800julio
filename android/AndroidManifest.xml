@@ -5,6 +5,9 @@
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+  <!-- avisos a la hora justa: en Android 13+ USE_EXACT_ALARM se otorga al instalar -->
+  <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32"/>
+  <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
 
   <queries>
     <intent>
@@ -55,9 +58,11 @@
       </intent-filter>
     </service>
     <receiver android:name=".ReminderReceiver" android:exported="false"/>
+    <receiver android:name=".AvisoReceiver" android:exported="false"/>
     <receiver android:name=".BootReceiver" android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.BOOT_COMPLETED"/>
+        <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
       </intent-filter>
     </receiver>
   </application>

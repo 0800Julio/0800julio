@@ -40,6 +40,8 @@ public class MainActivity extends Activity {
     private String pendingCsv = null;
     private ValueCallback<Uri[]> fileCallback;
     private int pendingRemH = -1, pendingRemM = -1;
+    /** Después de pedir el permiso de notificaciones, mandar el aviso de prueba. */
+    private boolean pendingProbar = false;
     /** Archivo que llegó por "Compartir con Guita", esperando a que la web lo pida. */
     private String sharedB64 = null, sharedMime = null, sharedName = null;
 
@@ -200,7 +202,12 @@ public class MainActivity extends Activity {
                 pendingRemH = -1;
                 pendingRemM = -1;
             }
+            if (pendingProbar) {
+                pendingProbar = false;
+                if (granted) probar();
+            }
             js("window.__remPermiso&&window.__remPermiso(" + (granted ? "true" : "false") + ")");
+            js("window.__avisosPermiso&&window.__avisosPermiso(" + (granted ? "true" : "false") + ")");
         }
     }
 
@@ -247,6 +254,34 @@ public class MainActivity extends Activity {
                     else finish();
                 }
             });
+    }
+
+    private boolean yaNegado = false;
+
+    private boolean notifHabilitadas() {
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS")
+                != PackageManager.PERMISSION_GRANTED) return false;
+        android.app.NotificationManager nm =
+                (android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        return nm == null || nm.areNotificationsEnabled();
+    }
+
+    private void probar() {
+        AvisoReceiver.programar(this, "prueba", System.currentTimeMillis() + 5000,
+                "¡Las notificaciones andan! 🔔", "Así te van a llegar los vencimientos y lo que agendes.");
+    }
+
+    private void abrirAjustesNotif() {
+        try {
+            Intent i = new Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+            i.putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, getPackageName());
+            startActivity(i);
+        } catch (Exception e) {
+            try {
+                startActivity(new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.fromParts("package", getPackageName(), null)));
+            } catch (Exception ignored) {}
+        }
     }
 
     private class Bridge {
@@ -330,6 +365,62 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void clearReminder() {
             runOnUiThread(() -> ReminderReceiver.cancel(MainActivity.this));
+        }
+
+        /* ---- avisos con día y hora (vencimientos, agenda) ---- */
+
+        /** La lista entera de avisos, como JSON [{id, when, titulo, texto}]. Devuelve cuántos quedaron. */
+        @JavascriptInterface
+        public int avisosSincronizar(String json) {
+            return AvisoReceiver.sincronizar(MainActivity.this, json);
+        }
+
+        /** Compatibilidad: el botón "Recordame" de un vencimiento. */
+        @JavascriptInterface
+        public void setReminderAt(long when, String texto) {
+            AvisoReceiver.programar(MainActivity.this, "rec:" + when, when, "Recordatorio", texto);
+        }
+
+        /** {permiso, exactas, sdk, programados}: para mostrar en Ajustes qué falta. */
+        @JavascriptInterface
+        public String avisosEstado() {
+            try {
+                JSONObject o = new JSONObject();
+                o.put("permiso", notifHabilitadas());
+                o.put("exactas", AvisoReceiver.exactas(MainActivity.this));
+                o.put("sdk", Build.VERSION.SDK_INT);
+                o.put("programados", AvisoReceiver.cantidad(MainActivity.this));
+                return o.toString();
+            } catch (Exception e) { return "{}"; }
+        }
+
+        /** Pide el permiso; si ya se negó, abre los ajustes de notificaciones de la app. */
+        @JavascriptInterface
+        public void avisosPedirPermiso() {
+            runOnUiThread(() -> {
+                if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS")
+                        != PackageManager.PERMISSION_GRANTED
+                        && !yaNegado) {
+                    yaNegado = true;
+                    requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, REQ_NOTIF);
+                } else {
+                    abrirAjustesNotif();
+                }
+            });
+        }
+
+        /** Un aviso de prueba en 5 segundos, por el mismo camino que los de verdad. */
+        @JavascriptInterface
+        public void avisoProbar() {
+            runOnUiThread(() -> {
+                if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS")
+                        != PackageManager.PERMISSION_GRANTED) {
+                    pendingProbar = true;
+                    requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, REQ_NOTIF);
+                    return;
+                }
+                probar();
+            });
         }
 
         /* ---- notificaciones de billeteras ---- */

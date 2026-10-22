@@ -1406,6 +1406,105 @@ page = await nuevaPagina();
 }
 await page.close();
 
+/* ══ avisos del celu: la web arma la lista y se la manda al APK ══ */
+{
+  const pg = await browser.newPage({viewport:{width:390,height:844}});
+  pg.on('pageerror', e=>{ console.log('PAGE ERROR:', e.message); fail++; });
+  await pg.addInitScript(()=>{
+    window.__sync = [];
+    window.AndroidVoz = {
+      avisosSincronizar: j => { window.__sync.push(JSON.parse(j)); return JSON.parse(j).length; },
+      avisosEstado: () => JSON.stringify({permiso:false, exactas:true, sdk:34, programados:0}),
+      avisosPedirPermiso: () => { window.__pidio = true; },
+      avisoProbar: () => { window.__probo = true; },
+      setReminder: ()=>{}, clearReminder: ()=>{}
+    };
+  });
+  await pg.goto(BASE+'/');
+  const h = new Date(); h.setHours(12,0,0,0);
+  const en = n => { const x = new Date(h); x.setDate(x.getDate()+n); return x; };
+  const iso = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  await pg.evaluate(s=>{ localStorage.clear(); localStorage.setItem('guita:v2', s); }, JSON.stringify({
+    movs:[], billeteras:[{id:1,nombre:'Lemon',saldoInicial:500000}], tarjetas:[], fijos:[], pagosFijos:{},
+    transf:[], ajustes:[], metas:[],
+    prestamos:[{id:7,nombre:'Préstamo',cuota:100000,cuotas:3,pagadasIni:1,pagos:[],dia:en(3).getDate(),proxima:iso(en(3))}],
+    config:{apiKey:''}, seq:10}));
+  await pg.reload();
+  await pg.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+  await pg.waitForTimeout(900);
+  const ultima = await pg.evaluate(()=>window.__sync[window.__sync.length-1]||[]);
+  ok(ultima.some(a=>/Mañana vence Cuota Préstamo/.test(a.titulo)), 'avisos: al abrir, manda al celu "mañana vence"',
+     JSON.stringify(ultima.map(a=>a.titulo)));
+  ok(ultima.some(a=>/Hoy vence Cuota Préstamo/.test(a.titulo)), 'avisos: y el "hoy vence" del mismo día');
+  const man = ultima.find(a=>/Mañana/.test(a.titulo));
+  ok(man && new Date(man.when).getHours()===10, 'avisos: el del día antes es a las 10');
+  ok(ultima.every(a=>a.id && a.when>Date.now()), 'avisos: todos con id y en el futuro');
+
+  // Ajustes muestra que falta el permiso y deja probar
+  await pg.click('#cfgBtn'); await pg.waitForTimeout(300);
+  ok(!(await pg.locator('#avisosPermisoBtn').isHidden()), 'avisos: sin permiso, Ajustes ofrece activarlo');
+  ok(/apagadas/.test(await pg.evaluate(()=>document.getElementById('avisosEstado').textContent)),
+     'avisos: y explica que están apagadas');
+  await pg.click('#avisosProbarBtn'); await pg.waitForTimeout(100);
+  ok(await pg.evaluate(()=>window.__probo===true), 'avisos: "Probar" llama al celu');
+
+  // apagarlos vacía la lista del celu
+  await pg.uncheck('#cfgAvisos'); await pg.click('#saveCfg'); await pg.waitForTimeout(900);
+  ok(await pg.evaluate(()=>(window.__sync[window.__sync.length-1]||[1]).length===0),
+     'avisos: si los apagás, el celu queda sin avisos');
+  await pg.close();
+}
+
+/* ══ "Pedile a Guita": Claude arma el archivo de cambios, vos confirmás ══ */
+{
+  const pg = await browser.newPage({viewport:{width:390,height:844}});
+  pg.on('pageerror', e=>{ console.log('PAGE ERROR:', e.message); fail++; });
+  let pedido = null;
+  await pg.route('https://api.anthropic.com/v1/messages', async route=>{
+    pedido = JSON.parse(route.request().postData());
+    const salida = {respuesta:"Anoto el pago mínimo de Visa y un gasto de verdulería.", cambios:[
+      {op:"pagoResumen", tarjeta:"Visa", monto:381776, billetera:"Mercado Pago", fecha:"2026-10-19"},
+      {op:"gasto", monto:12000, desc:"Verdulería", categoria:"Comida", billetera:"Mercado Pago", fecha:"2026-10-19"}]};
+    await route.fulfill({status:200, contentType:'application/json',
+      body: JSON.stringify({stop_reason:"end_turn", content:[{type:"text", text:JSON.stringify(salida)}]})});
+  });
+  await pg.goto(BASE+'/');
+  await pg.evaluate(s=>{ localStorage.clear(); localStorage.setItem('guita:v2', s); }, JSON.stringify({
+    movs:[], billeteras:[{id:1,nombre:'Mercado Pago',saldoInicial:1000000}], fijos:[], pagosFijos:{}, transf:[],
+    ajustes:[], metas:[], prestamos:[],
+    tarjetas:[{id:10,nombre:'Visa Provincia',cierre:15,vto:26,resumenes:{'2026-10':{monto:2574388.06,pagoMinimo:381776,pagadoMonto:0,detalle:[]}}}],
+    config:{apiKey:'sk-test'}, seq:20}));
+  await pg.reload();
+  await pg.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+  await pg.click('#asisBtn'); await pg.waitForTimeout(300);
+  ok(await pg.locator('#phaseAsis').isVisible(), 'asistente: se abre desde el encabezado');
+  await pg.fill('#asisTexto', 'pagué el mínimo de visa desde mp y 12 lucas de verdulería');
+  await pg.click('#asisEnviar'); await pg.waitForTimeout(700);
+  ok(pedido && /Visa Provincia/.test(pedido.messages[0].content) && /Mercado Pago/.test(pedido.messages[0].content),
+     'asistente: le pasa a Claude los nombres reales de tarjetas y billeteras');
+  ok(pedido && pedido.output_config && pedido.output_config.format.type==='json_schema',
+     'asistente: pide la respuesta con esquema, no texto libre');
+  ok(await pg.locator('#phaseParche').isVisible(), 'asistente: muestra la vista previa antes de cargar nada');
+  const st0 = await pg.evaluate(()=>window.__guitaState());
+  ok(st0.movs.length===0, 'asistente: hasta que no confirmás, no se carga nada');
+  await pg.click('#saveParche'); await pg.waitForTimeout(500);
+  const st = await pg.evaluate(()=>window.__guitaState());
+  ok(st.tarjetas[0].resumenes['2026-10'].pagadoMonto===381776, 'asistente: al confirmar registra el pago de la tarjeta');
+  ok(st.movs.some(m=>m.descripcion==='Verdulería' && m.monto===12000), 'asistente: y el gasto');
+
+  // si le falta un dato, pregunta en vez de inventar
+  await pg.unroute('https://api.anthropic.com/v1/messages');
+  await pg.route('https://api.anthropic.com/v1/messages', r=>r.fulfill({status:200, contentType:'application/json',
+    body: JSON.stringify({stop_reason:"end_turn", content:[{type:"text",
+      text:JSON.stringify({respuesta:"", pregunta:"¿De qué billetera salió?", cambios:[]})}]})}));
+  await pg.click('#asisBtn'); await pg.waitForTimeout(300);
+  await pg.fill('#asisTexto', 'pagué 50 lucas');
+  await pg.click('#asisEnviar'); await pg.waitForTimeout(600);
+  ok(/billetera/.test(await pg.evaluate(()=>document.getElementById('asisNota').textContent)),
+     'asistente: si le falta un dato, pregunta');
+  await pg.close();
+}
+
 await browser.close();
 server.close();
 console.log(fail ? `\n${fail} FALLARON` : '\nTODO OK');
