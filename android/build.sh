@@ -14,6 +14,7 @@ mkdir -p "$OUT/gen" "$OUT/classes" "$OUT/dex" "$OUT/assets"
 # La app web entera viaja como asset dentro del APK
 cp ../index.html "$OUT/assets/index.html"
 cp -r ../icons "$OUT/assets/icons"
+cp -r ../fonts "$OUT/assets/fonts"
 
 "$BT/aapt2" compile --dir res -o "$OUT/res.zip"
 
@@ -25,8 +26,8 @@ cp -r ../icons "$OUT/assets/icons"
   --java "$OUT/gen" \
   --min-sdk-version 24 \
   --target-sdk-version 34 \
-  --version-code 34 \
-  --version-name 3.13 \
+  --version-code 35 \
+  --version-name 4.0 \
   "$OUT/res.zip"
 
 javac --release 11 -Xlint:-options \

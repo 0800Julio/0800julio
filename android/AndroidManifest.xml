@@ -16,7 +16,7 @@
   </queries>
 
   <application
-      android:label="Guita"
+      android:label="Juli-o"
       android:icon="@mipmap/ic_launcher"
       android:allowBackup="true"
       android:theme="@android:style/Theme.DeviceDefault.NoActionBar">

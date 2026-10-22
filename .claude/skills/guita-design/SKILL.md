@@ -5,6 +5,22 @@ description: Sistema de diseño y motion de Guita (app de finanzas personales). 
 
 # Guita — sistema de diseño
 
+## Juli-o 4.0 · Noche (manda sobre lo de abajo)
+Guita pasó a ser el módulo **Plata** de Juli-o (Hoy · Plata · 🎙 · Cocina · Pedir).
+- Un solo look oscuro: fondo `#000`, cards `--card #121418` con anillo `--shadow`
+  (inset 1px), chips `--chip #1B1E24`, acento lima `--brand #C8F06B` con texto
+  `--brand-ink #0B0C0E`; secundarios `--acc2` rosa, `--acc3` celeste, `--acc4` ámbar.
+  Los tokens viejos (`--paper`, `--ink`, `--muted`…) siguen y apuntan a la paleta Noche.
+- Tipografía: Geist (`--ui`) empaquetada en `fonts/`, Geist Mono (`--mono`) sólo
+  para montos grandes. Títulos de módulo 30px/700, tracking -.035em.
+- Barra de abajo de vidrio flotante (radio 30px, blur 22px); Plata tiene un
+  segmentado con píldora que se desliza (`.j-seg`, `--i` = índice).
+- Resorte `--spring: cubic-bezier(.34,1.45,.64,1)` para toques, cards que entran
+  (`cardIn`, escalonadas con `--d`) y páginas completas (`.j-page`, `pageIn`).
+- Componentes nuevos con prefijo `j-`. Todo toque relevante vibra (`vibrar()`).
+- Clave de Plata: `plataBloq()` / `conPlata(fn)`; nada con montos se muestra
+  fuera de Plata si está bloqueada.
+
 ## Identidad
 Guita es una app de finanzas personales argentina, mobile-first, que se usa con una
 mano y muchas veces por voz. El tono es cercano y rioplatense ("Te escucho…",

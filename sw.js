@@ -1,11 +1,13 @@
-const CACHE = "guita-v34";
+const CACHE = "guita-v35";
 const SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
-  "./icons/icon-maskable-512.png"
+  "./icons/icon-maskable-512.png",
+  "./fonts/Geist-Variable.woff2",
+  "./fonts/GeistMono-SemiBold.woff2"
 ];
 
 self.addEventListener("install", e => {

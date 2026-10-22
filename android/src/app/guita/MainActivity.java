@@ -266,9 +266,12 @@ public class MainActivity extends Activity {
         return nm == null || nm.areNotificationsEnabled();
     }
 
+    /** El ícono elegido en Ajustes, para que la prueba salga igual que los avisos de verdad. */
+    private String iconoPrueba = null;
+
     private void probar() {
         AvisoReceiver.programar(this, "prueba", System.currentTimeMillis() + 5000,
-                "¡Las notificaciones andan! 🔔", "Así te van a llegar los vencimientos y lo que agendes.");
+                "¡Las notificaciones andan! 🔔", "Así te van a llegar los vencimientos y lo que agendes.", iconoPrueba);
     }
 
     private void abrirAjustesNotif() {
@@ -381,6 +384,26 @@ public class MainActivity extends Activity {
             AvisoReceiver.programar(MainActivity.this, "rec:" + when, when, "Recordatorio", texto);
         }
 
+        /** Timer del modo cocina: suena aunque apagues la pantalla. No entra en la lista de avisos. */
+        @JavascriptInterface
+        public void timerCocina(long when, String texto) {
+            AvisoReceiver.programar(MainActivity.this, "cocina:timer", when, "⏱ ¡Listo el timer!", texto, "olla");
+        }
+
+        @JavascriptInterface
+        public void timerCancelar() {
+            AvisoReceiver.cancelar(MainActivity.this, "cocina:timer");
+        }
+
+        /** Pantalla siempre prendida mientras seguís una receta. */
+        @JavascriptInterface
+        public void keepAwake(final boolean on) {
+            runOnUiThread(() -> {
+                if (on) getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                else getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            });
+        }
+
         /** {permiso, exactas, sdk, programados}: para mostrar en Ajustes qué falta. */
         @JavascriptInterface
         public String avisosEstado() {
@@ -407,6 +430,13 @@ public class MainActivity extends Activity {
                     abrirAjustesNotif();
                 }
             });
+        }
+
+        /** La prueba con el ícono que elegiste. */
+        @JavascriptInterface
+        public void avisoProbarCon(String icono) {
+            iconoPrueba = icono;
+            avisoProbar();
         }
 
         /** Un aviso de prueba en 5 segundos, por el mismo camino que los de verdad. */

@@ -163,6 +163,20 @@ cuantos más se den, más preciso.
 {"op":"borrarMov", "desc":"Pago resumen", "monto":90000, "fecha":"2026-08-26"}
 ```
 
+### `cocine` · `receta` (Cocina, desde Juli-o 4.0)
+
+```json
+{"op":"cocine", "nombre":"Milanesas al horno", "fecha":"2026-10-22"}
+{"op":"receta", "nombre":"Chipá", "cat":"otras", "minutos":40, "porciones":4,
+ "ingredientes":["500 g de almidón de mandioca","250 g de queso"],
+ "pasos":["Mezclá todo","Horneá a 200 °C (20 min)"], "fav":true}
+```
+
+- `cocine` anota que cocinaste un plato ese día. Si el nombre coincide con una receta guardada, se engancha a ella.
+- `receta` crea la receta, o la actualiza si ya hay una con el mismo nombre (sólo pisa los campos que mandás).
+  `cat`: `pastas`, `carnes`, `pollo`, `veggie`, `pescado`, `tartas`, `sopas`, `postres` u `otras`.
+  Si un paso termina con la duración entre paréntesis (`(10 min)`, `(1 hora)`), el modo cocina le pone un timer.
+
 ## Ejemplo completo
 
 ```json

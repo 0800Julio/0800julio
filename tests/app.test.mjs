@@ -11,7 +11,7 @@ import path from 'path';
 const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
 const OUT = process.env.GUITA_SHOTS || '/tmp/guita-shots';
 fs.mkdirSync(OUT, {recursive:true});
-const MIME = {'.html':'text/html','.js':'text/javascript','.png':'image/png','.webmanifest':'application/manifest+json'};
+const MIME = {'.woff2':'font/woff2','.html':'text/html','.js':'text/javascript','.png':'image/png','.webmanifest':'application/manifest+json'};
 const server = http.createServer((req,res)=>{
   let p = req.url.split('?')[0]; if(p==='/') p='/index.html';
   const f = path.join(ROOT,p);
@@ -31,6 +31,8 @@ const nuevaPagina = async (opts={}) => {
   const page = await browser.newPage({viewport:{width:390,height:844}, colorScheme:'light', ...opts});
   page.on('pageerror', e=>{ console.log('PAGE ERROR:', e.message); fail++; });
   await page.addInitScript(()=>{
+    // la suite de Guita arranca en Plata, que es donde vivía todo antes de Juli-o
+    window.__julioInicio = 'plata';
     window.__toastLog = [];
     addEventListener('DOMContentLoaded', ()=>{
       const t = document.getElementById('toast');
@@ -198,7 +200,7 @@ const nav = await page.evaluate(()=>{
   const mic=document.getElementById('micBtn').getBoundingClientRect();
   return {tabs, micCentro: mic.x+mic.width/2, ancho: innerWidth};
 });
-ok(nav.tabs.length===4, 'nav: 4 pestañas', nav.tabs.join(','));
+ok(nav.tabs.length===4, 'nav: 4 pestañas de Plata', nav.tabs.join(','));
 ok(Math.abs(nav.micCentro - nav.ancho/2) < 6, 'nav: el micrófono queda centrado',
    `mic en ${nav.micCentro.toFixed(1)} de ${nav.ancho}`);
 ok(!nav.tabs.includes('asesor'), 'nav: el asesor ya no está');
@@ -505,8 +507,11 @@ const futuro = await page.evaluate(()=>window.__guitaMes('2031-05'));
 ok(!futuro.startsWith('2031'), 'año: también corrige años muy adelantados', futuro);
 
 /* botón atrás: cierra lo abierto en vez de salir */
+ok(await page.evaluate(()=>window.__guitaBack()) === true && await page.evaluate(()=>window.__julioMod())==='hoy',
+   'atrás: desde el inicio de Plata vuelve a Hoy');
 ok(await page.evaluate(()=>window.__guitaBack()) === false,
-   'atrás: en el inicio sin nada abierto, deja salir');
+   'atrás: en Hoy sin nada abierto, deja salir');
+await page.click('.j-tab[data-mod="plata"]'); await page.waitForTimeout(300);
 await page.click('#addBtn'); await page.waitForTimeout(300);
 ok(await page.evaluate(()=>window.__guitaBack()) === true, 'atrás: con una hoja abierta la cierra');
 await page.waitForTimeout(300);
@@ -1437,7 +1442,7 @@ await page.close();
      JSON.stringify(ultima.map(a=>a.titulo)));
   ok(ultima.some(a=>/Hoy vence Cuota Préstamo/.test(a.titulo)), 'avisos: y el "hoy vence" del mismo día');
   const man = ultima.find(a=>/Mañana/.test(a.titulo));
-  ok(man && new Date(man.when).getHours()===10, 'avisos: el del día antes es a las 10');
+  ok(man && new Date(man.when).getHours()===9, 'avisos: por defecto avisa a las 9');
   ok(ultima.every(a=>a.id && a.when>Date.now()), 'avisos: todos con id y en el futuro');
 
   // Ajustes muestra que falta el permiso y deja probar
@@ -1502,6 +1507,180 @@ await page.close();
   await pg.click('#asisEnviar'); await pg.waitForTimeout(600);
   ok(/billetera/.test(await pg.evaluate(()=>document.getElementById('asisNota').textContent)),
      'asistente: si le falta un dato, pregunta');
+  await pg.close();
+}
+
+/* ══════════ Juli-o 4.0: módulos, Cocina, clave de Plata, avisos configurables ══════════ */
+{
+  const pg = await browser.newPage({viewport:{width:390,height:844}});
+  pg.on('pageerror', e=>{ console.log('PAGE ERROR:', e.message); fail++; });
+  await pg.addInitScript(()=>{
+    window.__sync = []; window.__awake = [];
+    window.AndroidVoz = {
+      avisosSincronizar: j => { window.__sync.push(JSON.parse(j)); return JSON.parse(j).length; },
+      avisosEstado: () => JSON.stringify({permiso:true, exactas:true, sdk:34, programados:0}),
+      avisoProbar: ()=>{}, avisoProbarCon: ic => { window.__probIcono = ic; },
+      keepAwake: on => window.__awake.push(on),
+      timerCocina: (when, txt) => { window.__timer = {when, txt}; }, timerCancelar: ()=>{ window.__timerCancel = true; },
+      setReminder: ()=>{}, clearReminder: ()=>{}
+    };
+  });
+  await pg.goto(BASE+'/');
+  await pg.evaluate(()=>localStorage.clear()); await pg.reload();
+  await pg.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+  await pg.waitForTimeout(500);
+
+  ok(await pg.evaluate(()=>window.__julioMod())==='hoy', 'juli-o: arranca en Hoy');
+  ok(await pg.evaluate(()=>document.getElementById('modTitle').textContent)==='Hoy', 'juli-o: el título dice Hoy');
+  ok(await pg.evaluate(()=>document.title)==='Juli-o', 'juli-o: la app se llama Juli-o');
+  ok(await pg.evaluate(()=>document.querySelectorAll('#hoyStack .j-card').length>=2), 'hoy: muestra tarjetas');
+  const mic = await pg.evaluate(()=>{ const r=document.getElementById('micBtn').getBoundingClientRect(); return r.x+r.width/2; });
+  ok(Math.abs(mic-195)<6, 'juli-o: el micrófono sigue centrado', String(mic));
+  ok(await pg.locator('#addBtn').isHidden(), 'juli-o: el + de gastos sólo aparece en Plata');
+
+  // Cocina
+  await pg.click('.j-tab[data-mod="cocina"]'); await pg.waitForTimeout(500);
+  const nRec = await pg.evaluate(()=>window.__guitaState().cocina.recetas.length);
+  ok(nRec>=10, 'cocina: arranca con recetas argentinas de base', String(nRec));
+  ok(await pg.evaluate(()=>document.querySelectorAll('#cocSemana .j-day').length)===7, 'cocina: la semana de lunes a domingo');
+  ok(await pg.isVisible('.j-sugcard'), 'cocina: sugiere qué cocinar hoy');
+  await pg.click('.j-chip[data-f="pastas"]'); await pg.waitForTimeout(200);
+  const soloPastas = await pg.evaluate(()=>[...document.querySelectorAll('#cocGrid .j-rcard b')].map(b=>b.textContent));
+  ok(soloPastas.length>=2 && soloPastas.every(n=>/Fideos|Ñoquis/.test(n)), 'cocina: filtra por categoría', soloPastas.join(','));
+  await pg.fill('#cocBuscar', 'lentejas'); await pg.click('.j-chip[data-f="todas"]'); await pg.waitForTimeout(200);
+  ok(await pg.evaluate(()=>document.querySelectorAll('#cocGrid .j-rcard').length)===1, 'cocina: busca por nombre o ingrediente');
+  await pg.fill('#cocBuscar', '');
+  await pg.evaluate(()=>{ const b=[...document.querySelectorAll('#cocGrid .j-rcard')].find(x=>/Fideos con tuco/.test(x.textContent)); b.click(); });
+  await pg.waitForTimeout(500);
+  ok(await pg.isVisible('#recPage'), 'receta: abre la ficha');
+  ok(await pg.evaluate(()=>document.querySelectorAll('#recIngs li').length)===8, 'receta: lista los ingredientes');
+  await pg.click('#recPorc [data-p="1"]'); await pg.click('#recPorc [data-p="1"]'); await pg.click('#recPorc [data-p="1"]');
+  ok(/^800 g/.test(await pg.evaluate(()=>document.querySelector('#recIngs li').textContent)), 'receta: escala las cantidades con las porciones');
+  await pg.click('#recFav'); await pg.waitForTimeout(150);
+  await pg.click('#recCocine'); await pg.waitForTimeout(300);
+  let st = await pg.evaluate(()=>window.__guitaState());
+  ok(st.cocina.historial.length===1 && st.cocina.historial[0].nombre==='Fideos con tuco', 'receta: "La cociné hoy" la anota');
+  const jc = await pg.evaluate(()=>window.__julioCocina());
+  ok(jc.favoritas[0]==='Fideos con tuco', 'cocina: tus favoritas ahora', jc.favoritas.join(','));
+  ok(jc.sugerencias.every(x=>x.nombre!=='Fideos con tuco'), 'cocina: no te sugiere lo que hiciste hoy');
+
+  // modo cocina
+  await pg.click('#recEmpezar'); await pg.waitForTimeout(500);
+  ok(await pg.isVisible('#cookPage') && /Paso 1 de 5/.test(await pg.textContent('#cookStage')), 'cocina guiada: arranca en el paso 1');
+  ok(await pg.evaluate(()=>window.__awake[window.__awake.length-1]===true), 'cocina guiada: deja la pantalla prendida');
+  await pg.click('#cookNext'); await pg.waitForTimeout(450);
+  ok(await pg.isVisible('#cookTimer') && /8:00/.test(await pg.textContent('#cookTimer')), 'cocina guiada: el "(8 min)" del paso se vuelve un timer');
+  await pg.click('#cookTimer'); await pg.waitForTimeout(400);
+  ok(await pg.evaluate(()=>document.getElementById('cookTimer').classList.contains('run')), 'cocina guiada: el timer corre');
+  ok(await pg.evaluate(()=>window.__timer && window.__timer.when>Date.now()+470000), 'cocina guiada: y el celu lo agenda por si apagás la pantalla');
+  for(let i=0;i<4;i++){ await pg.click('#cookNext'); await pg.waitForTimeout(350); }
+  ok(/A comer/.test(await pg.textContent('#cookStage')), 'cocina guiada: termina con el festejo');
+  await pg.click('#cookNext'); await pg.waitForTimeout(450);
+  st = await pg.evaluate(()=>window.__guitaState());
+  ok(st.cocina.historial.length===2, 'cocina guiada: al terminar la anota');
+  ok(await pg.evaluate(()=>window.__awake[window.__awake.length-1]===false), 'cocina guiada: suelta la pantalla');
+  ok(await pg.evaluate(()=>window.__guitaBack()) === true, 'atrás: con la ficha abierta, la cierra');
+  await pg.waitForTimeout(400);
+  ok(await pg.locator('#recPage').isHidden(), 'atrás: la ficha quedó cerrada');
+
+  // cargar una receta propia, con foto
+  await pg.click('#cocNueva'); await pg.waitForTimeout(400);
+  await pg.fill('#edNombre', 'Tortilla de papas');
+  await pg.click('#edCats [data-c="veggie"]');
+  await pg.fill('#edIngs', '1 kg de papas\n6 huevos\n1 cebolla');
+  await pg.fill('#edPasos', '1. Freí las papas (20 min)\n2. Mezclá con los huevos\n3. Cociná vuelta y vuelta (5 min)');
+  const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==','base64');
+  await pg.setInputFiles('#edFotoInput', {name:'tortilla.png', mimeType:'image/png', buffer:PNG});
+  await pg.waitForTimeout(400);
+  await pg.click('#edGuardar'); await pg.waitForTimeout(500);
+  st = await pg.evaluate(()=>window.__guitaState());
+  const tor = st.cocina.recetas.find(r=>r.nombre==='Tortilla de papas');
+  ok(tor && tor.cat==='veggie' && tor.pasos.length===3 && tor.pasos[0]==='Freí las papas (20 min)', 'editor: guarda la receta y limpia la numeración', JSON.stringify(tor&&tor.pasos));
+  ok(tor && /^data:image\/jpeg/.test(await pg.evaluate(id=>window.__julioFotos.get(id), tor.fotoId)), 'editor: guarda la foto comprimida');
+  const bk = JSON.parse(await pg.evaluate(()=>window.__guitaBackup()));
+  ok(bk.fotos && bk.fotos[tor.fotoId], 'respaldo: incluye las fotos de las recetas');
+  ok(bk.datos.cocina.historial.length===2, 'respaldo: incluye lo que cocinaste');
+  await pg.click('#recCerrar'); await pg.waitForTimeout(350);
+
+  // IA: armar una receta que no sabés
+  await pg.evaluate(()=>{ const S=window.__guitaState(); });
+  let pedidoIA = null;
+  await pg.route('https://api.anthropic.com/v1/messages', async route=>{
+    pedidoIA = JSON.parse(route.request().postData());
+    await route.fulfill({status:200, contentType:'application/json', body: JSON.stringify({stop_reason:"end_turn", content:[{type:"text", text: JSON.stringify({
+      nombre:"Ñoquis de calabaza", cat:"pastas", minutos:50, porciones:3, ingredientes:["500 g de calabaza","250 g de harina"],
+      pasos:["Asá la calabaza (30 min)","Hacé un puré","Sumá harina","Cortá y herví (2 min)"], nota:"Van bárbaro con manteca y salvia."})}]})});
+  });
+  await pg.evaluate(()=>{ const S=JSON.parse(localStorage.getItem('guita:v2')); S.config.apiKey='sk-test'; localStorage.setItem('guita:v2', JSON.stringify(S)); });
+  await pg.reload(); await pg.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+  await pg.click('.j-tab[data-mod="cocina"]'); await pg.waitForTimeout(300);
+  await pg.click('#cocNueva'); await pg.waitForTimeout(350);
+  await pg.fill('#edNombre', 'Ñoquis de calabaza');
+  await pg.click('#edIA'); await pg.waitForTimeout(700);
+  ok(/Asá la calabaza/.test(await pg.inputValue('#edPasos')), 'IA: completa los pasos de una receta que no sabés');
+  ok(/manteca y salvia/.test(await pg.textContent('#edIANota')), 'IA: y te deja un tip');
+  ok(pedidoIA && /Ñoquis de calabaza/.test(JSON.stringify(pedidoIA.messages)), 'IA: le pasa el nombre a Claude');
+  await pg.click('#edCerrar'); await pg.waitForTimeout(300);
+
+  // parche y asistente: "cociné" y "receta"
+  await pg.evaluate(()=>window.__guitaParche({app:"guita", parche:1, id:"coc-1", cambios:[
+    {op:"cocine", nombre:"milanesas al horno"},
+    {op:"receta", nombre:"Chipá", cat:"otras", minutos:40, ingredientes:["500 g de almidón"], pasos:["Mezclá todo","Horneá (20 min)"], fav:true}]}));
+  await pg.waitForTimeout(300);
+  await pg.click('#saveParche'); await pg.waitForTimeout(400);
+  st = await pg.evaluate(()=>window.__guitaState());
+  ok(st.cocina.historial.some(h=>h.nombre==='Milanesas al horno' && h.recetaId!=null), 'parche: "cocine" engancha con la receta guardada');
+  ok(st.cocina.recetas.some(r=>r.nombre==='Chipá' && r.fav && r.pasos.length===2), 'parche: "receta" la crea');
+  ok(/Recetas guardadas/.test(await pg.evaluate(()=>window.__guitaContextoAsis())), 'asistente: conoce tus recetas');
+
+  // avisos: ícono, días y hora configurables
+  await pg.click('#cfgBtn'); await pg.waitForTimeout(350);
+  await pg.click('#avIconos [data-icono="rayo"]');
+  await pg.click('#avDias [data-dia="3"]');
+  await pg.fill('#avHora', '08:30'); await pg.dispatchEvent('#avHora', 'change');
+  await pg.click('#avisosProbarBtn');
+  ok(await pg.evaluate(()=>window.__probIcono)==='rayo', 'avisos: la prueba sale con el ícono que elegiste');
+  await pg.check('#avCena'); await pg.waitForTimeout(700);
+  const lista = await pg.evaluate(()=>window.__guitaAvisos());
+  ok(lista.some(a=>/qué cocinamos/i.test(a.titulo) && a.icono==='olla'), 'avisos: la sugerencia de cena, si la prendés');
+  ok(await pg.evaluate(()=>window.__guitaState().config.avisosCfg.dias.includes(3)), 'avisos: guarda "3 días antes"');
+  await pg.keyboard.press('Escape'); await pg.waitForTimeout(300);
+
+  // clave de Plata
+  await pg.click('#cfgBtn'); await pg.waitForTimeout(350);
+  await pg.click('#pinActivar'); await pg.waitForTimeout(300);
+  for(const k of '2580') await pg.click(`#pinSetPad [data-k="${k}"]`);
+  await pg.waitForTimeout(250);
+  for(const k of '2580') await pg.click(`#pinSetPad [data-k="${k}"]`);
+  await pg.waitForTimeout(500);
+  st = await pg.evaluate(()=>window.__guitaState());
+  ok(st.config.pin && st.config.pin.h && !JSON.stringify(st.config.pin).includes('2580'), 'clave: se guarda sin quedar escrita tal cual');
+  await pg.evaluate(()=>{ const S=JSON.parse(localStorage.getItem('guita:v2'));
+    S.billeteras=[{id:1,nombre:'Lemon',saldoInicial:777000}]; localStorage.setItem('guita:v2', JSON.stringify(S)); });
+  await pg.reload(); await pg.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+  await pg.waitForTimeout(300);
+  ok(!/777/.test(await pg.textContent('#hoyStack')) && /ocultos/.test(await pg.textContent('#hoyStack')), 'clave: Hoy no muestra plata con la clave puesta');
+  await pg.click('.j-tab[data-mod="plata"]'); await pg.waitForTimeout(400);
+  ok(await pg.isVisible('#plataLock') && await pg.locator('#plataBody').isHidden(), 'clave: Plata pide la clave');
+  ok(await pg.locator('#addBtn').isHidden(), 'clave: bloqueada no se puede cargar nada');
+  await pg.click('#cfgBtn'); await pg.waitForTimeout(300);
+  ok(!(await pg.evaluate(()=>document.getElementById('sheet').classList.contains('open'))), 'clave: los Ajustes también la piden');
+  for(const k of '1111') await pg.click(`#pinPad [data-k="${k}"]`);
+  await pg.waitForTimeout(600);
+  ok(await pg.isVisible('#plataLock'), 'clave: una equivocada no abre');
+  for(const k of '2580') await pg.click(`#pinPad [data-k="${k}"]`);
+  await pg.waitForTimeout(700);
+  ok(await pg.locator('#plataLock').isHidden(), 'clave: la correcta abre Plata');
+  ok(await pg.evaluate(()=>document.getElementById('sheet').classList.contains('open') && !document.getElementById('phaseConfig').hidden),
+     'clave: y sigue con lo que querías hacer (los Ajustes)');
+  await pg.keyboard.press('Escape'); await pg.waitForTimeout(250);
+  const conPin = await pg.evaluate(()=>window.__guitaAvisos());
+  ok(conPin.every(a=>!/\$/.test(a.texto)), 'clave: los avisos no muestran montos');
+  await pg.click('#lockBtn'); await pg.waitForTimeout(300);
+  ok(await pg.isVisible('#plataLock'), 'clave: el candado la vuelve a bloquear');
+  await pg.click('#pinOlvido'); await pg.waitForTimeout(200);
+  ok(/30 min/.test(await pg.textContent('#pinReset')), 'clave: si te la olvidás, hay que esperar 30 minutos para borrarla');
+  await pg.click('#pinOlvido');
   await pg.close();
 }
 

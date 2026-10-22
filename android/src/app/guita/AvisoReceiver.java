@@ -41,7 +41,8 @@ public class AvisoReceiver extends BroadcastReceiver {
         if (intent == null || !ACTION.equals(intent.getAction())) return;
         String id = intent.getStringExtra("id");
         mostrar(ctx, id == null ? "aviso" : id,
-                intent.getStringExtra("titulo"), intent.getStringExtra("texto"));
+                intent.getStringExtra("titulo"), intent.getStringExtra("texto"),
+                intent.getStringExtra("icono"));
         // ya sonó: sacarlo de la lista para no reprogramarlo después de un reinicio
         if (id != null) {
             try {
@@ -55,7 +56,26 @@ public class AvisoReceiver extends BroadcastReceiver {
         }
     }
 
+    /** El ícono que elegiste en Ajustes → Avisos; si no se reconoce, la campana. */
+    static int icono(String nombre) {
+        if (nombre == null) return R.drawable.ic_n_campana;
+        switch (nombre) {
+            case "billetera": return R.drawable.ic_n_billetera;
+            case "calendario": return R.drawable.ic_n_calendario;
+            case "rayo": return R.drawable.ic_n_rayo;
+            case "estrella": return R.drawable.ic_n_estrella;
+            case "corazon": return R.drawable.ic_n_corazon;
+            case "olla": return R.drawable.ic_n_olla;
+            case "juli": return R.drawable.ic_n_juli;
+            default: return R.drawable.ic_n_campana;
+        }
+    }
+
     static void mostrar(Context ctx, String id, String titulo, String texto) {
+        mostrar(ctx, id, titulo, texto, null);
+    }
+
+    static void mostrar(Context ctx, String id, String titulo, String texto, String icono) {
         NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm == null) return;
         canal(ctx);
@@ -66,7 +86,8 @@ public class AvisoReceiver extends BroadcastReceiver {
         Notification.Builder b = Build.VERSION.SDK_INT >= 26
                 ? new Notification.Builder(ctx, CHANNEL)
                 : new Notification.Builder(ctx);
-        b.setSmallIcon(R.mipmap.ic_launcher)
+        b.setSmallIcon(icono(icono))
+                .setColor(0xFFC8F06B)
                 .setContentTitle(titulo == null || titulo.isEmpty() ? "Recordatorio" : titulo)
                 .setContentIntent(pi)
                 .setAutoCancel(true);
@@ -115,7 +136,7 @@ public class AvisoReceiver extends BroadcastReceiver {
         for (int i = 0; i < futuras.length(); i++) {
             JSONObject o = futuras.optJSONObject(i);
             programar(ctx, o.optString("id"), o.optLong("when"),
-                    o.optString("titulo"), o.optString("texto"));
+                    o.optString("titulo"), o.optString("texto"), o.optString("icono", null));
         }
         guardar(ctx, futuras);
         return futuras.length();
@@ -127,9 +148,13 @@ public class AvisoReceiver extends BroadcastReceiver {
     }
 
     static void programar(Context ctx, String id, long when, String titulo, String texto) {
+        programar(ctx, id, when, titulo, texto, null);
+    }
+
+    static void programar(Context ctx, String id, long when, String titulo, String texto, String icono) {
         AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
         if (am == null) return;
-        PendingIntent pi = pendiente(ctx, id, titulo, texto);
+        PendingIntent pi = pendiente(ctx, id, titulo, texto, icono);
         try {
             if (exactas(ctx)) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, when, pi);
             else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, when, pi);
@@ -140,7 +165,7 @@ public class AvisoReceiver extends BroadcastReceiver {
 
     static void cancelar(Context ctx, String id) {
         AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
-        if (am != null) am.cancel(pendiente(ctx, id, null, null));
+        if (am != null) am.cancel(pendiente(ctx, id, null, null, null));
     }
 
     static boolean exactas(Context ctx) {
@@ -152,13 +177,14 @@ public class AvisoReceiver extends BroadcastReceiver {
     static int cantidad(Context ctx) { return leer(ctx).length(); }
 
     /* Un PendingIntent distinto por aviso: el id viaja en la URI, que es lo que Android compara. */
-    private static PendingIntent pendiente(Context ctx, String id, String titulo, String texto) {
+    private static PendingIntent pendiente(Context ctx, String id, String titulo, String texto, String icono) {
         Intent i = new Intent(ctx, AvisoReceiver.class);
         i.setAction(ACTION);
         i.setData(Uri.parse("guita://aviso/" + Uri.encode(id)));
         i.putExtra("id", id);
         if (titulo != null) i.putExtra("titulo", titulo);
         if (texto != null) i.putExtra("texto", texto);
+        if (icono != null) i.putExtra("icono", icono);
         return PendingIntent.getBroadcast(ctx, id.hashCode(), i,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
