@@ -384,6 +384,12 @@ public class MainActivity extends Activity {
             AvisoReceiver.programar(MainActivity.this, "rec:" + when, when, "Recordatorio", texto);
         }
 
+        /** Los "Listo" y "En 1 hora" que tocaste en las notificaciones de la agenda. */
+        @JavascriptInterface
+        public String agendaAcciones() {
+            return AvisoReceiver.tomarAcciones(MainActivity.this);
+        }
+
         /** Timer del modo cocina: suena aunque apagues la pantalla. No entra en la lista de avisos. */
         @JavascriptInterface
         public void timerCocina(long when, String texto) {

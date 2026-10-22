@@ -35,9 +35,13 @@ public class AvisoReceiver extends BroadcastReceiver {
     static final String KEY = "lista";
     static final String CHANNEL = "guita_avisos";
     static final String ACTION = "app.guita.AVISO";
+    /** Botones de la notificación de la agenda: "Listo" y "En 1 hora". */
+    static final String ACCION = "app.guita.AVISO_ACCION";
+    static final String KEY_ACC = "acciones";
 
     @Override
     public void onReceive(Context ctx, Intent intent) {
+        if (intent != null && ACCION.equals(intent.getAction())) { accion(ctx, intent); return; }
         if (intent == null || !ACTION.equals(intent.getAction())) return;
         String id = intent.getStringExtra("id");
         mostrar(ctx, id == null ? "aviso" : id,
@@ -96,6 +100,13 @@ public class AvisoReceiver extends BroadcastReceiver {
             b.setStyle(new Notification.BigTextStyle().bigText(texto));
         }
         if (Build.VERSION.SDK_INT < 26) b.setPriority(Notification.PRIORITY_HIGH);
+        if (id.startsWith("ag:") && !id.startsWith("ag:resumen")) {
+            android.graphics.drawable.Icon ic = android.graphics.drawable.Icon.createWithResource(ctx, icono(icono));
+            b.addAction(new Notification.Action.Builder(ic, "✓ Listo",
+                    accionPI(ctx, id, "hecho", titulo, texto, icono)).build());
+            b.addAction(new Notification.Action.Builder(ic, "En 1 hora",
+                    accionPI(ctx, id, "posponer", titulo, texto, icono)).build());
+        }
         nm.notify(id.hashCode(), b.build());
     }
 
@@ -107,6 +118,74 @@ public class AvisoReceiver extends BroadcastReceiver {
                 CHANNEL, "Vencimientos y recordatorios", NotificationManager.IMPORTANCE_HIGH);
         ch.setDescription("Lo que vence y lo que agendaste");
         nm.createNotificationChannel(ch);
+    }
+
+    private static PendingIntent accionPI(Context ctx, String id, String accion, String titulo, String texto, String icono) {
+        Intent i = new Intent(ctx, AvisoReceiver.class);
+        i.setAction(ACCION);
+        i.setData(Uri.parse("guita://accion/" + accion + "/" + Uri.encode(id)));
+        i.putExtra("id", id);
+        i.putExtra("accion", accion);
+        if (titulo != null) i.putExtra("titulo", titulo);
+        if (texto != null) i.putExtra("texto", texto);
+        if (icono != null) i.putExtra("icono", icono);
+        return PendingIntent.getBroadcast(ctx, (accion + id).hashCode(), i,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    /**
+     * Tocaste "Listo" o "En 1 hora". La app web es la dueña de la agenda, así que acá sólo
+     * se anota lo que hiciste (la web lo levanta al abrir) y se ajustan las alarmas ya:
+     * "Listo" apaga todo lo que quedaba de ese día; "En 1 hora" lo vuelve a programar.
+     */
+    static void accion(Context ctx, Intent intent) {
+        String id = intent.getStringExtra("id"), accion = intent.getStringExtra("accion");
+        if (id == null || accion == null) return;
+        NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (nm != null) nm.cancel(id.hashCode());
+        String[] p = id.split(":");
+        if (p.length < 3) return;
+        String pref = p[0] + ":" + p[1] + ":" + p[2];
+        long when = 0;
+        try {
+            JSONArray vieja = leer(ctx), nueva = new JSONArray();
+            for (int i = 0; i < vieja.length(); i++) {
+                JSONObject o = vieja.optJSONObject(i);
+                if (o == null) continue;
+                String oid = o.optString("id", "");
+                boolean deEseDia = oid.equals(pref) || oid.startsWith(pref + ":");
+                if ("hecho".equals(accion) && deEseDia) { cancelar(ctx, oid); continue; }
+                if ("posponer".equals(accion) && oid.equals(pref + ":snz")) continue;
+                nueva.put(o);
+            }
+            if ("posponer".equals(accion)) {
+                when = System.currentTimeMillis() + 3600_000L;
+                String snz = pref + ":snz";
+                String tit = intent.getStringExtra("titulo");
+                String ico = intent.getStringExtra("icono");
+                programar(ctx, snz, when, tit, "Lo pospusiste una hora: ¿ahora sí?", ico);
+                JSONObject o = new JSONObject();
+                o.put("id", snz); o.put("when", when); o.put("titulo", tit);
+                o.put("texto", "Lo pospusiste una hora: ¿ahora sí?"); o.put("icono", ico);
+                nueva.put(o);
+            }
+            guardar(ctx, nueva);
+            SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+            JSONArray acc = new JSONArray(sp.getString(KEY_ACC, "[]"));
+            JSONObject a = new JSONObject();
+            a.put("id", id); a.put("accion", accion); a.put("ts", System.currentTimeMillis());
+            if (when > 0) a.put("when", when);
+            acc.put(a);
+            sp.edit().putString(KEY_ACC, acc.toString()).apply();
+        } catch (Exception ignored) {}
+    }
+
+    /** Lo que tocaste en las notificaciones desde la última vez; se vacía al leerlo. */
+    static String tomarAcciones(Context ctx) {
+        SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        String s = sp.getString(KEY_ACC, "[]");
+        sp.edit().remove(KEY_ACC).apply();
+        return s;
     }
 
     /** Reemplaza la lista entera: cancela lo que ya no está, programa lo que falta. */

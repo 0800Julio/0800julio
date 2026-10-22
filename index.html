@@ -583,7 +583,7 @@
   .g-ccard::after{background:rgba(200,240,107,.05)}
   .g-ccbtn{background:rgba(255,255,255,.09); color:var(--ink)}
   .g-ccbtn.solid{background:var(--brand); color:var(--brand-ink)}
-  .g-toast{background:#F4F5F7; color:#0B0C0E; bottom:calc(112px + env(safe-area-inset-bottom))}
+  .g-toast{background:#F4F5F7; color:#0B0C0E; bottom:calc(112px + env(safe-area-inset-bottom)); width:max-content}
   .g-mic.listening, .g-mic.listening:active{box-shadow:0 0 44px rgba(200,240,107,.6)}
   .g-mic.canceling, .g-mic.canceling.listening{box-shadow:0 0 30px rgba(255,90,122,.5)}
   .s-coin{font-family:var(--mono); font-weight:600}
@@ -908,6 +908,59 @@
   .j-done h2{font-size:28px; font-weight:700; letter-spacing:-.03em; margin-top:8px}
   .j-done p{color:var(--muted); font-size:14.5px; max-width:300px; line-height:1.5}
 
+
+  /* Agenda */
+  .j-quick{display:flex; gap:8px; align-items:center; background:var(--card); border-radius:20px; padding:6px 6px 6px 16px;
+    box-shadow:var(--shadow); margin-top:4px; transition:box-shadow .2s}
+  .j-quick:focus-within{box-shadow:inset 0 0 0 1.5px var(--brand), 0 0 24px rgba(200,240,107,.12)}
+  .j-quick input{flex:1; min-width:0; font:inherit; font-size:16px; color:var(--ink); background:none; border:none; outline:none; padding:10px 0}
+  .j-quick button{width:44px; height:44px; border-radius:15px; border:none; background:var(--brand); color:var(--brand-ink); display:grid; place-items:center;
+    cursor:pointer; flex:none; transition:transform .2s var(--spring)}
+  .j-quick button:active{transform:scale(.88)}
+  .j-quick button svg{width:20px; height:20px}
+  .j-quickprev{display:flex; flex-wrap:wrap; gap:6px; min-height:0; padding:0 4px}
+  .j-quickprev:not(:empty){padding:10px 4px 0}
+  .j-quickprev span{font-size:12.5px; font-weight:600; background:var(--brand-soft); color:var(--brand); padding:5px 10px; border-radius:999px; animation:popIn .3s var(--spring) both}
+  .j-agdays{display:flex; gap:6px; overflow-x:auto; padding:14px 2px 4px; scrollbar-width:none; scroll-snap-type:x proximity}
+  .j-agdays::-webkit-scrollbar{display:none}
+  .j-agd{flex:none; width:50px; display:flex; flex-direction:column; align-items:center; gap:4px; padding:9px 0 8px; border:none; border-radius:16px;
+    background:var(--card); color:var(--muted); font:inherit; cursor:pointer; scroll-snap-align:start; box-shadow:var(--shadow);
+    transition:transform .2s var(--spring), background .18s, color .18s}
+  .j-agd:active{transform:scale(.9)}
+  .j-agd small{font-size:10.5px; font-weight:600; letter-spacing:.05em; text-transform:uppercase}
+  .j-agd b{font-family:var(--mono); font-size:18px; font-weight:600; color:var(--ink)}
+  .j-agd i{width:5px; height:5px; border-radius:50%; background:transparent}
+  .j-agd i.on{background:var(--brand)}
+  .j-agd.hoy small{color:var(--brand)}
+  .j-agd.sel{background:var(--brand); color:var(--brand-ink)} .j-agd.sel b{color:var(--brand-ink)} .j-agd.sel i.on{background:var(--brand-ink)}
+  .j-agd.todo{width:auto; padding:9px 14px; justify-content:center}
+  .j-agd.todo b{font-family:var(--ui); font-size:13px}
+  .j-aglist{display:flex; flex-direction:column}
+  .j-aggroup{background:var(--card); border-radius:22px; box-shadow:var(--shadow); padding:4px 14px; animation:cardIn .45s var(--spring) both; animation-delay:var(--d,0s)}
+  .j-aggroup.late{box-shadow:inset 0 0 0 1px rgba(255,90,122,.35)}
+  .j-agh{display:flex; justify-content:space-between; align-items:baseline; font-size:13px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:20px 4px 8px}
+  .j-agh.late{color:var(--danger)}
+  .j-agh small{font-size:12px; letter-spacing:0; text-transform:none; font-weight:500}
+  .j-ag{display:flex; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--line); cursor:pointer;
+    transition:opacity .35s var(--ease), transform .35s var(--ease)}
+  .j-ag:first-child{border-top:none}
+  .j-ag .tx{flex:1; min-width:0}
+  .j-ag .tx b{display:block; font-size:15.5px; font-weight:550; line-height:1.3; overflow-wrap:anywhere; transition:color .25s}
+  .j-ag .tx span{display:block; font-size:12.5px; color:var(--muted); margin-top:2px}
+  .j-ag .hr{font-family:var(--mono); font-size:14px; font-weight:600; color:var(--ink); flex:none}
+  .j-ag.hecho .tx b{color:var(--muted); text-decoration:line-through}
+  .j-ag.hecho .hr{color:var(--muted)}
+  .j-ag.saliendo{opacity:0; transform:translateX(24px)}
+  .j-chk{width:26px; height:26px; border-radius:50%; flex:none; border:none; cursor:pointer; background:transparent;
+    box-shadow:inset 0 0 0 2px var(--line-2); display:grid; place-items:center; transition:background .2s, box-shadow .2s, transform .25s var(--spring); padding:0}
+  .j-chk:active{transform:scale(.8)}
+  .j-chk svg{width:15px; height:15px; opacity:0; transform:scale(.4); transition:opacity .2s, transform .3s var(--spring)}
+  .j-ag.hecho .j-chk{background:var(--brand); box-shadow:0 0 14px rgba(200,240,107,.5)}
+  .j-ag.hecho .j-chk svg{opacity:1; transform:none}
+  .j-ag.late .tx span{color:var(--danger)}
+  .j-agempty{text-align:center; padding:34px 16px 10px; color:var(--muted); font-size:14.5px; line-height:1.55; animation:cardIn .5s var(--spring) both}
+  .j-agempty .big{font-size:42px; display:block; margin-bottom:8px}
+
   /* avisos: ícono y frecuencia */
   .j-icons{display:grid; grid-template-columns:repeat(4,1fr); gap:8px}
   .j-icons button{height:46px; border:none; border-radius:14px; background:var(--chip); color:var(--ink); display:grid; place-items:center;
@@ -940,6 +993,9 @@
       </button>
       <button class="g-icobtn solo-plata solo-desbloq" id="exportBtn" aria-label="Exportar planilla" title="Exportar planilla">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+      </button>
+      <button class="g-icobtn" id="asisBtn" aria-label="Pedile a Juli-o" title="Pedile a Juli-o">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9.4l-4.7 1.8L12 16l-1.8-4.8L5.5 9.4l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
       </button>
       <button class="g-icobtn" id="cfgBtn" aria-label="Ajustes" title="Ajustes">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -1260,6 +1316,17 @@
     </div>
     </section>
 
+    <!-- AGENDA -->
+    <section class="mod" id="mod-agenda" aria-label="Agenda">
+      <form class="j-quick" id="agQuickForm" autocomplete="off">
+        <input id="agQuick" type="text" enterkeyhint="done" placeholder="Agregá algo: «mañana 18hs dentista»" aria-label="Agregar a la agenda">
+        <button type="submit" id="agQuickAdd" aria-label="Agregar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+      </form>
+      <div class="j-quickprev" id="agPrev" aria-live="polite"></div>
+      <div class="j-agdays" id="agDias" role="tablist" aria-label="Días"></div>
+      <div id="agLista" class="j-aglist"></div>
+    </section>
+
     <!-- COCINA -->
     <section class="mod" id="mod-cocina" aria-label="Cocina">
       <div class="j-week" id="cocSemana"></div>
@@ -1283,9 +1350,9 @@
       <button class="j-tab on" data-mod="hoy">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
         <span>Hoy</span></button>
-      <button class="j-tab" data-mod="plata">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H5a2 2 0 0 1 0-4h13v4"/><path d="M3 5v13a3 3 0 0 0 3 3h14a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1"/><circle cx="16.5" cy="14" r="1.2" fill="currentColor" stroke="none"/></svg>
-        <span>Plata</span></button>
+      <button class="j-tab" data-mod="agenda">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="m9 15 2 2 4-4"/></svg>
+        <span>Agenda</span></button>
       <div class="g-micwrap">
         <button class="g-mic" id="micBtn" aria-label="Mantené apretado para hablar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1293,12 +1360,12 @@
           </svg>
         </button>
       </div>
+      <button class="j-tab" data-mod="plata">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H5a2 2 0 0 1 0-4h13v4"/><path d="M3 5v13a3 3 0 0 0 3 3h14a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1"/><circle cx="16.5" cy="14" r="1.2" fill="currentColor" stroke="none"/></svg>
+        <span>Plata</span></button>
       <button class="j-tab" data-mod="cocina">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.9A4 4 0 0 1 7.5 6a5 5 0 0 1 9 0A4 4 0 0 1 18 13.9V20H6z"/><path d="M6 17h12"/></svg>
         <span>Cocina</span></button>
-      <button class="j-tab" id="asisBtn" aria-label="Pedile a Juli-o">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9.4l-4.7 1.8L12 16l-1.8-4.8L5.5 9.4l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
-        <span>Pedir</span></button>
     </div>
   </nav>
 
@@ -1335,6 +1402,31 @@
         </div>
         <div class="g-note">Es una pantalla de privacidad para que nadie vea tu plata si agarra el celu: tus datos siguen guardados en el teléfono como siempre, sin cifrar.</div>
         <div class="g-actions"><button class="g-btn" data-close>Cancelar</button></div>
+      </div>
+
+      <div id="phaseAgenda" hidden>
+        <h3 id="agEdTitulo">Nuevo en la agenda</h3>
+        <div class="g-field"><label class="g-label" for="agTitulo">Qué</label>
+          <input id="agTitulo" type="text" placeholder="Ej: Turno con el dentista" autocomplete="off"></div>
+        <div class="g-row2">
+          <div class="g-field"><label class="g-label" for="agFecha">Día</label><input id="agFecha" type="date"></div>
+          <div class="g-field"><label class="g-label" for="agHora">Hora (opcional)</label><input id="agHora" type="time"></div>
+        </div>
+        <label class="g-switch" style="padding:0"><input type="checkbox" id="agSinFecha"> Sin fecha: algún día</label>
+        <div class="g-field"><label class="g-label" for="agRepetir">Se repite</label>
+          <select id="agRepetir">
+            <option value="">No se repite</option><option value="diario">Todos los días</option>
+            <option value="semanal">Todas las semanas</option><option value="mensual">Todos los meses</option>
+            <option value="anual">Todos los años</option>
+          </select></div>
+        <div class="g-field"><span class="g-label">Avisarme</span><div class="j-checks" id="agAvisos"></div></div>
+        <label class="g-switch" style="padding:0"><input type="checkbox" id="agInsistir"> Insistirme hasta que lo marque hecho</label>
+        <div class="g-field"><label class="g-label" for="agNota">Nota</label>
+          <textarea id="agNota" rows="2" placeholder="Dirección, qué llevar, lo que sea"></textarea></div>
+        <div class="g-actions">
+          <button class="g-btn danger" id="agBorrar" hidden>Borrar</button>
+          <button class="g-btn" data-close>Cancelar</button>
+          <button class="g-btn primary" id="agGuardar">Guardar</button></div>
       </div>
 
       <div id="phaseCocine" hidden>
@@ -1873,7 +1965,7 @@
         <div class="g-card g-tips" id="avisosCard" style="margin:2px 0 4px">
           <label class="g-switch" style="padding:0"><input type="checkbox" id="cfgAvisos">
             Avisarme de los vencimientos en el celu</label>
-          <div class="g-note">Tarjetas, préstamos, alquiler y las boletas que pagás vos.</div>
+          <div class="g-note">Tarjetas, préstamos, alquiler, las boletas que pagás vos y todo lo de la Agenda.</div>
           <div class="g-label" style="margin-top:10px">Ícono de los avisos</div>
           <div class="j-icons" id="avIconos" style="margin-top:6px"></div>
           <div class="g-label" style="margin-top:12px">Cuándo avisarte</div>
@@ -1884,7 +1976,8 @@
               <select id="avInsistir"><option value="0">Avisar una vez</option><option value="2">Insistir cada 2 h</option>
                 <option value="3">Insistir cada 3 h</option><option value="4">Insistir cada 4 h</option></select></div>
           </div>
-          <label class="g-switch" style="padding:10px 0 0"><input type="checkbox" id="avCena"> Sugerirme qué cocinar cada día</label>
+          <label class="g-switch" style="padding:10px 0 0"><input type="checkbox" id="avResumen"> Resumen de la mañana con lo que tenés en la agenda</label>
+          <label class="g-switch" style="padding:6px 0 0"><input type="checkbox" id="avCena"> Sugerirme qué cocinar cada día</label>
           <div class="g-field" id="avCenaHoraRow" hidden style="margin-top:6px"><label class="g-label" for="avCenaHora">A qué hora</label><input id="avCenaHora" type="time" value="19:30"></div>
           <div class="g-note" id="avisosEstado" style="margin-top:6px"></div>
           <div class="g-heroactions" id="avisosAcciones" style="margin-top:8px">
@@ -2128,7 +2221,7 @@
     recordatorio:{on:false, hora:"21:30"}, notificaciones:false, diaCobro:0, sueldo:0, dolar:0});
   const blankState = () => ({movs:[], billeteras:[], tarjetas:[], fijos:[], pagosFijos:{}, transf:[], ajustes:[],
     metas:[], prestamos:[], presu:blankPresu(), parches:[], config:blankConfig(), seq:0,
-    cocina:{recetas:[], historial:[], semilla:false}});
+    cocina:{recetas:[], historial:[], semilla:false}, agenda:{items:[]}});
   const blankPresu = () => ({porDia:0, desde:"", previstos:[], ajustes:[]});
   // qué archivos de cambios ya aplicaste: para no cargar dos veces lo mismo
 
@@ -2346,7 +2439,7 @@
      Claude no toca los datos: arma el mismo archivo que te mando yo, y pasa por la
      misma vista previa con Deshacer. Si algo no le queda claro, pregunta. */
   const OPS_ASIS = ["gasto","ingreso","pagoResumen","pagoFijo","pagoPrestamo","transferencia","saldo",
-    "fijo","previsto","presupuesto","borrarMov","cocine","receta"];
+    "fijo","previsto","presupuesto","borrarMov","cocine","receta","agenda","hecho"];
   const SCHEMA_ASIS = {type:"object", additionalProperties:false, required:["respuesta","cambios"], properties:{
     respuesta:{type:"string"},
     pregunta:{type:"string"},
@@ -2358,7 +2451,9 @@
       dia:{type:"integer"}, esencial:{type:"boolean"}, avisar:{type:"boolean"}, adelanto:{type:"boolean"},
       porDia:{type:"number"},
       receta:{type:"string"}, cat:{type:"string"}, minutos:{type:"integer"}, porciones:{type:"integer"},
-      ingredientes:{type:"array", items:{type:"string"}}, pasos:{type:"array", items:{type:"string"}}, fav:{type:"boolean"}
+      ingredientes:{type:"array", items:{type:"string"}}, pasos:{type:"array", items:{type:"string"}}, fav:{type:"boolean"},
+      titulo:{type:"string"}, hora:{type:"string"}, repetir:{type:"string", enum:["","diario","semanal","mensual","anual"]},
+      avisos:{type:"array", items:{type:"integer"}}, insistir:{type:"boolean"}, nota:{type:"string"}
     }}}
   }};
   function contextoAsis(){
@@ -2382,6 +2477,14 @@
     if((C.recetas||[]).length) L.push("Recetas guardadas: " + C.recetas.map(r=>r.nombre + (r.fav?" (favorita)":"")).join("; ") + ".");
     const semana = (C.historial||[]).filter(h=>h.fecha>=isoDe(masDias(new Date(), -7)));
     if(semana.length) L.push("Cocinó estos días: " + semana.map(h=>`${h.fecha} ${h.nombre}`).join("; ") + ".");
+    const ag = (S.agenda && S.agenda.items) || [];
+    if(ag.length){
+      const prox = [];
+      for(let k=-7; k<=14; k++){ const d = isoDe(masDias(new Date(), k));
+        for(const it of ag) if(ocurre(it, d)) prox.push(`${d}${it.hora?" "+it.hora:""} ${it.titulo}${it.repetir?" (se repite "+it.repetir+")":""}${hechoEn(it,d)?" [hecho]":""}`); }
+      const sin = ag.filter(it=>!it.fecha).map(it=>it.titulo);
+      L.push("Agenda (de hace una semana a dos semanas adelante): " + (prox.join("; ") || "nada") + "." + (sin.length ? " Sin fecha: " + sin.join("; ") + "." : ""));
+    }
     return L.join("\n");
   }
   const SYS_ASIS = [
@@ -2399,6 +2502,8 @@
     "- presupuesto: cambia cuánto quiere gastar por día. porDia.",
     "- borrarMov: borra un movimiento cargado mal. desc, monto, fecha (los que sepas).",
     "- cocine: anota que cocinó un plato. nombre (usá el de la receta guardada si coincide), fecha.",
+    "- agenda: agenda un plan o quehacer. titulo (corto, sin la fecha), fecha YYYY-MM-DD (vacía si es 'algún día'), hora HH:MM si la dice, repetir (diario, semanal, mensual, anual o vacío), avisos (minutos antes: 0 a la hora, 60 una hora antes, 1440 el día antes), insistir:true si pide que le insistas, nota. Si dice 'recordame' sin día, es para hoy.",
+    "- hecho: marca como hecho algo de la agenda. titulo (el del contexto), fecha del día en que tocaba.",
     "- receta: crea o actualiza una receta. nombre, cat (pastas, carnes, pollo, veggie, pescado, tartas, sopas, postres u otras), minutos, porciones, ingredientes (lista, con cantidades), pasos (lista; si un paso lleva tiempo, terminalo con la duración entre paréntesis, ej. (10 min)), fav si dice que es su favorita. Si pide una receta que no sabe, armala vos.",
     "Usá los nombres EXACTOS de billeteras, tarjetas, fijos y préstamos del contexto. Si no dice la fecha, es hoy. Si no dice de qué billetera salió y no se deduce, preguntá.",
     "En 'respuesta' resumí en una o dos frases qué vas a cargar, hablándole de vos. Si te falta un dato imprescindible, devolvé cambios vacío y la duda en 'pregunta'. Nunca inventes montos."
@@ -4059,7 +4164,8 @@
           titulo:"¿Qué cocinamos hoy?", texto: sg ? `Te tiro una idea: ${sg.r.nombre}. ${sg.porque}.` : "Abrí Cocina y te sugiero algo según lo que venís haciendo."});
       }
     }
-    return out.sort((x,y)=>x.when-y.when).slice(0,60);
+    if(julioListo) out.push(...agendaAvisos(cfg, ahora, tope, icono));
+    return out.sort((x,y)=>x.when-y.when).slice(0,150);
   }
   let avisosT = null;
   function sincronizarAvisos(){
@@ -5469,6 +5575,28 @@
               if(c.fav!=null) r.fav = !!c.fav;
             }});
         }
+        else if(op==="agenda"){
+          const titulo = String(c.titulo || c.nombre || c.desc || "").trim();
+          if(!titulo){ out.errores.push("agenda sin título"); continue; }
+          const fecha = c.fecha==="" || c.fecha===null ? null : fechaValida(c.fecha);
+          const hora = /^\d{1,2}:\d{2}$/.test(c.hora||"") ? c.hora.padStart(5,"0") : null;
+          const repetir = ["diario","semanal","mensual","anual"].includes(c.repetir) ? c.repetir : "";
+          out.ops.push({
+            txt: `🗓️ Agendo <strong>${esc(titulo)}</strong>` + (fecha ? ` · ${fecha.slice(8)}/${fecha.slice(5,7)}` : " · sin fecha") +
+                 (hora ? ` · ${hora}` : "") + (repetir ? ` · 🔁 ${REP_TXT[repetir].toLowerCase()}` : ""),
+            aplicar(){ nuevoAg({titulo, fecha, hora, repetir, nota: String(c.nota||""), insistir: !!c.insistir,
+              avisos: Array.isArray(c.avisos) ? c.avisos.map(Number).filter(n=>n>=0) : null}); }});
+        }
+        else if(op==="hecho"){
+          const titulo = String(c.titulo || c.nombre || "").trim();
+          const it = (S.agenda && S.agenda.items || []).find(x=>norm(x.titulo)===norm(titulo))
+                  || (S.agenda && S.agenda.items || []).find(x=>norm(x.titulo).includes(norm(titulo)) && titulo);
+          if(!it){ out.errores.push(`no encuentro "${titulo}" en la agenda`); continue; }
+          const dia = it.fecha ? (c.fecha ? fechaValida(c.fecha) : (it.repetir ? todayISO() : it.fecha)) : "sin";
+          out.ops.push({
+            txt: `✅ Hecho: <strong>${esc(it.titulo)}</strong>` + (it.fecha ? ` · ${dia.slice(8)}/${dia.slice(5,7)}` : ""),
+            aplicar(){ it.hechos = it.hechos || {}; it.hechos[claveDia(it, dia)] = true; }});
+        }
         else if(op==="transferencia" || op==="transferir"){
           const de = resolver(S.billeteras, c.de || c.desde, "la billetera de origen", out.errores);
           const a  = resolver(S.billeteras, c.a || c.hacia, "la billetera de destino", out.errores);
@@ -5696,12 +5824,13 @@
     // restaurar pisa todo: primero guardamos lo actual para poder volver atrás
     const antes = JSON.stringify(S);
     const key = S.config.apiKey||"";
-    const cocinaActual = S.cocina;
+    const cocinaActual = S.cocina, agendaActual = S.agenda;
     S = Object.assign(blankState(), datos);
     S.config = Object.assign(blankConfig(), datos.config||{});
     S.config.apiKey = key;                          // la key del celu actual se conserva
     // un respaldo de antes de Juli-o no trae cocina: no te borro tus recetas
     if(!datos.cocina && cocinaActual) S.cocina = cocinaActual;
+    if(!datos.agenda && agendaActual) S.agenda = agendaActual;
     if(j && j.fotos && typeof j.fotos==="object") for(const [id, f] of Object.entries(j.fotos)) if(typeof f==="string" && f.startsWith("data:image/")) Fotos.put(id, f);
     if(datos.config && datos.config.pin) plataAbierta = true;
     save(); closeSheet(); renderAll();
@@ -6265,7 +6394,7 @@
     toast(monto>0 ? `Sumé ${fmtMoney(monto)} al sobre ✔` : `Resté ${fmtMoney(-monto)} del sobre ✔`);
   });
 
-  function renderAll(){ if(julioListo){ renderHoy(); renderCocina(); } renderHome(); renderVencimientos(); renderPagos(); renderPanel(); renderDiario(); renderPresu(); renderAnalisis(); renderTarjetas(); renderPrestamos(); renderBilleteras(); renderPlan(); sincronizarAvisos(); }
+  function renderAll(){ if(julioListo){ renderHoy(); renderCocina(); renderAgenda(); } renderHome(); renderVencimientos(); renderPagos(); renderPanel(); renderDiario(); renderPresu(); renderAnalisis(); renderTarjetas(); renderPrestamos(); renderBilleteras(); renderPlan(); sincronizarAvisos(); }
 
   /* ---------- navegación ---------- */
   const tabs = document.querySelectorAll(".g-tab");
@@ -6351,7 +6480,7 @@
 
   /* ---------- sheet ---------- */
   const sheet=$("sheet"), scrim=$("scrim");
-  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte","Alcanza","Simu","Reparto","Rendir","Parche","Compartido","Fijos","FijosGuia","Prestamo","PagoPrestamo","Rec","Salida","Presu","Previsto","AjSobre","Asis","Pin","Cocine","Dia"];
+  const phases = ["Text","Review","Multi","Fijo","Card","Resumen","Busy","Import","Detalle","Subs","Pay","PagoRes","Wallet","Transfer","Config","Setup","Budget","Proy","Cat","Notif","Meta","Aporte","Alcanza","Simu","Reparto","Rendir","Parche","Compartido","Fijos","FijosGuia","Prestamo","PagoPrestamo","Rec","Salida","Presu","Previsto","AjSobre","Asis","Pin","Cocine","Dia","Agenda"];
   const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]),' +
     ' textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
   const focoVisibles = () => Array.from(sheet.querySelectorAll(FOCUSABLE))
@@ -8330,6 +8459,8 @@
   }
 
   async function processTranscript(text){
+    // en la Agenda, lo que dictás se agenda ("mañana a las 10 llamar al banco")
+    if(julioListo && modActual==="agenda"){ closeListen(); agregarRapido(text, "voz"); return; }
     lastOrigen = "voz";
     if((S.config.apiKey||"").trim()){
       const gen = ++vozGen;
@@ -8587,14 +8718,14 @@
 
   /* ══════════════════ Juli-o: módulos, clave de Plata, Hoy y Cocina ══════════════════ */
 
-  const MOD_TIT = {hoy:"Hoy", plata:"Plata", cocina:"Cocina"};
+  const MOD_TIT = {hoy:"Hoy", agenda:"Agenda", plata:"Plata", cocina:"Cocina"};
   function irMod(m){
     if(!MOD_TIT[m]) return;
     const cambio = m !== modActual;
     modActual = m;
     document.querySelectorAll(".mod").forEach(x=>x.classList.toggle("on", x.id==="mod-"+m));
     document.querySelectorAll(".j-tab[data-mod]").forEach(t=>t.classList.toggle("on", t.dataset.mod===m));
-    document.body.classList.remove("mod-hoy","mod-plata","mod-cocina");
+    document.body.classList.remove("mod-hoy","mod-agenda","mod-plata","mod-cocina");
     document.body.classList.add("mod-"+m);
     const t = $("modTitle");
     if(t.textContent !== MOD_TIT[m]){
@@ -8604,6 +8735,8 @@
     pintarBloqueo();
     if(julioListo && m==="hoy") renderHoy();
     if(julioListo && m==="cocina") renderCocina();
+    if(julioListo && m==="agenda") renderAgenda();
+    $("micBtn").setAttribute("aria-label", m==="agenda" ? "Mantené apretado y decí qué agendar" : "Mantené apretado para hablar");
     if(cambio) window.scrollTo({top:0, behavior:"auto"});
   }
   document.querySelectorAll(".j-tab[data-mod]").forEach(b=>b.onclick = ()=>{
@@ -8790,7 +8923,7 @@
   { const abrirAsis = $("asisBtn").onclick;
     $("asisBtn").onclick = ()=>{ vibrar(8); conPlata(()=>abrirAsis()); }; }
   $("micBtn").parentElement.addEventListener("pointerdown", e=>{
-    if(!plataBloq()) return;
+    if(!plataBloq() || modActual==="agenda") return;
     e.stopPropagation(); e.preventDefault();
     conPlata(null);
     toast("Primero tu clave 🔒");
@@ -8966,6 +9099,14 @@
     $("hoyFecha").textContent = `${DIAS_L[h.getDay()]} ${h.getDate()} de ${MESES_L[h.getMonth()]}`;
     $("hoySaludo").textContent = (hr<6 ? "Buenas noches" : hr<13 ? "Buen día" : hr<20 ? "Buenas tardes" : "Buenas noches") + ", Juli";
     const cards = [];
+    {
+      const hoy = todayISO(), del = itemsDelDia(hoy), pend = pendientes();
+      const filas = [...pend.slice(0,3).map(x=>filaAg(x, x.fecha, true)), ...del.slice(0,5).map(x=>filaAg(x, hoy))];
+      cards.push(`<div class="j-card" data-agcard>
+        <div class="j-k"><span>Agenda de hoy</span><span>${del.filter(x=>!hechoEn(x,hoy)).length ? `${del.filter(x=>!hechoEn(x,hoy)).length} por hacer` : ""}</span></div>
+        ${filas.length ? `<div style="margin-top:4px">${filas.join("")}</div>` : `<div class="j-sub" style="margin-top:8px">Nada para hoy. ¿Querés agendar algo?</div>`}
+        <button class="g-minibtn" data-ir="agenda" style="margin-top:10px">${filas.length ? "Ver la agenda" : "＋ Agendar"}</button></div>`);
+    }
     if(plataBloq()){
       cards.push(`<button class="j-card" data-ir="plata">
         <div class="j-k">Plata</div>
@@ -9010,11 +9151,13 @@
     const so = $("hoySobre"); if(so){ const v = presupuesto(); if(v){ lastNum.hoySobre = lastNum.hoySobre ?? 0; animMoney(so, v.queda); } }
   }
   $("hoyStack").addEventListener("click", e=>{
+    if(clickAg(e)) return;
     const c = e.target.closest("[data-ir],[data-rec]");
     if(!c) return;
     vibrar(8);
     if(c.dataset.rec){ abrirReceta(c.dataset.rec); return; }
     if(c.dataset.ir==="asis"){ $("asisBtn").click(); return; }
+    if(c.dataset.ir==="agenda"){ irMod("agenda"); setTimeout(()=>{ try{ $("agQuick").focus(); }catch(e){} }, 300); return; }
     if(c.dataset.ir==="plata"){ irMod("plata"); if(c.dataset.vista && !plataBloq()) switchView(c.dataset.vista); }
   });
 
@@ -9454,7 +9597,7 @@
     ["olla", '<path d="M3 9h18M5 9v8a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V9"/><path d="M10 5h4"/>'],
     ["juli", '<path d="M15 3v11.5a5.5 5.5 0 0 1-10.6 2"/>']];
   const AV_DIAS = [[3,"3 días antes"],[2,"2 días antes"],[1,"El día antes"],[0,"El mismo día"]];
-  function avCfg(){ return Object.assign({icono:"campana", dias:[1,0], hora:"09:00", insistir:0, cena:false, cenaHora:"19:30"}, S.config.avisosCfg||{}); }
+  function avCfg(){ return Object.assign({icono:"campana", dias:[1,0], hora:"09:00", insistir:0, cena:false, cenaHora:"19:30", resumen:true}, S.config.avisosCfg||{}); }
   function guardarAvCfg(c){ S.config.avisosCfg = c; save(); sincronizarAvisos(); pintarAvisosCfg(); setTimeout(pintarAvisos, 600); }
   function pintarAvisosCfg(){
     if(!$("avIconos")) return;
@@ -9467,6 +9610,7 @@
     $("avCena").checked = !!c.cena;
     $("avCenaHora").value = c.cenaHora;
     $("avCenaHoraRow").hidden = !c.cena;
+    $("avResumen").checked = c.resumen !== false;
   }
   $("avIconos").addEventListener("click", e=>{ const b = e.target.closest("[data-icono]"); if(!b) return;
     vibrar(8); guardarAvCfg(Object.assign(avCfg(), {icono:b.dataset.icono})); });
@@ -9476,6 +9620,7 @@
     vibrar(6); guardarAvCfg(c); });
   $("avHora").addEventListener("change", ()=>guardarAvCfg(Object.assign(avCfg(), {hora: $("avHora").value || "09:00"})));
   $("avInsistir").addEventListener("change", ()=>guardarAvCfg(Object.assign(avCfg(), {insistir: Number($("avInsistir").value)||0})));
+  $("avResumen").addEventListener("change", ()=>guardarAvCfg(Object.assign(avCfg(), {resumen: $("avResumen").checked})));
   $("avCena").addEventListener("change", ()=>guardarAvCfg(Object.assign(avCfg(), {cena: $("avCena").checked})));
   $("avCenaHora").addEventListener("change", ()=>guardarAvCfg(Object.assign(avCfg(), {cenaHora: $("avCenaHora").value || "19:30"})));
   $("avisosProbarBtn").onclick = ()=>{
@@ -9484,8 +9629,388 @@
     toast("Te mando una de prueba en 5 segundos 🔔");
   };
 
+
+  /* ══════════════════ Agenda: planes y quehaceres que avisan ══════════════════ */
+  function agenda(){
+    if(!S.agenda || !Array.isArray(S.agenda.items)) S.agenda = {items:[]};
+    return S.agenda;
+  }
+  const isoMas = (iso, n) => isoDe(masDias(new Date(iso+"T12:00:00"), n));
+  const DOW_N = ["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
+  const DOW_C = ["dom","lun","mar","mié","jue","vie","sáb"];
+  const MES_N = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  const REP_TXT = {diario:"Todos los días", semanal:"Todas las semanas", mensual:"Todos los meses", anual:"Todos los años"};
+
+  /**
+   * "mañana 18hs dentista", "todos los lunes a las 9 sacar la basura", "el 25 a la noche
+   * cumple de Lu", "en 2 horas llamar al banco". Devuelve {titulo, fecha, hora, repetir}.
+   * Lo que entiende lo saca del título; lo que no, queda como está.
+   */
+  function parseAgenda(raw, ahora){
+    ahora = ahora || new Date();
+    let t = " " + String(raw||"").normalize("NFC").replace(/\s+/g," ").trim() + " ";
+    let low = norm(t);
+    const cut = m => { const i = m.index, L = m[0].length;
+      t = t.slice(0,i) + " ".repeat(L) + t.slice(i+L); low = low.slice(0,i) + " ".repeat(L) + low.slice(i+L); };
+    const find = re => { const m = re.exec(low); if(m) cut(m); return m; };
+    const hoyISO = isoDe(ahora);
+    const proxDow = (nombre, incluyeHoy) => {
+      const k = DOW_N.indexOf(nombre.replace(/^(sabado|domingo)s$/, "$1"));
+      let d = (k - ahora.getDay() + 7) % 7;
+      if(d===0 && !incluyeHoy) d = 7;
+      return isoMas(hoyISO, d);
+    };
+    const proxDiaMes = (dia, mes) => {
+      let y = ahora.getFullYear(), m = mes!=null ? mes : ahora.getMonth();
+      const arma = (y,m) => isoDe(new Date(y, m, Math.min(dia, new Date(y, m+1, 0).getDate()), 12));
+      let f = arma(y, m);
+      if(f < hoyISO){ if(mes!=null) y++; else m++; f = arma(y, m); }
+      return f;
+    };
+    let fecha = null, hora = null, repetir = "", franja = null, m;
+
+    // se repite
+    if((m = find(/\b(todos los dias|cada dia|diariamente|todas las (mananas|tardes|noches))\b/))){
+      repetir = "diario"; if(m[2]) franja = m[2].slice(0,-1);
+    }
+    if((m = find(/\b(?:todos los|todas las|cada)\s+(lunes|martes|miercoles|jueves|viernes|sabados?|domingos?)\b/))){
+      repetir = "semanal"; fecha = proxDow(m[1], true);
+    } else if(find(/\b(todas las semanas|cada semana|semanalmente|una vez por semana)\b/)) repetir = "semanal";
+    if((m = find(/\b(?:todos los|cada)\s+(\d{1,2})(?:\s+de\s+cada\s+mes)?\b/))){ repetir = "mensual"; fecha = proxDiaMes(+m[1]); }
+    else if(find(/\b(todos los meses|cada mes|mensualmente|una vez por mes)\b/)) repetir = "mensual";
+    if(find(/\b(todos los anos|cada ano|anualmente)\b/)) repetir = "anual";
+    if(!repetir && /\b(cumple|cumpleanos|aniversario)\b/.test(low)) repetir = "anual";
+
+    // franja del día
+    if((m = find(/\b(?:a|por|de|a la|en la)\s*la\s+(manana|tarde|noche|siesta)\b/)) || (m = find(/\besta\s+(noche|tarde|manana)\b/))){
+      franja = m[1];
+      if(/^esta/.test(m[0].trim())) fecha = fecha || hoyISO;
+    }
+    if(find(/\bal\s+mediodia\b/)) hora = "13:00";
+
+    // cuándo
+    if(find(/\bpasado\s+manana\b/)) fecha = isoMas(hoyISO, 2);
+    else if(find(/\bmanana\b/)) fecha = isoMas(hoyISO, 1);
+    else if(find(/\bhoy\b/)) fecha = hoyISO;
+    if((m = find(/\ben\s+(\d+|un|una|media)\s+(minutos?|min|horas?|hs|dias?|semanas?)\b/))){
+      const n = m[1]==="media" ? .5 : /^un/.test(m[1]) ? 1 : +m[1];
+      if(/^(min|hora|hs)/.test(m[2])){
+        const d = new Date(ahora.getTime() + n*(/^min/.test(m[2]) ? 6e4 : 36e5));
+        fecha = isoDe(d); hora = String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+      } else fecha = isoMas(hoyISO, n*(/^sem/.test(m[2]) ? 7 : 1));
+    }
+    if((m = find(/\b(?:el|este|esta|el proximo|la proxima|proximo)?\s*(lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b(?:\s+que\s+viene)?/))) fecha = proxDow(m[1], false);
+    if((m = find(/\b(?:el\s+)?(\d{1,2})\s*\/\s*(\d{1,2})\b/))) fecha = proxDiaMes(+m[1], +m[2]-1);
+    else if((m = find(new RegExp("\\b(?:el\\s+)?(\\d{1,2})\\s+de\\s+(" + MES_N.join("|") + ")\\b")))) fecha = proxDiaMes(+m[1], MES_N.indexOf(m[2]));
+    else if((m = find(/\bel\s+(\d{1,2})\b(?!\s*(?:hs|h|:|horas))/))) fecha = proxDiaMes(+m[1]);
+    if(find(/\b(?:a\s+)?fin\s+de\s+mes\b/)){ const d = new Date(ahora.getFullYear(), ahora.getMonth()+1, 0, 12); fecha = isoDe(d); }
+
+    // hora
+    if(!hora && ((m = find(/\b(?:a\s+las?\s+)?(\d{1,2})(?:[:.](\d{2}))?\s*(?:hs|h|hrs|horas)\b(?:\s+y\s+(media|cuarto))?/))
+             || (m = find(/\ba\s+las?\s+(\d{1,2})(?:[:.](\d{2}))?\b(?:\s+y\s+(media|cuarto))?/))
+             || (m = find(/\b(\d{1,2}):(\d{2})\b()/)))){
+      let h = +m[1], mi = m[2] ? +m[2] : m[3]==="media" ? 30 : m[3]==="cuarto" ? 15 : 0;
+      if(franja && /tarde|noche|siesta/.test(franja) && h<12) h += 12;
+      else if(!franja && h>=1 && h<=7 && !/:/.test(m[0])) h += 12;      // "a las 5" es a la tarde
+      if(h<24 && mi<60) hora = String(h).padStart(2,"0")+":"+String(mi).padStart(2,"0");
+    }
+    if(!hora && franja) hora = {manana:"09:00", siesta:"15:00", tarde:"17:00", noche:"21:00"}[franja];
+
+    // sin día pero con hora: hoy si todavía no pasó, si no mañana
+    if(!fecha && hora){
+      const [h, mi] = hora.split(":").map(Number);
+      fecha = (h*60+mi > ahora.getHours()*60+ahora.getMinutes()) ? hoyISO : isoMas(hoyISO, 1);
+    }
+    if(!fecha) fecha = hoyISO;
+
+    let titulo = t.replace(/\s+/g," ").trim()
+      .replace(/^(?:recorda(?:me|rme)|acorda(?:te|rme)|avisa(?:me)?|agenda(?:me|r)?|anota(?:me|r)?|tengo que|hay que|tenemos que)\s+(?:que\s+|de\s+)?/i, "")
+      .replace(/^(?:(?:el|la|a|de|para|que|y|a las)\s+)+/i, "")
+      .replace(/(?:\s+(?:el|la|a|de|para|que|y|a las|las|los))+$/i, "")
+      .trim();
+    if(!titulo) titulo = String(raw||"").trim();
+    titulo = titulo.charAt(0).toUpperCase() + titulo.slice(1);
+    return {titulo, fecha, hora, repetir};
+  }
+
+  /** ¿Este ítem cae este día? (contando las repeticiones) */
+  function ocurre(it, iso){
+    if(!it.fecha || iso < it.fecha) return false;
+    if(!it.repetir) return iso === it.fecha;
+    const a = new Date(it.fecha+"T12:00:00"), b = new Date(iso+"T12:00:00");
+    if(it.repetir==="diario") return true;
+    if(it.repetir==="semanal") return a.getDay()===b.getDay();
+    if(it.repetir==="mensual"){ const ult = new Date(b.getFullYear(), b.getMonth()+1, 0).getDate(); return b.getDate()===Math.min(a.getDate(), ult); }
+    if(it.repetir==="anual") return a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+    return false;
+  }
+  const claveDia = (it, iso) => it.fecha ? iso : "sin";
+  const hechoEn = (it, iso) => !!(it.hechos && it.hechos[claveDia(it, iso)]);
+  const porHora = (a,b) => ((a.hora||"99") < (b.hora||"99") ? -1 : (a.hora||"99") > (b.hora||"99") ? 1 : a.id-b.id);
+  const itemsDelDia = iso => agenda().items.filter(it=>ocurre(it, iso)).sort(porHora);
+  /** Lo que quedó sin hacer de días anteriores: sólo quehaceres (sin hora), hasta 30 días. */
+  const pendientes = () => { const h = todayISO(), desde = isoMas(h, -30);
+    return agenda().items.filter(it=>!it.repetir && it.fecha && !it.hora && it.fecha<h && it.fecha>=desde && !hechoEn(it, it.fecha))
+      .sort((a,b)=>a.fecha<b.fecha?-1:1); };
+  const fechaCorta = iso => { const d = new Date(iso+"T12:00:00"); return `${DOW_C[d.getDay()]} ${d.getDate()}`; };
+  const fechaLarga = iso => { const d = new Date(iso+"T12:00:00"), h = todayISO();
+    return iso===h ? "hoy" : iso===isoMas(h,1) ? "mañana" : `${DOW_N[d.getDay()].replace("miercoles","miércoles").replace("sabado","sábado")} ${d.getDate()} de ${MES_N[d.getMonth()]}`; };
+  function describirAg(p){
+    return [p.fecha ? fechaLarga(p.fecha) : "", p.hora || "", p.repetir ? "🔁 "+REP_TXT[p.repetir].toLowerCase() : ""].filter(Boolean);
+  }
+  const avisosDefault = (hora, repetir) => repetir==="anual" ? [1440, 0] : hora ? [60, 0] : [0];
+
+  function nuevoAg(datos){
+    const it = Object.assign({id:nid(), titulo:"", fecha:todayISO(), hora:null, repetir:"", avisos:null, insistir:false, nota:"", hechos:{}, creado:Date.now()}, datos);
+    if(!Array.isArray(it.avisos)) it.avisos = avisosDefault(it.hora, it.repetir);
+    agenda().items.push(it);
+    return it;
+  }
+  function agregarRapido(texto, origen){
+    texto = String(texto||"").trim();
+    if(!texto) return null;
+    const p = parseAgenda(texto);
+    const it = nuevoAg(p);
+    save(); renderAgenda(); renderHoy(); sincronizarAvisos();
+    vibrar([10,40,14]);
+    toast(`${origen==="voz"?"🎙 ":""}Agendé “${it.titulo}” · ${describirAg(it).join(" · ")}`, ()=>{
+      agenda().items = agenda().items.filter(x=>x.id!==it.id);
+      save(); renderAgenda(); renderHoy(); sincronizarAvisos(); toast("Lo saqué");
+    });
+    return it;
+  }
+  function marcarAg(id, iso, valor){
+    const it = agenda().items.find(x=>String(x.id)===String(id)); if(!it) return;
+    it.hechos = it.hechos || {};
+    const k = claveDia(it, iso);
+    const nuevo = valor!=null ? valor : !it.hechos[k];
+    if(nuevo) it.hechos[k] = true; else delete it.hechos[k];
+    save(); sincronizarAvisos();
+    vibrar(nuevo ? [12,30,18] : 8);
+    return nuevo;
+  }
+
+  /* ---------- pantalla ---------- */
+  let agSel = null;
+  function filaAg(it, iso, tardio){
+    const hecho = hechoEn(it, iso);
+    const meta = [];
+    if(tardio) meta.push(`Era para el ${fechaCorta(it.fecha)}`);
+    if(it.repetir) meta.push("🔁 " + REP_TXT[it.repetir].replace("Todos los ","cada ").replace("Todas las ","cada ").replace(/s$/,"").replace("cada día","todos los días"));
+    if((it.avisos||[]).length) meta.push(it.insistir ? "🔔 insiste" : "🔔");
+    if(it.nota) meta.push(esc(it.nota.length>40 ? it.nota.slice(0,40)+"…" : it.nota));
+    return `<div class="j-ag ${hecho?"hecho":""} ${tardio?"late":""}" data-ag="${it.id}" data-f="${iso}">
+      <button class="j-chk" aria-label="${hecho?"Desmarcar":"Marcar como hecho"}: ${esc(it.titulo)}" aria-pressed="${hecho}"><svg viewBox="0 0 24 24" fill="none" stroke="#0B0C0E" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></button>
+      <div class="tx"><b>${esc(it.titulo)}</b>${meta.length?`<span>${meta.join(" · ")}</span>`:""}</div>
+      ${it.hora ? `<span class="hr">${it.hora}</span>` : ""}</div>`;
+  }
+  function renderAgenda(){
+    if(!$("agLista")) return;
+    const h = todayISO();
+    const dias = [...Array(14)].map((_,k)=>isoMas(h,k));
+    $("agDias").innerHTML = `<button class="j-agd todo ${agSel?"":"sel"}" data-d="" role="tab" aria-selected="${!agSel}"><b>Todo</b></button>` +
+      dias.map((d,k)=>{ const dd = new Date(d+"T12:00:00"), hay = itemsDelDia(d).some(it=>!hechoEn(it,d));
+        return `<button class="j-agd ${k===0?"hoy":""} ${agSel===d?"sel":""}" data-d="${d}" role="tab" aria-selected="${agSel===d}" aria-label="${fechaLarga(d)}">
+          <small>${k===0?"hoy":DOW_C[dd.getDay()]}</small><b>${dd.getDate()}</b><i class="${hay?"on":""}"></i></button>`; }).join("");
+    const grupo = (titulo, filas, clase, i, sub) => filas.length ? `<div class="j-agh ${clase||""}"><span>${titulo}</span>${sub?`<small>${sub}</small>`:""}</div>
+      <div class="j-aggroup ${clase||""}" style="--d:${i*0.05}s">${filas.join("")}</div>` : "";
+    let html = "", i = 0;
+    if(agSel){
+      const it = itemsDelDia(agSel);
+      html = it.length ? grupo(fechaLarga(agSel).replace(/^./, c=>c.toUpperCase()), it.map(x=>filaAg(x, agSel)), "", 0)
+        : `<div class="j-agempty"><span class="big">🌤️</span>Nada para el ${fechaLarga(agSel)}.<br>Escribí arriba y lo agendo para ese día.</div>`;
+    } else {
+      const pend = pendientes();
+      html += grupo("Quedó pendiente", pend.map(x=>filaAg(x, x.fecha, true)), "late", i++, `${pend.length}`);
+      html += grupo("Hoy", itemsDelDia(h).map(x=>filaAg(x, h)), "", i++, fechaLarga(isoMas(h,0)) === "hoy" ? fechaCorta(h) : "");
+      html += grupo("Mañana", itemsDelDia(isoMas(h,1)).map(x=>filaAg(x, isoMas(h,1))), "", i++, fechaCorta(isoMas(h,1)));
+      for(let k=2; k<=7; k++){ const d = isoMas(h,k);
+        html += grupo(fechaLarga(d).replace(/ de \w+$/,""), itemsDelDia(d).map(x=>filaAg(x, d)), "", i++); }
+      const lejos = agenda().items.filter(it=>!it.repetir && it.fecha && it.fecha>isoMas(h,7)).sort((a,b)=>a.fecha<b.fecha?-1:a.fecha>b.fecha?1:porHora(a,b)).slice(0,12);
+      html += grupo("Más adelante", lejos.map(x=>filaAg(x, x.fecha).replace('<div class="tx"><b>', `<div class="tx"><b>`).replace("</b>", `</b><span>${fechaCorta(x.fecha)}</span>`)), "", i++);
+      const algun = agenda().items.filter(it=>!it.fecha);
+      html += grupo("Algún día", algun.map(x=>filaAg(x, "sin")), "", i++);
+      if(!html) html = `<div class="j-agempty"><span class="big">🗓️</span>No tenés nada agendado.<br>Escribilo arriba como lo dirías («el jueves a las 10 llamar al banco»)<br>o mantené apretado el 🎙 y decilo.</div>`;
+    }
+    $("agLista").innerHTML = html;
+  }
+  $("agDias").addEventListener("click", e=>{
+    const b = e.target.closest("[data-d]"); if(!b) return;
+    agSel = b.dataset.d || null; vibrar(6); renderAgenda();
+  });
+  function clickAg(e){
+    const fila = e.target.closest(".j-ag"); if(!fila) return false;
+    const id = fila.dataset.ag, iso = fila.dataset.f;
+    if(e.target.closest(".j-chk")){
+      const late = fila.classList.contains("late");
+      const nuevo = marcarAg(id, iso);
+      fila.classList.toggle("hecho", nuevo);
+      setTimeout(()=>{ if(late && nuevo) fila.classList.add("saliendo"); }, 250);
+      setTimeout(()=>{ renderAgenda(); renderHoy(); }, late && nuevo ? 600 : 380);
+      if(nuevo){
+        const it = agenda().items.find(x=>String(x.id)===String(id));
+        toast(`¡Hecho! ${it ? it.titulo : ""} ✔`, ()=>{ marcarAg(id, iso, false); renderAgenda(); renderHoy(); });
+      }
+      return true;
+    }
+    abrirAgEditor(id);
+    return true;
+  }
+  $("agLista").addEventListener("click", clickAg);
+
+  /* vista previa mientras escribís, y alta rápida */
+  $("agQuick").addEventListener("input", ()=>{
+    const v = $("agQuick").value.trim();
+    if(!v){ $("agPrev").innerHTML = ""; return; }
+    const p = parseAgenda(v);
+    $("agPrev").innerHTML = [`“${esc(p.titulo)}”`, ...describirAg(p).map(esc)].map(x=>`<span>${x}</span>`).join("");
+  });
+  $("agQuickForm").addEventListener("submit", e=>{
+    e.preventDefault();
+    const v = $("agQuick").value.trim();
+    if(!v){ $("agQuick").focus(); return; }
+    agregarRapido(v);
+    $("agQuick").value = ""; $("agPrev").innerHTML = "";
+  });
+
+  /* editor */
+  let agEdId = null, agEdAvisos = [];
+  function opcionesAvisos(conHora){
+    return conHora ? [[0,"A la hora"],[10,"10 min antes"],[60,"1 h antes"],[1440,"1 día antes"]]
+                   : [[0,"Ese día"],[1440,"El día antes"]];
+  }
+  function pintarAgAvisos(){
+    const conHora = !!$("agHora").value;
+    $("agAvisos").innerHTML = opcionesAvisos(conHora).map(([v,n])=>`<button type="button" class="j-chip ${agEdAvisos.includes(v)?"on":""}" data-v="${v}" aria-pressed="${agEdAvisos.includes(v)}">${n}</button>`).join("")
+      + `<span class="g-note" style="align-self:center">${conHora ? "" : `a las ${avCfg().hora}`}</span>`;
+  }
+  function abrirAgEditor(id, preset){
+    const it = id!=null ? agenda().items.find(x=>String(x.id)===String(id)) : null;
+    const d = it || Object.assign({titulo:"", fecha: agSel || todayISO(), hora:null, repetir:"", insistir:false, nota:""}, preset||{});
+    agEdId = it ? it.id : null;
+    $("agEdTitulo").textContent = it ? "Editar" : "Nuevo en la agenda";
+    $("agTitulo").value = d.titulo || "";
+    $("agFecha").value = d.fecha || "";
+    $("agSinFecha").checked = !d.fecha;
+    $("agFecha").disabled = !d.fecha;
+    $("agHora").value = d.hora || "";
+    $("agRepetir").value = d.repetir || "";
+    $("agInsistir").checked = !!d.insistir;
+    $("agNota").value = d.nota || "";
+    agEdAvisos = Array.isArray(d.avisos) ? d.avisos.slice() : avisosDefault(d.hora, d.repetir);
+    pintarAgAvisos();
+    $("agBorrar").hidden = !it;
+    openSheet("agenda");
+    if(!it) setTimeout(()=>{ try{ $("agTitulo").focus(); }catch(e){} }, 280);
+  }
+  $("agAvisos").addEventListener("click", e=>{
+    const b = e.target.closest("[data-v]"); if(!b) return;
+    const v = Number(b.dataset.v);
+    agEdAvisos = agEdAvisos.includes(v) ? agEdAvisos.filter(x=>x!==v) : [...agEdAvisos, v];
+    vibrar(6); pintarAgAvisos();
+  });
+  $("agHora").addEventListener("change", ()=>{
+    const validos = opcionesAvisos(!!$("agHora").value).map(x=>x[0]);
+    agEdAvisos = agEdAvisos.filter(v=>validos.includes(v));
+    if(!agEdAvisos.length) agEdAvisos = avisosDefault($("agHora").value, $("agRepetir").value);
+    pintarAgAvisos();
+  });
+  $("agSinFecha").addEventListener("change", ()=>{
+    $("agFecha").disabled = $("agSinFecha").checked;
+    if(!$("agSinFecha").checked && !$("agFecha").value) $("agFecha").value = todayISO();
+  });
+  $("agGuardar").onclick = ()=>{
+    const titulo = $("agTitulo").value.trim();
+    if(!titulo){ toast("¿Qué agendamos?"); $("agTitulo").focus(); return; }
+    const sinFecha = $("agSinFecha").checked;
+    const datos = {titulo, fecha: sinFecha ? null : ($("agFecha").value || todayISO()), hora: $("agHora").value || null,
+      repetir: sinFecha ? "" : $("agRepetir").value, avisos: sinFecha ? [] : agEdAvisos.slice().sort((a,b)=>b-a),
+      insistir: $("agInsistir").checked, nota: $("agNota").value.trim()};
+    let it = agEdId!=null ? agenda().items.find(x=>x.id===agEdId) : null;
+    if(it) Object.assign(it, datos); else it = nuevoAg(datos);
+    save(); closeSheet(); renderAgenda(); renderHoy(); sincronizarAvisos();
+    vibrar(14);
+    toast(agEdId!=null ? "Guardado ✔" : `Agendado: ${it.titulo} ✔`);
+  };
+  $("agBorrar").onclick = ()=>{
+    const it = agenda().items.find(x=>x.id===agEdId); if(!it) return;
+    closeSheet();
+    borrarConUndo(`Borré “${it.titulo}”`, ()=>{ agenda().items = agenda().items.filter(x=>x.id!==it.id); });
+    sincronizarAvisos();
+  };
+
+  /* ---------- avisos de la agenda ---------- */
+  function agendaAvisos(cfg, ahora, tope, icono){
+    const out = [];
+    if(!S.agenda || !(S.agenda.items||[]).length) return out;
+    const hoy = todayISO();
+    const base = (iso, hora) => { const [h, mi] = String(hora || cfg.hora || "09:00").split(":").map(Number);
+      const d = new Date(iso+"T12:00:00"); d.setHours(h, mi||0, 0, 0); return d.getTime(); };
+    const enRango = t => t>ahora && t<tope;
+    const resumen = cfg.resumen !== false;
+    for(let k=-1; k<=40; k++){
+      const D = isoMas(hoy, k);
+      for(const it of agenda().items){
+        if(!ocurre(it, D) || hechoEn(it, D)) continue;
+        const pref = `ag:${it.id}:${D}`;
+        const cuando = it.hora ? `A las ${it.hora}` : "Para hoy";
+        for(const off of (it.avisos||[])){
+          // los quehaceres sin hora del día ya van en el resumen de la mañana
+          if(off===0 && !it.hora && resumen && !it.insistir) continue;
+          const t = base(D, it.hora) - off*60000;
+          if(!enRango(t)) continue;
+          out.push({id:`${pref}:${off}`, when:t, icono,
+            titulo: off===0 ? it.titulo : off>=1440 ? `Mañana: ${it.titulo}` : `En ${off>=60 ? off/60+" h" : off+" min"}: ${it.titulo}`,
+            texto: [off>=1440 ? (it.hora ? `Mañana a las ${it.hora}` : "Es mañana") : cuando, it.nota].filter(Boolean).join(" · ")});
+        }
+        if(it.insistir){
+          const paso = Math.max(1, cfg.insistir || 2) * 36e5;
+          for(let j=1, t=base(D, it.hora)+paso; j<=4 && new Date(t).getHours()<=21; j++, t+=paso)
+            if(enRango(t)) out.push({id:`${pref}:i${j}`, when:t, icono, titulo:`¿Ya está? ${it.titulo}`,
+              texto:"Te lo vuelvo a recordar. Tocá «Listo» cuando lo hagas."});
+        }
+        const snz = it.pospuesto && it.pospuesto[D];
+        if(snz && enRango(snz)) out.push({id:`${pref}:snz`, when:snz, icono, titulo:it.titulo, texto:"Lo pospusiste una hora: ¿ahora sí?"});
+        // un quehacer de un día que no marcaste: los dos días siguientes te lo recuerdo a la mañana
+        if(!it.repetir && !it.hora && k>=0) for(const p of [1,2]){
+          const t = base(isoMas(D, p));
+          if(enRango(t)) out.push({id:`${pref}:p${p}`, when:t, icono, titulo:"Te quedó pendiente", texto:it.titulo});
+        }
+      }
+      // el resumen de la mañana: todo lo del día en una sola notificación
+      if(resumen && k>=0){
+        const del = itemsDelDia(D).filter(it=>!hechoEn(it, D));
+        const t = base(D);
+        if(del.length && enRango(t)){
+          const lineas = del.slice(0,5).map(it=>`${it.hora ? it.hora+" " : "• "}${it.titulo}`);
+          if(del.length>5) lineas.push(`y ${del.length-5} más`);
+          out.push({id:`ag:resumen:${D}`, when:t, icono,
+            titulo: `Hoy: ${del.length} ${del.length===1 ? "cosa" : "cosas"} en tu agenda`, texto: lineas.join("\n")});
+        }
+      }
+    }
+    return out;
+  }
+
+  /* lo que tocaste en la notificación ("Listo" / "En 1 hora") mientras la app estaba cerrada */
+  function procesarAccionesAgenda(){
+    if(!(window.AndroidVoz && window.AndroidVoz.agendaAcciones)) return;
+    let acc = [];
+    try{ acc = JSON.parse(window.AndroidVoz.agendaAcciones() || "[]"); }catch(e){}
+    let cambio = false;
+    for(const a of acc){
+      const [, id, iso] = String(a.id||"").split(":");
+      const it = agenda().items.find(x=>String(x.id)===id); if(!it) continue;
+      if(a.accion==="hecho"){ it.hechos = it.hechos || {}; it.hechos[claveDia(it, iso)] = true; cambio = true; }
+      if(a.accion==="posponer" && a.when){ it.pospuesto = it.pospuesto || {}; it.pospuesto[iso] = a.when; cambio = true; }
+    }
+    if(cambio){ save(); renderAgenda(); renderHoy(); }
+  }
+  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden){ procesarAccionesAgenda(); renderAgenda(); } });
+
   /* ---------- arranque de Juli-o ---------- */
   cocina();
+  procesarAccionesAgenda();
   Fotos.listo.then(()=>{
     // fotos huérfanas (de recetas borradas en otra sesión): afuera
     const usadas = new Set(cocina().recetas.map(r=>r.fotoId).filter(Boolean));
@@ -9498,6 +10023,7 @@
   window.__julioCocina = () => ({sugerencias: sugerencias(3).map(x=>({nombre:x.r.nombre, porque:x.porque})),
     favoritas: favoritasAhora().map(x=>x.r.nombre), semana: semanaCocina()});
   window.__julioMod = () => modActual;
+  window.__julioAgenda = {parse: (t, ahora) => parseAgenda(t, ahora ? new Date(ahora) : undefined), ocurre: (it, iso) => ocurre(it, iso)};
   window.__julioPinHash = pinHash;
 
   window.__guitaParse = parseFrase;

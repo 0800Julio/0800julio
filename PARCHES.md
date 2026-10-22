@@ -177,6 +177,20 @@ cuantos más se den, más preciso.
   `cat`: `pastas`, `carnes`, `pollo`, `veggie`, `pescado`, `tartas`, `sopas`, `postres` u `otras`.
   Si un paso termina con la duración entre paréntesis (`(10 min)`, `(1 hora)`), el modo cocina le pone un timer.
 
+### `agenda` · `hecho` (Agenda, desde Juli-o 4.1)
+
+```json
+{"op":"agenda", "titulo":"Turno con el dentista", "fecha":"2026-11-05", "hora":"18:00",
+ "repetir":"", "avisos":[1440, 60], "insistir":false, "nota":"Llevar la orden"}
+{"op":"hecho", "titulo":"Comprar pilas", "fecha":"2026-10-22"}
+```
+
+- `agenda` agrega un plan o quehacer. `fecha` vacía = "algún día". `hora` es opcional: sin hora es un
+  quehacer del día, y si no lo marcás te lo recuerda los dos días siguientes. `repetir`: `diario`,
+  `semanal`, `mensual`, `anual` o vacío. `avisos`: minutos antes (0 = a la hora, 60, 1440 = el día antes).
+  `insistir`: te lo vuelve a avisar cada tantas horas hasta que lo marques.
+- `hecho` lo marca como hecho. Para algo que se repite, `fecha` dice qué día (por defecto, hoy).
+
 ## Ejemplo completo
 
 ```json

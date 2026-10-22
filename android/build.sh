@@ -26,8 +26,8 @@ cp -r ../fonts "$OUT/assets/fonts"
   --java "$OUT/gen" \
   --min-sdk-version 24 \
   --target-sdk-version 34 \
-  --version-code 35 \
-  --version-name 4.0 \
+  --version-code 36 \
+  --version-name 4.1 \
   "$OUT/res.zip"
 
 javac --release 11 -Xlint:-options \

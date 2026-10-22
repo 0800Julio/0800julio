@@ -1684,6 +1684,113 @@ await page.close();
   await pg.close();
 }
 
+/* ══════════ Juli-o 4.1: Agenda ══════════ */
+{
+  const pg = await browser.newPage({viewport:{width:390,height:844}});
+  pg.on('pageerror', e=>{ console.log('PAGE ERROR:', e.message); fail++; });
+  await pg.addInitScript(()=>{
+    window.__sync = []; window.__acc = '[]';
+    window.AndroidVoz = {
+      avisosSincronizar: j => { window.__sync.push(JSON.parse(j)); return JSON.parse(j).length; },
+      avisosEstado: () => JSON.stringify({permiso:true, exactas:true, sdk:34, programados:0}),
+      agendaAcciones: () => { const a = window.__acc; window.__acc = '[]'; return a; },
+      setReminder: ()=>{}, clearReminder: ()=>{}
+    };
+  });
+  await pg.goto(BASE+'/');
+  await pg.evaluate(()=>localStorage.clear()); await pg.reload();
+  await pg.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+
+  // el parser, con "ahora" fijo: jueves 22/10/2026 a las 15:00
+  const AHORA = new Date(2026, 9, 22, 15, 0).getTime();
+  const P = t => pg.evaluate(([t,a])=>window.__julioAgenda.parse(t, a), [t, AHORA]);
+  const casos = [
+    ['mañana 18hs dentista', {titulo:'Dentista', fecha:'2026-10-23', hora:'18:00', repetir:''}],
+    ['recordame llamar al banco el lunes a las 10', {titulo:'Llamar al banco', fecha:'2026-10-26', hora:'10:00'}],
+    ['todos los lunes a las 9 sacar la basura', {titulo:'Sacar la basura', fecha:'2026-10-26', hora:'09:00', repetir:'semanal'}],
+    ['el 25 a la noche cumple de Lu', {titulo:'Cumple de Lu', fecha:'2026-10-25', hora:'21:00', repetir:'anual'}],
+    ['comprar pilas', {titulo:'Comprar pilas', fecha:'2026-10-22', hora:null}],
+    ['a las 5 ir al gimnasio', {titulo:'Ir al gimnasio', fecha:'2026-10-22', hora:'17:00'}],
+    ['pagar el alquiler todos los 10', {titulo:'Pagar el alquiler', fecha:'2026-11-10', repetir:'mensual'}],
+    ['tomar la pastilla todos los días a las 8:30', {titulo:'Tomar la pastilla', hora:'08:30', repetir:'diario'}],
+    ['en 2 horas sacar la ropa del lavarropas', {titulo:'Sacar la ropa del lavarropas', fecha:'2026-10-22', hora:'17:00'}],
+    ['pasado mañana a la mañana turno médico', {titulo:'Turno médico', fecha:'2026-10-24', hora:'09:00'}],
+    ['viernes 20:30 cena con los chicos', {titulo:'Cena con los chicos', fecha:'2026-10-23', hora:'20:30'}],
+    ['tengo que renovar el registro el 3/12', {titulo:'Renovar el registro', fecha:'2026-12-03'}],
+  ];
+  for(const [txt, esp] of casos){
+    const r = await P(txt);
+    const okc = Object.entries(esp).every(([k,v])=>r[k]===v);
+    ok(okc, `agenda: entiende «${txt}»`, JSON.stringify(r));
+  }
+  const oc = await pg.evaluate(()=>{ const O = window.__julioAgenda.ocurre;
+    return [O({fecha:'2026-01-31', repetir:'mensual'}, '2026-02-28'), O({fecha:'2026-10-26', repetir:'semanal'}, '2026-11-02'),
+            O({fecha:'2026-10-26', repetir:'semanal'}, '2026-11-03'), O({fecha:'2000-05-04', repetir:'anual'}, '2026-05-04')]; });
+  ok(oc.join()==='true,true,false,true', 'agenda: repeticiones (fin de mes, semanal, anual)', oc.join());
+
+  // alta rápida
+  await pg.click('.j-tab[data-mod="agenda"]'); await pg.waitForTimeout(400);
+  ok(await pg.evaluate(()=>window.__julioMod())==='agenda', 'agenda: tiene su pestaña');
+  await pg.fill('#agQuick', 'en 3 horas llamar a mamá');
+  await pg.waitForTimeout(150);
+  ok(/Llamar a mamá/.test(await pg.textContent('#agPrev')), 'agenda: muestra cómo lo entendió mientras escribís');
+  await pg.press('#agQuick', 'Enter'); await pg.waitForTimeout(400);
+  await pg.fill('#agQuick', 'comprar pilas'); await pg.press('#agQuick', 'Enter'); await pg.waitForTimeout(400);
+  let st = await pg.evaluate(()=>window.__guitaState());
+  ok(st.agenda.items.length===2, 'agenda: se agregan con Enter');
+  const mama = st.agenda.items.find(x=>x.titulo==='Llamar a mamá');
+  ok(mama && mama.hora && mama.avisos.includes(0) && mama.avisos.includes(60), 'agenda: con hora avisa a la hora y una hora antes', JSON.stringify(mama&&mama.avisos));
+  ok(await pg.evaluate(()=>document.querySelectorAll('#agLista .j-ag').length)===2, 'agenda: aparecen en la lista');
+
+  // avisos que se mandan al celu
+  const av = await pg.evaluate(()=>window.__guitaAvisos());
+  const deMama = av.filter(a=>a.id.startsWith('ag:'+String(mama.id)+':'));
+  ok(deMama.some(a=>a.titulo==='Llamar a mamá') && deMama.some(a=>/^En 1 h/.test(a.titulo)), 'agenda: avisa a la hora y antes', JSON.stringify(deMama.map(a=>a.titulo)));
+  ok(av.some(a=>a.titulo==='Te quedó pendiente' && a.texto==='Comprar pilas'), 'agenda: si no lo marcás, te lo recuerda al otro día');
+
+  // tildar
+  await pg.click('#agLista .j-ag:has-text("Comprar pilas") .j-chk'); await pg.waitForTimeout(500);
+  st = await pg.evaluate(()=>window.__guitaState());
+  const pilas = st.agenda.items.find(x=>x.titulo==='Comprar pilas');
+  ok(pilas.hechos[pilas.fecha]===true, 'agenda: tildar lo marca hecho');
+  ok(!(await pg.evaluate(()=>window.__guitaAvisos())).some(a=>a.texto==='Comprar pilas'), 'agenda: hecho, deja de avisar');
+
+  // editor: insistir y repetir
+  await pg.click('#agLista .j-ag:has-text("Llamar a mamá") .tx'); await pg.waitForTimeout(350);
+  ok(await pg.isVisible('#phaseAgenda'), 'agenda: tocar un ítem abre el editor');
+  await pg.check('#agInsistir'); await pg.selectOption('#agRepetir', 'semanal');
+  await pg.click('#agGuardar'); await pg.waitForTimeout(400);
+  st = await pg.evaluate(()=>window.__guitaState());
+  const m2 = st.agenda.items.find(x=>x.titulo==='Llamar a mamá');
+  ok(m2.insistir && m2.repetir==='semanal', 'agenda: el editor guarda insistir y repetir');
+
+  // lo que se tocó en la notificación con la app cerrada
+  await pg.evaluate(id=>{ window.__acc = JSON.stringify([{id:`ag:${id}:${new Date().toISOString().slice(0,10)}:0`, accion:'hecho'}]); }, m2.id);
+  await pg.evaluate(()=>{ Object.defineProperty(document, 'hidden', {value:false, configurable:true}); document.dispatchEvent(new Event('visibilitychange')); });
+  await pg.waitForTimeout(300);
+  st = await pg.evaluate(()=>window.__guitaState());
+  const hoyIso = await pg.evaluate(()=>{ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; });
+  ok(st.agenda.items.find(x=>x.id===m2.id).hechos[hoyIso]===true || m2.fecha!==hoyIso, 'agenda: el «Listo» de la notificación queda marcado');
+
+  // Hoy muestra la agenda
+  await pg.click('.j-tab[data-mod="hoy"]'); await pg.waitForTimeout(300);
+  ok(/Agenda de hoy/.test(await pg.textContent('#hoyStack')), 'hoy: muestra la agenda de hoy');
+
+  // parche / asistente
+  await pg.evaluate(()=>window.__guitaParche({app:'guita', parche:1, id:'ag-1', cambios:[
+    {op:'agenda', titulo:'Turno con el dentista', fecha:'2026-11-05', hora:'18:00', avisos:[1440,60]},
+    {op:'hecho', titulo:'comprar pilas'}]}));
+  await pg.waitForTimeout(300); await pg.click('#saveParche'); await pg.waitForTimeout(400);
+  st = await pg.evaluate(()=>window.__guitaState());
+  ok(st.agenda.items.some(x=>x.titulo==='Turno con el dentista' && x.hora==='18:00' && x.avisos.includes(1440)), 'parche: «agenda» agenda');
+  ok(/Agenda/.test(await pg.evaluate(()=>window.__guitaContextoAsis())), 'asistente: conoce tu agenda');
+
+  // la clave de Plata no bloquea el micrófono en la Agenda
+  ok(await pg.evaluate(()=>!!document.querySelector('.j-tab[data-mod="agenda"]')) && await pg.evaluate(()=>document.querySelectorAll('.j-tab[data-mod]').length)===4,
+     'nav: Hoy, Agenda, Plata y Cocina');
+  await pg.close();
+}
+
 await browser.close();
 server.close();
 console.log(fail ? `\n${fail} FALLARON` : '\nTODO OK');
