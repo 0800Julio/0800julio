@@ -157,8 +157,10 @@ para un gasto que ya se sabe que viene, así lo que queda por día no miente.
 ```
 
 ### `borrarMov`
-Borra los movimientos que coincidan. Cualquiera de los tres campos alcanza, pero
-cuantos más se den, más preciso.
+Borra los movimientos que coincidan. Cualquiera de los campos alcanza, pero
+cuantos más se den, más preciso. También acepta `mes` (YYYY-MM), `categoria` y
+`sueltos:true` (sólo los que no están enganchados a un gasto fijo: sirve para sacar
+un pago duplicado sin tocar el bueno).
 ```json
 {"op":"borrarMov", "desc":"Pago resumen", "monto":90000, "fecha":"2026-08-26"}
 ```

@@ -432,7 +432,7 @@ await page.reload();
 await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
 
 /* panel del inicio */
-ok(!(await page.isVisible('#panelCard')), 'panel: ya no repite en el inicio lo que está en Pagos, Fijos y Cuentas');
+ok(await page.isVisible('#panelCard'), 'panel: tu situación, en Mes');
 ok(/1\.400\.000/.test(await page.evaluate(()=>document.getElementById('panelTenes').textContent)),
    'panel: suma la plata a mano', await page.evaluate(()=>document.getElementById('panelTenes').textContent));
 ok(/en reserva/.test(await page.evaluate(()=>document.getElementById('panelTenesSub').textContent)),
@@ -1967,6 +1967,54 @@ await page.close();
   const prox = (await pg.textContent('#proxMes')).replace(/\s+/g,' ');
   ok(/Alquiler/.test(prox) && /Para no atrasarte/.test(prox) && /Si pagás todo/.test(prox), 'pagos: el mes que viene, con lo que necesitás', prox.slice(0,160));
   ok(await pg.evaluate(()=>!document.getElementById('detTarjetas').open), 'pagos: el detalle de tarjetas arranca plegado');
+  await pg.close();
+}
+
+/* ══════════ Juli-o 4.6: duplicados, tira del mes, en qué se fue ══════════ */
+{
+  const pg = await browser.newPage({viewport:{width:390,height:844}});
+  pg.on('pageerror', e=>{ console.log('PAGE ERROR:', e.message); fail++; });
+  await pg.addInitScript(()=>{ window.__julioInicio = 'plata'; });
+  await pg.goto(BASE+'/');
+  const h = new Date(); h.setHours(12,0,0,0);
+  const iso = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const mk = iso(h).slice(0,7), ant = new Date(h.getFullYear(), h.getMonth()-1, 10, 12);
+  await pg.evaluate(s=>{ localStorage.clear(); localStorage.setItem('guita:v2', s); }, JSON.stringify({
+    movs:[{id:1,tipo:'gasto',monto:650000,categoria:'Hogar',fecha:iso(ant),descripcion:'Alquiler',billetera:4,origen:'fijo'},
+          {id:2,tipo:'gasto',monto:650000,categoria:'Hogar',fecha:mk+'-09',descripcion:'Alquiler',billetera:4,origen:'fijo'},
+          {id:3,tipo:'gasto',monto:650000,categoria:'Hogar',fecha:iso(h),descripcion:'Alquiler',billetera:2,origen:'manual'},
+          {id:4,tipo:'gasto',monto:276000,categoria:'Otros',fecha:iso(h),descripcion:'Fondo de emergencia',billetera:2,origen:'manual'},
+          {id:5,tipo:'gasto',monto:5500,categoria:'Comida',fecha:iso(h),descripcion:'Pan',billetera:4,origen:'manual'}],
+    billeteras:[{id:2,nombre:'Lemon',saldoInicial:1199000,inversion:true},{id:4,nombre:'Efectivo',saldoInicial:749500}],
+    tarjetas:[], fijos:[{id:22,nombre:'Alquiler',monto:650000,dia:17,categoria:'Hogar',billetera:2,activo:true,esencial:true}],
+    pagosFijos:{[iso(ant).slice(0,7)]:{22:1},[mk]:{22:2}}, transf:[], ajustes:[],
+    metas:[{id:7,nombre:'Fondo de emergencia',objetivo:500000,billetera:2}],
+    prestamos:[{id:30,nombre:'Préstamo Provincia',cuota:118242,cuotas:3,pagadasIni:1,pagos:[{fecha:'2026-08-31',monto:118242}],dia:30}],
+    presu:{modo:'hasta', monto:94000, hasta:iso(new Date(h.getFullYear(), h.getMonth()+1, 0)), desde:iso(h), inicio:iso(h), porDia:10000, previstos:[], ajustes:[]},
+    config:{}, seq:100}));
+  await pg.reload(); await pg.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+  await pg.waitForTimeout(400);
+  const P = await pg.evaluate(()=>window.__guitaPresu());
+  ok(P.gastado===5500, 'día a día: no cuenta el alquiler repetido ni la plata separada para el fondo', String(P.gastado));
+  await pg.click('.g-tab[data-view="fijos"]'); await pg.waitForTimeout(300);
+  ok(!/Alquiler/.test(await pg.textContent('#aumentosList').catch(()=>'')), 'aumentos: el alquiler pagado dos veces no es un aumento');
+  await pg.click('.g-tab[data-view="home"]'); await pg.waitForTimeout(300);
+  ok(await pg.evaluate(()=>document.querySelectorAll('#tira .j-td').length)>=28, 'tira: una barrita por día del mes');
+  await pg.click(`#tira [data-td="${iso(h)}"]`); await pg.waitForTimeout(200);
+  ok(/Pan/.test(await pg.textContent('#tiraCap')), 'tira: tocar un día dice qué fue');
+  ok(/En qué se fue/.test(await pg.textContent('#catLbl')) && /%/.test(await pg.textContent('#catBars')), 'mes: en qué se fue, con porcentajes');
+  ok(await pg.isVisible('#panelCard'), 'mes: tu situación');
+  await pg.evaluate(()=>window.__guitaParche({app:'guita', parche:1, id:'c-1', cambios:[
+    {op:'borrarMov', desc:'Alquiler', monto:650000, mes:new Date().toISOString().slice(0,7), sueltos:true},
+    {op:'fijo', nombre:'Alquiler', billetera:'Efectivo'},
+    {op:'borrarMov', monto:276000, categoria:'Otros'},
+    {op:'prestamo', nombre:'Préstamo Provincia', quedan:0}]}));
+  await pg.waitForTimeout(300); await pg.click('#saveParche'); await pg.waitForTimeout(400);
+  const st = await pg.evaluate(()=>window.__guitaState());
+  ok(st.movs.filter(m=>m.descripcion==='Alquiler').length===2 && !st.movs.some(m=>m.id===3), 'parche: borra sólo el alquiler suelto, no el enganchado al fijo');
+  ok(!st.movs.some(m=>m.monto===276000), 'parche: saca la plata separada que se había cargado como gasto');
+  ok(st.fijos[0].billetera===4, 'parche: el alquiler sale de Efectivo');
+  ok(await pg.evaluate(()=>{ const p = window.__guitaState().prestamos[0]; return p.pagadasIni + p.pagos.length === p.cuotas; }), 'parche: «quedan 0» termina el préstamo');
   await pg.close();
 }
 

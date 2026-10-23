@@ -1129,6 +1129,22 @@
   .cpfoot{font-size:12.5px; color:#3A3F4A; margin-top:8px; line-height:1.4}
   .cpfoot strong{color:#0B0C0E}
 
+
+  .j-tirawrap{display:flex; flex-direction:column; gap:8px}
+  .j-tira{position:relative; display:flex; align-items:flex-end; gap:3px; height:74px; padding-top:4px}
+  .j-td{flex:1; min-width:0; height:100%; display:flex; align-items:flex-end; background:none; border:none; padding:0; cursor:pointer; position:relative}
+  .j-td i{display:block; width:100%; height:var(--h); border-radius:3px; background:var(--brand); transform-origin:bottom;
+    animation:tdIn .6s var(--spring) both; animation-delay:var(--d,0s); transition:opacity .2s}
+  @keyframes tdIn{from{transform:scaleY(0)}}
+  .j-td.sobre i{background:var(--danger)}
+  .j-td.fut i{background:var(--track)}
+  .j-td.hoy::after{content:""; position:absolute; left:50%; bottom:-7px; width:4px; height:4px; margin-left:-2px; border-radius:50%; background:var(--ink)}
+  .j-td.lun::before{content:""; position:absolute; left:-2px; top:4px; bottom:0; width:1px; background:var(--line)}
+  .j-tira:has(.sel) .j-td:not(.sel) i{opacity:.35}
+  .j-tope{position:absolute; left:0; right:0; bottom:var(--tope); border-top:1.5px dashed rgba(244,245,247,.45); pointer-events:none}
+  .j-tiracap{font-size:12.5px; color:var(--muted); line-height:1.45; margin-top:6px; min-height:18px}
+  .j-tiracap strong{color:var(--ink)}
+
   /* avisos: ícono y frecuencia */
   .j-icons{display:grid; grid-template-columns:repeat(4,1fr); gap:8px}
   .j-icons button{height:46px; border:none; border-radius:14px; background:var(--chip); color:var(--ink); display:grid; place-items:center;
@@ -1243,8 +1259,39 @@
           <div><div class="g-label">Ingresos</div><div class="val pos" id="totalIn">$ 0</div></div>
           <div><div class="g-label" id="balanceLbl">Balance</div><div class="val" id="balance">$ 0</div></div>
         </div>
+        <div class="j-tirawrap" id="tiraWrap">
+          <div class="g-label">Día por día</div>
+          <div class="j-tira" id="tira" role="list" aria-label="Lo que gastaste cada día del mes"></div>
+          <div class="j-tiracap" id="tiraCap"></div>
+        </div>
+        <div class="g-label" id="catLbl">¿En qué se fue?</div>
         <div class="g-bars" id="catBars"></div>
         <button class="g-linkbtn" id="verAnalisisBtn" style="align-self:flex-start; font-size:13px">📊 Ver el análisis completo ›</button>
+      </section>
+      <section class="g-card g-panel" id="panelCard" aria-label="Tu situación" hidden style="margin-top:var(--gap)">
+        <div class="g-panel-grid">
+          <button class="g-panel-item" data-ir="tarjetas">
+            <span class="lbl">Debés</span>
+            <span class="val neg" id="panelDeuda">$ 0</span>
+            <span class="sub" id="panelDeudaSub"></span>
+          </button>
+          <button class="g-panel-item" data-ir="plata">
+            <span class="lbl">Tenés</span>
+            <span class="val pos" id="panelTenes">$ 0</span>
+            <span class="sub" id="panelTenesSub"></span>
+          </button>
+          <button class="g-panel-item" id="panelFijosBtn">
+            <span class="lbl">Gastos fijos por mes</span>
+            <span class="val" id="panelFijos">$ 0</span>
+            <span class="sub" id="panelFijosSub"></span>
+          </button>
+          <button class="g-panel-item" data-ir="tarjetas">
+            <span class="lbl">Próximo resumen</span>
+            <span class="val neg" id="panelProx">$ 0</span>
+            <span class="sub" id="panelProxSub"></span>
+          </button>
+        </div>
+        <div class="g-panel-metas" id="panelMetas"></div>
       </section>
       <div class="g-card g-tips" id="notifTip" hidden style="margin-top:var(--gap)" aria-label="Leer notificaciones">
         <div class="g-tip"><span class="ic">🔔</span><div>
@@ -1422,31 +1469,6 @@
         <div class="g-note" id="diarioMonto" hidden></div>
         <div class="g-note" id="diarioLbl" hidden></div>
         <div class="g-heroactions"><button class="g-btn" id="alcanzaBtn" style="flex:none">🤔 ¿Me alcanza para…?</button></div>
-      </section>
-      <section class="g-card g-panel" id="panelCard" aria-label="Tu situación" hidden>
-        <div class="g-panel-grid">
-          <button class="g-panel-item" data-ir="tarjetas">
-            <span class="lbl">Debés</span>
-            <span class="val neg" id="panelDeuda">$ 0</span>
-            <span class="sub" id="panelDeudaSub"></span>
-          </button>
-          <button class="g-panel-item" data-ir="plata">
-            <span class="lbl">Tenés</span>
-            <span class="val pos" id="panelTenes">$ 0</span>
-            <span class="sub" id="panelTenesSub"></span>
-          </button>
-          <button class="g-panel-item" id="panelFijosBtn">
-            <span class="lbl">Gastos fijos por mes</span>
-            <span class="val" id="panelFijos">$ 0</span>
-            <span class="sub" id="panelFijosSub"></span>
-          </button>
-          <button class="g-panel-item" data-ir="tarjetas">
-            <span class="lbl">Próximo resumen</span>
-            <span class="val neg" id="panelProx">$ 0</span>
-            <span class="sub" id="panelProxSub"></span>
-          </button>
-        </div>
-        <div class="g-panel-metas" id="panelMetas"></div>
       </section>
       <input type="file" id="capturaInput" accept="image/*,application/pdf,.pdf" hidden>
       <div class="g-card" id="walletList" hidden style="margin-top:var(--gap)"></div>
@@ -3277,19 +3299,22 @@
       : "") + (out>diaADia+1 ? `Con fijos, préstamos y tarjetas: ${fmtMoney(out)}` : "");
     $("totalIn").textContent = fmtMoney(inn);
     const bal = inn-out;
-    $("balanceLbl").textContent = inn>0 ? "Te queda del mes" : "Balance";
+    $("balanceLbl").textContent = "Te queda del mes";
+    $("balance").parentElement.hidden = !(inn>0);
     const balEl = $("balance");
     balEl.textContent = fmtMoney(bal);
     balEl.className = "val" + (bal>=0 ? " pos" : "");
 
     const byCat = {};
     mm.filter(x=>x.tipo==="gasto").forEach(x=>{ byCat[x.categoria]=(byCat[x.categoria]||0)+x.monto; });
-    const top = Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,5);
-    const max = top.length ? top[0][1] : 1;
+    const top = Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,7);
+    const max = top.length ? top[0][1] : 1, totCat = Object.values(byCat).reduce((a,b)=>a+b, 0) || 1;
+    $("catLbl").hidden = !top.length;
     $("catBars").innerHTML = top.map(([cat,val])=>
       `<div class="g-bar"><span class="name">${esc(cat)}</span>
        <span class="track"><span class="fill" style="width:100%;transform:scaleX(${(Math.max(4,Math.round(val/max*100))/100).toFixed(3)});background:${catColor(cat)}"></span></span>
-       <span class="amt">${fmtMoney(val)}</span></div>`).join("");
+       <span class="amt">${fmtMoney(val)} <small style="color:var(--muted); font-weight:500">${Math.round(val/totCat*100)}%</small></span></div>`).join("");
+    renderTira();
 
     // los vencimientos los pinta renderVencimientos(), arriba de todo
     $("dueCard").hidden = monthKey(view)!==monthKey(new Date());
@@ -4018,14 +4043,14 @@
     const mapa = {};   // clave normalizada → {nombre, puntos:[{mk, monto}], via}
     // misma clave que usa el resto de la app para decidir si dos consumos son el mismo
     // comercio: sin esto "WWW.CAMUZZI GAS PAMPEA" y "Camuzzi Gas Pampeana" eran dos
-    const sumar = (nombre, mk, monto, via) => {
+    const sumar = (nombre, mk, monto, via, mayor) => {
       const k = claveComercio(nombre);
       if(!k) return;
       const e = mapa[k] || (mapa[k] = {nombre, puntos:[], via});
       // nos quedamos con el nombre más prolijo (el más corto sin prefijos de pasarela)
       if(nombre.length < e.nombre.length) e.nombre = nombre;
       const ya = e.puntos.find(p=>p.mk===mk);
-      if(ya) ya.monto += monto; else e.puntos.push({mk, monto});
+      if(ya) ya.monto = mayor ? Math.max(ya.monto, monto) : ya.monto + monto; else e.puntos.push({mk, monto});
     };
     // lo que vino en los resúmenes de cada tarjeta
     for(const t of S.tarjetas){
@@ -4041,7 +4066,8 @@
       if(m.tipo!=="gasto") continue;
       const esFijo = S.fijos.some(f=>norm(f.nombre)===norm(m.descripcion||""));
       if(!esFijo && !esRecurrente({desc:m.descripcion||"", categoria:m.categoria})) continue;
-      sumar(m.descripcion||m.categoria, m.fecha.slice(0,7), m.monto, "👛 de tu plata");
+      // lo que pagaste de tu plata: si quedó dos veces el mismo mes es un duplicado, no un aumento
+      sumar(m.descripcion||m.categoria, m.fecha.slice(0,7), m.monto, "👛 de tu plata", true);
     }
     for(const k in mapa) mapa[k].puntos.sort((a,b)=>a.mk.localeCompare(b.mk));
     return mapa;
@@ -4563,9 +4589,7 @@
   /* ---------- panel del inicio: toda tu situación de un vistazo ---------- */
   function renderPanel(){
     const hayAlgo = S.tarjetas.length || S.billeteras.length || S.fijos.length || (S.prestamos||[]).length;
-    // 4.5: el panel ya no se muestra (sus datos viven en Pagos, Fijos y Cuentas); se sigue
-    // calculando porque otras partes leen sus números
-    $("panelCard").hidden = true;
+    $("panelCard").hidden = !hayAlgo;
     if(!hayAlgo) return;
     const mk = monthKey(new Date());
 
@@ -5314,8 +5338,12 @@
    */
   function movsDelSobre(desdeISO, hastaISO){
     const fijos = movsDeFijos();
+    const nombresFijos = new Set(S.fijos.map(f=>norm(f.nombre)));
+    const metas = (S.metas||[]).map(g=>norm(g.nombre)).filter(Boolean);
     return S.movs.filter(m=>m.tipo==="gasto" && m.fecha>=desdeISO && m.fecha<=hastaISO
-      && m.origen!=="tarjeta" && m.categoria!=="Tarjeta" && m.prestamo==null && !fijos.has(m.id));
+      && m.origen!=="tarjeta" && m.categoria!=="Tarjeta" && m.prestamo==null && !fijos.has(m.id)
+      && !nombresFijos.has(norm(m.descripcion||""))
+      && m.meta==null && !/^ahorro\b/.test(norm(m.descripcion||"")) && !metas.includes(norm(m.descripcion||"")));
   }
   const gastoDelSobre = (a,b) => movsDelSobre(a,b).reduce((s,m)=>s+m.monto, 0);
 
@@ -6102,10 +6130,15 @@
         else if(op==="borrarmov"){
           const desc = String(c.desc||c.descripcion||"");
           const monto = Number(c.monto)||0;
+          const enFijos = movsDeFijos();
           const cand = S.movs.filter(m=>
             (!desc || norm(m.descripcion||"").includes(norm(desc))) &&
             (!monto || Math.abs(m.monto-monto)<0.5) &&
-            (!c.fecha || m.fecha===c.fecha));
+            (!c.fecha || m.fecha===c.fecha) &&
+            (!c.mes || m.fecha.slice(0,7)===c.mes) &&
+            (!c.categoria || m.categoria===c.categoria) &&
+            // "sueltos": el duplicado, no el pago que está enganchado al gasto fijo
+            (!c.sueltos || !enFijos.has(m.id)));
           if(!cand.length){ out.errores.push(`no encuentro el movimiento "${desc}"`); continue; }
           out.ops.push({
             txt: `🗑 Borro ${cand.length} movimiento${cand.length===1?"":"s"}: ` +
@@ -6861,6 +6894,41 @@
     S.presu.ajustes.push({id:nid(), desc, monto, fecha: todayISO()});
     save(); closeSheet(); renderAll();
     toast(monto>0 ? `Sumé ${fmtMoney(monto)} al sobre ✔` : `Resté ${fmtMoney(-monto)} del sobre ✔`);
+  });
+
+  /* la tira del mes: una barrita por día con lo del día a día, contra lo que podés por día */
+  let tiraSel = null;
+  function renderTira(){
+    const el = $("tira"); if(!el) return;
+    const y = view.getFullYear(), m = view.getMonth(), ult = new Date(y, m+1, 0).getDate();
+    const hoyI = todayISO();
+    const dias = [...Array(ult)].map((_,i)=>{ const iso = isoDe(new Date(y, m, i+1, 12)); return {iso, d:i+1, v: gastoDelSobre(iso, iso), dow:new Date(y,m,i+1).getDay()}; });
+    const P = presupuesto();
+    const tope = P && P.porDia>0 ? P.porDia : null;
+    const max = Math.max(1, tope ? tope*1.6 : 0, ...dias.map(x=>x.v));
+    $("tiraWrap").hidden = !dias.some(x=>x.v>0) && !tope;
+    el.style.setProperty("--tope", tope ? Math.min(100, tope/max*100)+"%" : "-10%");
+    el.innerHTML = dias.map((x,i)=>{
+      const futuro = x.iso > hoyI, sobre = tope && x.v > tope;
+      const h = x.v>0 ? Math.max(6, Math.min(100, x.v/max*100)) : 3;
+      return `<button class="j-td ${futuro?"fut":""} ${x.iso===hoyI?"hoy":""} ${sobre?"sobre":""} ${tiraSel===x.iso?"sel":""} ${x.dow===1?"lun":""}" data-td="${x.iso}" role="listitem" aria-label="${x.d}: ${fmtMoney(x.v)}" style="--h:${h}%; --d:${Math.min(i,31)*0.012}s"><i></i></button>`;
+    }).join("") + (tope ? `<span class="j-tope" aria-hidden="true"></span>` : "");
+    const sel = dias.find(x=>x.iso===tiraSel);
+    if(sel){
+      const movs = movsDelSobre(sel.iso, sel.iso);
+      $("tiraCap").innerHTML = `<strong>${fmtDay(sel.iso)}</strong> · ${fmtMoney(sel.v)}` + (movs.length ? ` — ${movs.slice(0,3).map(x=>esc(x.descripcion)).join(", ")}${movs.length>3?"…":""}` : " — nada del día a día");
+    } else {
+      const conGasto = dias.filter(x=>x.v>0 && x.iso<=hoyI), sobres = tope ? conGasto.filter(x=>x.v>tope).length : 0;
+      $("tiraCap").innerHTML = tope
+        ? `Línea punteada: lo que podés por día (${fmtMoney(Math.round(tope))}). ${sobres ? `Te pasaste ${sobres} ${sobres===1?"día":"días"}.` : "Venís bien 👌"} Tocá un día para ver qué fue.`
+        : "Tocá un día para ver qué gastaste.";
+    }
+  }
+  $("tira").addEventListener("click", e=>{
+    const b = e.target.closest("[data-td]"); if(!b) return;
+    tiraSel = tiraSel===b.dataset.td ? null : b.dataset.td;
+    if(navigator.vibrate){ try{ navigator.vibrate(6); }catch(err){} }
+    renderTira();
   });
 
   /** Días seguidos (hasta hoy o ayer) en los que anotaste algo a mano, por voz o con captura. */
