@@ -191,6 +191,16 @@ cuantos más se den, más preciso.
   `insistir`: te lo vuelve a avisar cada tantas horas hasta que lo marques.
 - `hecho` lo marca como hecho. Para algo que se repite, `fecha` dice qué día (por defecto, hoy).
 
+### `presupuesto` como meta de gasto (desde Juli-o 4.3)
+
+```json
+{"op":"presupuesto", "modo":"hasta", "monto":70000, "hasta":"2026-10-31"}
+{"op":"presupuesto", "modo":"mes", "monto":300000}
+{"op":"presupuesto", "modo":"semana", "monto":70000, "arrastrar":false}
+```
+Pone la meta de gasto del día a día y la cuenta desde hoy. Sin `modo`, sigue valiendo el formato viejo
+con `porDia`.
+
 ## Ejemplo completo
 
 ```json

@@ -200,7 +200,7 @@ const nav = await page.evaluate(()=>{
   const mic=document.getElementById('micBtn').getBoundingClientRect();
   return {tabs, micCentro: mic.x+mic.width/2, ancho: innerWidth};
 });
-ok(nav.tabs.length===4, 'nav: 4 pestañas de Plata', nav.tabs.join(','));
+ok(nav.tabs.length===5, 'nav: 5 pestañas de Plata', nav.tabs.join(','));
 ok(Math.abs(nav.micCentro - nav.ancho/2) < 6, 'nav: el micrófono queda centrado',
    `mic en ${nav.micCentro.toFixed(1)} de ${nav.ancho}`);
 ok(!nav.tabs.includes('asesor'), 'nav: el asesor ya no está');
@@ -256,9 +256,9 @@ ok((planTxt.match(/Alquiler/g)||[]).length===1,
 ok(/Pagar/.test(planTxt), 'plan: se puede pagar desde la lista');
 
 /* metas */
-ok(await page.evaluate(()=>document.getElementById('metasTitulo').hidden),
-   'metas: sin metas cargadas la sección no ocupa lugar');
-await page.click('#metaInvit'); await page.waitForTimeout(300);
+await page.click('.g-tab[data-view="metas"]'); await page.waitForTimeout(300);
+ok(await page.isVisible('#metasEmpty'), 'metas: tienen su pestaña y, vacías, invitan a crear la primera');
+await page.click('#addMetaBtn2'); await page.waitForTimeout(300);
 await page.fill('#mtNombre','Viaje a Brasil');
 await page.fill('#mtObjetivo','1200000');
 await page.fill('#mtGuardado','200000');
@@ -1271,7 +1271,7 @@ page = await nuevaPagina();
   ok(B.historial.length === 1 && B.historial[0].saldo === 40000,
      'sobre: la semana cerrada queda en el historial con su saldo');
 
-  await page.click('[data-view="plata"]');
+  await page.click('[data-view="metas"]');
   await page.waitForTimeout(300);
   ok(/130\.000/.test(await page.evaluate(()=>document.getElementById('presuQueda').textContent)),
      'sobre: la tarjeta de Plata muestra lo que queda');
@@ -1307,7 +1307,7 @@ page = await nuevaPagina();
   await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
   const rojo = await page.evaluate(()=>window.__guitaPresu());
   ok(rojo.queda < 0, 'sobre: pasarse deja el saldo en rojo', String(rojo.queda));
-  await page.click('[data-view="plata"]');
+  await page.click('[data-view="metas"]');
   await page.waitForTimeout(300);
   ok(/te pasaste/i.test(await page.evaluate(()=>document.getElementById('presuLbl').textContent)),
      'sobre: y la tarjeta lo dice sin vueltas');
@@ -1322,17 +1322,17 @@ await sembrar(page, {movs:[], billeteras:[{id:1,nombre:'Lemon',saldoInicial:1000
 await page.reload();
 await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
 ok(await page.evaluate(()=>window.__guitaPresu()===null), 'sobre: sin presupuesto puesto devuelve null');
-await page.click('[data-view="plata"]');
+await page.click('[data-view="metas"]');
 await page.waitForTimeout(300);
 ok(/Sin poner/.test(await page.evaluate(()=>document.getElementById('presuQueda').textContent)),
    'sobre: y la tarjeta invita a ponerlo');
 await page.click('#presuBtn');
 await page.waitForTimeout(200);
-await page.fill('#psDia','20.000');
+await page.fill('#psMonto','140.000');
 await page.click('#psGuardar');
 await page.waitForTimeout(300);
 const nuevoP = await page.evaluate(()=>window.__guitaPresu());
-ok(nuevoP && nuevoP.base === 140000, 'sobre: se puede configurar desde cero');
+ok(nuevoP && Math.round(nuevoP.base) === 20000*nuevoP.diasTotal, 'meta: se configura por semana, y si arrancás a mitad, con los días que quedan', JSON.stringify(nuevoP&&{b:nuevoP.base,d:nuevoP.diasTotal}));
 ok(nuevoP.arrastre === 0, 'sobre: arranca sin arrastre, no desde el principio de los tiempos');
 await page.close();
 
@@ -1540,8 +1540,10 @@ await page.close();
 
   // Cocina
   await pg.click('.j-tab[data-mod="cocina"]'); await pg.waitForTimeout(500);
+  ok(await pg.evaluate(()=>window.__guitaState().cocina.recetas.length)===0, 'cocina: arranca vacía, para tus recetas');
+  await pg.click('#cocEjemplos'); await pg.waitForTimeout(300);
   const nRec = await pg.evaluate(()=>window.__guitaState().cocina.recetas.length);
-  ok(nRec>=10, 'cocina: arranca con recetas argentinas de base', String(nRec));
+  ok(nRec>=10, 'cocina: las clásicas argentinas, sólo si las pedís', String(nRec));
   ok(await pg.evaluate(()=>document.querySelectorAll('#cocSemana .j-day').length)===7, 'cocina: la semana de lunes a domingo');
   ok(await pg.isVisible('.j-sugcard'), 'cocina: sugiere qué cocinar hoy');
   await pg.click('.j-chip[data-f="pastas"]'); await pg.waitForTimeout(200);
@@ -1788,6 +1790,87 @@ await page.close();
   // la clave de Plata no bloquea el micrófono en la Agenda
   ok(await pg.evaluate(()=>!!document.querySelector('.j-tab[data-mod="agenda"]')) && await pg.evaluate(()=>document.querySelectorAll('.j-tab[data-mod]').length)===4,
      'nav: Hoy, Agenda, Plata y Cocina');
+  await pg.close();
+}
+
+/* ══════════ Juli-o 4.3: meta de gasto, resumen de la mañana, cocina propia y logros ══════════ */
+{
+  const pg = await browser.newPage({viewport:{width:390,height:844}});
+  pg.on('pageerror', e=>{ console.log('PAGE ERROR:', e.message); fail++; });
+  await pg.addInitScript(()=>{ window.__julioInicio = 'plata';
+    window.AndroidVoz = { avisosSincronizar: j => JSON.parse(j).length, avisosEstado: () => JSON.stringify({permiso:true, exactas:true, sdk:34, programados:0}),
+      setReminder: ()=>{}, clearReminder: ()=>{} }; });
+  await pg.goto(BASE+'/');
+  const h = new Date(); h.setHours(12,0,0,0);
+  const iso = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const mas = (d,n)=>{ const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+  const lun = mas(h, -((h.getDay()+6)%7)), ant = mas(lun, -7);
+  await pg.evaluate(s=>{ localStorage.clear(); localStorage.setItem('guita:v2', s); }, JSON.stringify({
+    movs:[{id:1,tipo:'gasto',monto:50000,categoria:'Comida',fecha:iso(ant),descripcion:'Súper',billetera:1},
+          {id:2,tipo:'gasto',monto:12000,categoria:'Comida',fecha:iso(h),descripcion:'Verdulería',billetera:1}],
+    billeteras:[{id:1,nombre:'Efectivo',saldoInicial:70000}], tarjetas:[], fijos:[], pagosFijos:{}, transf:[], ajustes:[], prestamos:[],
+    metas:[{id:5,nombre:'Viaje',objetivo:100000,guardado:100000,icono:'✈️'}],
+    presu:{porDia:10000, desde:iso(ant), previstos:[], ajustes:[]},
+    cocina:{recetas:[], historial:[{id:30,fecha:iso(mas(h,-3)),recetaId:null,nombre:'Guiso de mi vieja'},{id:31,fecha:iso(mas(h,-10)),recetaId:null,nombre:'Guiso de mi vieja'}], semilla:true, limpio:true},
+    logros:{desde:iso(ant)}, config:{}, seq:40}));
+  await pg.reload(); await pg.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+  await pg.waitForTimeout(2200);
+
+  // logros: la semana pasada (50.000 de 70.000) se festeja y suma
+  ok(await pg.isVisible('#celebra') && /Cumpliste/.test(await pg.textContent('#celTitulo')), 'logros: la meta cumplida se festeja');
+  ok(/\+1\d\d puntos/.test(await pg.textContent('#celChip')), 'logros: con sus puntos', await pg.textContent('#celChip'));
+  await pg.click('#celCerrar'); await pg.waitForTimeout(900);
+  // y a continuación el nivel (la meta de ahorro completa suma 200)
+  ok(await pg.isVisible('#celebra') && /Nivel 2/.test(await pg.textContent('#celTitulo')), 'logros: subir de nivel se festeja', await pg.textContent('#celTitulo'));
+  await pg.click('#celAccion'); await pg.waitForTimeout(400);
+  ok(await pg.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--brand').trim().toUpperCase())==='#7CC4FF', 'logros: el nivel 2 desbloquea el celeste y se aplica');
+  const st = await pg.evaluate(()=>window.__guitaState());
+  ok(Object.values(st.logros.periodos).length===1 && Object.values(st.logros.periodos)[0].cumplida, 'logros: el período cerrado queda guardado');
+  await pg.waitForTimeout(900);
+  if(await pg.isVisible('#celebra')) { await pg.click('#celCerrar'); await pg.waitForTimeout(500); }
+
+  // meta hasta una fecha: 70.000 hasta fin de mes
+  await pg.click('.g-tab[data-view="metas"]'); await pg.waitForTimeout(300);
+  await pg.click('#presuBtn'); await pg.waitForTimeout(300);
+  await pg.click('#psModo [data-m="hasta"]');
+  await pg.fill('#psMonto', '70.000');
+  const fin = iso(new Date(h.getFullYear(), h.getMonth()+1, 0));
+  await pg.fill('#psHasta', fin);
+  await pg.click('#psGuardar'); await pg.waitForTimeout(400);
+  let P = await pg.evaluate(()=>window.__guitaPresu());
+  const diasFin = Math.round((new Date(fin+'T12:00:00')-h)/864e5)+1;
+  ok(P.modo==='hasta' && P.total===70000 && P.gastado===12000 && P.diasQuedan===diasFin, 'meta: hasta una fecha cuenta desde hoy', JSON.stringify({m:P.modo,t:P.total,g:P.gastado,d:P.diasQuedan}));
+  ok(Math.round(P.porDiaReal)===Math.round(58000/diasFin), 'meta: y te dice cuánto por día');
+  ok(/te queda/i.test(await pg.textContent('#presuLbl')) && /hasta el/i.test(await pg.textContent('#presuLbl')), 'meta: la tarjeta dice hasta cuándo', await pg.textContent('#presuLbl'));
+  // por mes
+  await pg.click('#presuBtn'); await pg.waitForTimeout(300);
+  await pg.click('#psModo [data-m="mes"]'); await pg.fill('#psMonto', '300.000'); await pg.click('#psGuardar'); await pg.waitForTimeout(300);
+  P = await pg.evaluate(()=>window.__guitaPresu());
+  ok(P.modo==='mes' && P.total===300000 && P.hasta===fin, 'meta: por mes, hasta el último día');
+  // reiniciar
+  await pg.click('#presuReiniciar'); await pg.waitForTimeout(300);
+  P = await pg.evaluate(()=>window.__guitaPresu());
+  ok(P.desde===iso(h), 'meta: «Empezar de nuevo» cuenta desde hoy', P.desde);
+
+  // resumen de la mañana aunque la agenda esté vacía
+  const av = await pg.evaluate(()=>window.__guitaAvisos());
+  const res = av.find(a=>a.id.startsWith('ag:resumen:'));
+  ok(res && /Para gastar/.test(res.texto), 'resumen de la mañana: sale siempre, con lo que podés gastar', JSON.stringify(res));
+
+  // cocina: lo que anotás sin receta también se sugiere, y se puede guardar
+  await pg.click('.j-tab[data-mod="cocina"]'); await pg.waitForTimeout(400);
+  ok(/Guiso de mi vieja/.test(await pg.textContent('#cocSugg')), 'cocina: sugiere lo que cocinás seguido aunque no tenga receta');
+  await pg.fill('#cocQuick', 'Milanesas con puré'); await pg.press('#cocQuick', 'Enter'); await pg.waitForTimeout(300);
+  ok((await pg.evaluate(()=>window.__guitaState())).cocina.historial.some(x=>x.nombre==='Milanesas con puré'), 'cocina: «¿Qué cocinaste hoy?» lo anota');
+  await pg.click('#cocHist [data-guardar="Milanesas con puré"]'); await pg.waitForTimeout(400);
+  ok(await pg.isVisible('#edPage') && (await pg.inputValue('#edNombre'))==='Milanesas con puré', 'cocina: «Guardar receta» abre el editor con el nombre');
+  await pg.click('#edCerrar'); await pg.waitForTimeout(300);
+
+  // logros: la página
+  await pg.click('.j-tab[data-mod="hoy"]'); await pg.waitForTimeout(300);
+  await pg.click('#hoyStack [data-ir="logros"]'); await pg.waitForTimeout(500);
+  ok(await pg.isVisible('#logrosPage') && /Nivel/.test(await pg.textContent('#lgHero')), 'logros: la página muestra tu nivel');
+  ok(await pg.evaluate(()=>document.querySelectorAll('#lgMedallas .j-medal.on').length)>=2, 'logros: medallas ganadas (primera meta y ahorrista)');
   await pg.close();
 }
 
