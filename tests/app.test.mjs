@@ -434,8 +434,8 @@ await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>
 ok(await page.isVisible('#panelCard'), 'panel: aparece en el inicio');
 ok(/1\.400\.000/.test(await page.evaluate(()=>document.getElementById('panelTenes').textContent)),
    'panel: suma la plata a mano', await page.evaluate(()=>document.getElementById('panelTenes').textContent));
-ok(/invertido/.test(await page.evaluate(()=>document.getElementById('panelTenesSub').textContent)),
-   'panel: muestra lo invertido aparte');
+ok(/en reserva/.test(await page.evaluate(()=>document.getElementById('panelTenesSub').textContent)),
+   'panel: muestra la reserva aparte');
 ok(/25%/.test(await page.evaluate(()=>document.getElementById('panelMetas').textContent)),
    'panel: muestra el avance de las metas');
 await page.evaluate(()=>document.querySelector('[data-ir="plata"]').click());
@@ -1871,6 +1871,38 @@ await page.close();
   await pg.click('#hoyStack [data-ir="logros"]'); await pg.waitForTimeout(500);
   ok(await pg.isVisible('#logrosPage') && /Nivel/.test(await pg.textContent('#lgHero')), 'logros: la página muestra tu nivel');
   ok(await pg.evaluate(()=>document.querySelectorAll('#lgMedallas .j-medal.on').length)>=2, 'logros: medallas ganadas (primera meta y ahorrista)');
+  await pg.close();
+}
+
+/* ══════════ Juli-o 4.4: meta de ahorro enganchada a una cuenta ══════════ */
+{
+  const pg = await browser.newPage({viewport:{width:390,height:844}});
+  pg.on('pageerror', e=>{ console.log('PAGE ERROR:', e.message); fail++; });
+  await pg.addInitScript(()=>{ window.__julioInicio = 'plata'; });
+  await pg.goto(BASE+'/');
+  await pg.evaluate(s=>{ localStorage.clear(); localStorage.setItem('guita:v2', s); }, JSON.stringify({
+    movs:[], billeteras:[{id:1,nombre:'Mercado Pago',saldoInicial:50000},{id:2,nombre:'Lemon',saldoInicial:0}],
+    tarjetas:[], fijos:[], pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[], config:{}, seq:10}));
+  await pg.reload(); await pg.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+  await pg.evaluate(()=>window.__guitaParche({app:'guita', parche:1, id:'fe-1', cambios:[
+    {op:'billetera', nombre:'Lemon', inversion:true},
+    {op:'meta', nombre:'Fondo de emergencia', objetivo:500000, billetera:'Lemon', icono:'🛟'},
+    {op:'saldo', billetera:'Lemon', monto:273000}]}));
+  await pg.waitForTimeout(300);
+  ok(!(await pg.textContent('#parcheErrores')).trim(), 'parche: «billetera» sobre una que ya existe la marca como reserva', await pg.textContent('#parcheErrores'));
+  await pg.click('#saveParche'); await pg.waitForTimeout(400);
+  let st = await pg.evaluate(()=>window.__guitaState());
+  ok(st.billeteras.find(b=>b.nombre==='Lemon').inversion===true, 'reserva: Lemon queda aparte de la plata para gastar');
+  await pg.click('.g-tab[data-view="metas"]'); await pg.waitForTimeout(300);
+  ok(/273\.000 de \$\s?500\.000/.test(await pg.textContent('#metasLista')) && /en Lemon/.test(await pg.textContent('#metasLista')), 'meta: toma el saldo de la cuenta enganchada', (await pg.textContent('#metasLista')).replace(/\s+/g,' ').slice(0,120));
+  // aportar = pasar plata de una cuenta a la otra
+  await pg.click('[data-aporte]'); await pg.waitForTimeout(300);
+  await pg.fill('#apMonto', '20.000');
+  await pg.selectOption('#apBill', {label:'Mercado Pago'}).catch(async()=>{ await pg.selectOption('#apBill', '1'); });
+  await pg.click('#saveAporte'); await pg.waitForTimeout(400);
+  st = await pg.evaluate(()=>window.__guitaState());
+  ok(st.transf.some(t=>t.de===1 && t.a===2 && t.monto===20000) && !st.movs.some(m=>/Ahorro/.test(m.descripcion||'')), 'meta: guardar es pasar plata a esa cuenta, no un gasto');
+  ok(await pg.evaluate(()=>window.__guitaSaldo(2))===293000 && /293\.000/.test(await pg.textContent('#metasLista')), 'meta: y se mueve sola');
   await pg.close();
 }
 

@@ -201,6 +201,16 @@ cuantos más se den, más preciso.
 Pone la meta de gasto del día a día y la cuenta desde hoy. Sin `modo`, sigue valiendo el formato viejo
 con `porDia`.
 
+### Reserva y meta enganchada a una cuenta (desde Juli-o 4.4)
+
+```json
+{"op":"billetera", "nombre":"Lemon", "inversion":true}
+{"op":"meta", "nombre":"Fondo de emergencia", "objetivo":500000, "billetera":"Lemon", "icono":"🛟"}
+```
+- `billetera` sobre una que ya existe, con `inversion`, la marca como reserva (aparte de la plata para gastar)
+  o la vuelve a contar.
+- `meta` con `billetera`: lo guardado es el saldo de esa cuenta, y guardar plata es una transferencia hacia ella.
+
 ## Ejemplo completo
 
 ```json
