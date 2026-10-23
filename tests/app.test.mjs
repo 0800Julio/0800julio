@@ -33,6 +33,7 @@ const nuevaPagina = async (opts={}) => {
   await page.addInitScript(()=>{
     // la suite de Guita arranca en Plata, que es donde vivía todo antes de Juli-o
     window.__julioInicio = 'plata';
+    window.__detallesAbiertos = true;
     window.__toastLog = [];
     addEventListener('DOMContentLoaded', ()=>{
       const t = document.getElementById('toast');
@@ -155,7 +156,7 @@ ok(/no vuelve/.test(lp), 'proyección: marca lo que no vuelve');
 await page.keyboard.press('Escape'); await page.waitForTimeout(300);
 
 /* ══ análisis: detalle por categoría con el origen ══ */
-await page.click('.g-tab[data-view="analisis"]'); await page.waitForTimeout(800);
+await page.evaluate(()=>document.getElementById('verAnalisisBtn').click()); await page.waitForTimeout(800);
 const catName = await page.evaluate(()=>{ const b=document.querySelector('#pieLegend [data-vercat]');
   if(!b) return null; const n=b.dataset.vercat; b.click(); return n; });
 ok(catName!==null, 'análisis: la leyenda tiene botón para ver el detalle');
@@ -200,7 +201,7 @@ const nav = await page.evaluate(()=>{
   const mic=document.getElementById('micBtn').getBoundingClientRect();
   return {tabs, micCentro: mic.x+mic.width/2, ancho: innerWidth};
 });
-ok(nav.tabs.length===5, 'nav: 5 pestañas de Plata', nav.tabs.join(','));
+ok(nav.tabs.length===4, 'nav: 4 pestañas de Plata (Mes, Pagos, Fijos, Cuentas)', nav.tabs.join(','));
 ok(Math.abs(nav.micCentro - nav.ancho/2) < 6, 'nav: el micrófono queda centrado',
    `mic en ${nav.micCentro.toFixed(1)} de ${nav.ancho}`);
 ok(!nav.tabs.includes('asesor'), 'nav: el asesor ya no está');
@@ -214,11 +215,11 @@ const deslizar = async (dx)=>{
 const vistaActiva = ()=>page.evaluate(()=>document.querySelector('.view.active').id);
 ok(await vistaActiva()==='view-home', 'deslizar: arranca en Inicio');
 await deslizar(-160);
-ok(await vistaActiva()==='view-analisis', 'deslizar: hacia la izquierda pasa a Análisis', await vistaActiva());
+ok(await vistaActiva()==='view-tarjetas', 'deslizar: hacia la izquierda pasa a Pagos', await vistaActiva());
 await deslizar(-160);
-ok(await vistaActiva()==='view-tarjetas', 'deslizar: sigue hasta Deudas', await vistaActiva());
+ok(await vistaActiva()==='view-fijos', 'deslizar: sigue hasta Fijos', await vistaActiva());
 await deslizar(160);
-ok(await vistaActiva()==='view-analisis', 'deslizar: hacia la derecha vuelve', await vistaActiva());
+ok(await vistaActiva()==='view-tarjetas', 'deslizar: hacia la derecha vuelve', await vistaActiva());
 await deslizar(160);
 await deslizar(160);
 ok(await vistaActiva()==='view-home', 'deslizar: no se pasa del principio', await vistaActiva());
@@ -236,7 +237,7 @@ await sembrar(page, {
   config:{apiKey:''}, seq:60});
 await page.reload();
 await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
-await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(600);
+await page.click('.g-tab[data-view="fijos"]'); await page.waitForTimeout(600);
 const planTot = await page.evaluate(()=>document.getElementById('planTotal').textContent);
 ok(/347\.999|347999/.test(planTot.replace(/\s/g,'')), 'plan: suma fijos + suscripciones de tarjeta', planTot);
 const planTxt = await page.evaluate(()=>document.getElementById('planLista').textContent);
@@ -256,7 +257,7 @@ ok((planTxt.match(/Alquiler/g)||[]).length===1,
 ok(/Pagar/.test(planTxt), 'plan: se puede pagar desde la lista');
 
 /* metas */
-await page.click('.g-tab[data-view="metas"]'); await page.waitForTimeout(300);
+await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(300);
 ok(await page.isVisible('#metasEmpty'), 'metas: tienen su pestaña y, vacías, invitan a crear la primera');
 await page.click('#addMetaBtn2'); await page.waitForTimeout(300);
 await page.fill('#mtNombre','Viaje a Brasil');
@@ -353,8 +354,8 @@ ok(/No te alcanza/.test(await page.evaluate(()=>document.getElementById('alResul
 ok(/financiando/.test(alcanza1) || true, '(2) ¿me alcanza?: considera la deuda');
 await page.keyboard.press('Escape'); await page.waitForTimeout(300);
 
-/* (3) aumentos + (5) suscripciones */
-await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(700);
+/* (3) aumentos + (5) suscripciones: viven en Fijos */
+await page.click('.g-tab[data-view="fijos"]'); await page.waitForTimeout(700);
 await page.evaluate(()=>document.getElementById('aumentosCard').scrollIntoView());
 ok(await page.isVisible('#aumentosCard'), '(3) aumentos: la tarjeta aparece');
 const aumTxt = await page.evaluate(()=>document.getElementById('aumentosList').textContent);
@@ -431,7 +432,7 @@ await page.reload();
 await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
 
 /* panel del inicio */
-ok(await page.isVisible('#panelCard'), 'panel: aparece en el inicio');
+ok(!(await page.isVisible('#panelCard')), 'panel: ya no repite en el inicio lo que está en Pagos, Fijos y Cuentas');
 ok(/1\.400\.000/.test(await page.evaluate(()=>document.getElementById('panelTenes').textContent)),
    'panel: suma la plata a mano', await page.evaluate(()=>document.getElementById('panelTenes').textContent));
 ok(/en reserva/.test(await page.evaluate(()=>document.getElementById('panelTenesSub').textContent)),
@@ -478,7 +479,7 @@ ok(/680\.000/.test(await page.evaluate(()=>document.getElementById('debtTotal').
 await page.click('.g-tab[data-view="home"]'); await page.waitForTimeout(500);
 ok(/préstamos/.test(await page.evaluate(()=>document.getElementById('panelDeudaSub').textContent)),
    'préstamos: aparecen en el panel del inicio');
-await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(500);
+await page.click('.g-tab[data-view="fijos"]'); await page.waitForTimeout(500);
 ok(/Préstamo Santander/.test(await page.evaluate(()=>document.getElementById('planLista').textContent)),
    'préstamos: entran en la lista del mes');
 // v3.0 llamaba a abrirPagoPrestamo(), que no existía: tiraba ReferenceError
@@ -537,7 +538,7 @@ await sembrar(page, {
   config:{apiKey:''}, seq:60});
 await page.reload();
 await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
-await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(700);
+await page.click('.g-tab[data-view="fijos"]'); await page.waitForTimeout(700);
 const cal2 = await page.evaluate(()=>document.getElementById('planLista').textContent);
 const vecesPedidos = (cal2.match(/pedidosya/gi)||[]).length;
 ok(vecesPedidos===1, 'duplicados: PedidosYa aparece una sola vez', vecesPedidos+' veces');
@@ -592,9 +593,10 @@ await page.reload();
 await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
 
 // un solo número tamaño héroe por pantalla, y arriba de todo
-for(const [vista, heroe] of [['home','dueTotal'],['tarjetas','debtTotal'],['plata','walletGrandTotal']]){
+for(const [vista, heroe] of [['home','presuQueda'],['tarjetas','dueTotal'],['plata','walletGrandTotal']]){
   await page.click(`.g-tab[data-view="${vista}"]`); await page.waitForTimeout(600);
-  const n = await page.evaluate(v=>document.querySelectorAll('#view-'+v+' .g-hero .num').length, vista);
+  // lo plegado ("en detalle") no cuenta: es lo que abrís si querés más
+  const n = await page.evaluate(v=>[...document.querySelectorAll('#view-'+v+' .g-hero .num')].filter(e=>!e.closest('details')).length, vista);
   ok(n===1, `héroe: ${vista} tiene un solo número grande`, n+' encontrados');
   const primero = await page.evaluate(v=>{
     const cards = [...document.querySelectorAll('#view-'+v+' > section.g-card, #view-'+v+' > .g-card')]
@@ -605,8 +607,8 @@ for(const [vista, heroe] of [['home','dueTotal'],['tarjetas','debtTotal'],['plat
      `héroe: en ${vista} el número grande abre la pantalla`, String(primero));
 }
 
-// el vencimiento del inicio se paga en un toque y avisa cuánto queda
-await page.click('.g-tab[data-view="home"]'); await page.waitForTimeout(600);
+// el vencimiento (ahora en Pagos) se paga en un toque y avisa cuánto queda
+await page.click('.g-tab[data-view="tarjetas"]'); await page.waitForTimeout(600);
 ok(/Visa/.test(await page.evaluate(()=>document.getElementById('dueSub').textContent)),
    'pago: el inicio muestra el resumen que vence',
    await page.evaluate(()=>document.getElementById('dueSub').textContent));
@@ -630,7 +632,7 @@ const saldoDespues = await page.evaluate(()=>window.__guitaSaldo(1));
 ok(Math.round(saldoAntes-saldoDespues)===100000,
    'pago: el pago se descuenta de la billetera elegida', `${saldoAntes} → ${saldoDespues}`);
 // y se puede seguir adelantando: el segundo pago suma al primero
-await page.click('.g-tab[data-view="home"]'); await page.waitForTimeout(500);
+await page.click('.g-tab[data-view="tarjetas"]'); await page.waitForTimeout(500);
 const pagosTxt = await page.evaluate(()=>document.getElementById('pagosList').textContent);
 ok(/Visa/.test(pagosTxt) && /100\.000/.test(pagosTxt) && /quedan/.test(pagosTxt)
    && (pagosTxt.match(/100\.000/g)||[]).length===1,
@@ -839,7 +841,7 @@ await page.evaluate(()=>{
   return null;
 });
 await page.click('.g-tab[data-view="home"]'); await page.waitForTimeout(500);
-await page.click('#panelFijosBtn'); await page.waitForTimeout(500);
+await page.evaluate(()=>document.getElementById('panelFijosBtn').click()); await page.waitForTimeout(500);
 const fjTxt2 = await page.evaluate(()=>document.getElementById('fijosDetalle').textContent.replace(/\s+/g,' '));
 ok(/Gas/.test(fjTxt2) && /Master/.test(fjTxt2),
    'enganchar: aparece con tu nombre y su tarjeta', fjTxt2.slice(0,120));
@@ -910,7 +912,7 @@ ok(/680\.198|680\.198,49/.test(await page.evaluate(()=>document.getElementById('
    await page.evaluate(()=>document.getElementById('panelFijos').textContent));
 ok(/de tu plata/.test(await page.evaluate(()=>document.getElementById('panelFijosSub').textContent)),
    'fijos: y el desglose de dónde sale');
-await page.click('#panelFijosBtn'); await page.waitForTimeout(500);
+await page.evaluate(()=>document.getElementById('panelFijosBtn').click()); await page.waitForTimeout(500);
 ok(await page.isVisible('#fijosDetalle'), 'fijos: se toca y abre el detalle');
 const fdTxt = await page.evaluate(()=>document.getElementById('fijosDetalle').textContent.replace(/\s+/g,' '));
 ok(/Alquiler/.test(fdTxt) && /Lemon/.test(fdTxt),
@@ -980,7 +982,7 @@ await sembrar(page, {
   config:{apiKey:''}, seq:40});
 await page.reload();
 await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
-await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(700);
+await page.click('.g-tab[data-view="fijos"]'); await page.waitForTimeout(700);
 const fjTxt = await page.evaluate(()=>document.getElementById('planLista').textContent.replace(/\s+/g,' '));
 const iSiOSi = fjTxt.search(/Los que s[ií] o s[ií]/i), iCortar = fjTxt.search(/Los que podr[ií]as cortar/i);
 ok(iSiOSi>=0 && iCortar>iSiOSi, 'fijos: primero los que no se tocan', fjTxt.slice(0,90));
@@ -1037,7 +1039,7 @@ await sembrar(page, {
     usd:0}], config:{apiKey:''}, seq:60});
 await page.reload();
 await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
-await page.click('.g-tab[data-view="plata"]'); await page.waitForTimeout(700);
+await page.click('.g-tab[data-view="fijos"]'); await page.waitForTimeout(700);
 await page.evaluate(()=>{ const d=document.getElementById('subsCard'); if(d) d.open=true; });
 const servTxt = await page.evaluate(()=>document.getElementById('subsList').textContent.replace(/\s+/g,' '));
 ok((servTxt.match(/camuzzi/gi)||[]).length===1, 'servicios: Camuzzi aparece una sola vez',
@@ -1271,7 +1273,7 @@ page = await nuevaPagina();
   ok(B.historial.length === 1 && B.historial[0].saldo === 40000,
      'sobre: la semana cerrada queda en el historial con su saldo');
 
-  await page.click('[data-view="metas"]');
+  await page.click('[data-view="home"]');
   await page.waitForTimeout(300);
   ok(/130\.000/.test(await page.evaluate(()=>document.getElementById('presuQueda').textContent)),
      'sobre: la tarjeta de Plata muestra lo que queda');
@@ -1307,7 +1309,7 @@ page = await nuevaPagina();
   await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
   const rojo = await page.evaluate(()=>window.__guitaPresu());
   ok(rojo.queda < 0, 'sobre: pasarse deja el saldo en rojo', String(rojo.queda));
-  await page.click('[data-view="metas"]');
+  await page.click('[data-view="home"]');
   await page.waitForTimeout(300);
   ok(/te pasaste/i.test(await page.evaluate(()=>document.getElementById('presuLbl').textContent)),
      'sobre: y la tarjeta lo dice sin vueltas');
@@ -1322,7 +1324,7 @@ await sembrar(page, {movs:[], billeteras:[{id:1,nombre:'Lemon',saldoInicial:1000
 await page.reload();
 await page.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
 ok(await page.evaluate(()=>window.__guitaPresu()===null), 'sobre: sin presupuesto puesto devuelve null');
-await page.click('[data-view="metas"]');
+await page.click('[data-view="home"]');
 await page.waitForTimeout(300);
 ok(/Sin poner/.test(await page.evaluate(()=>document.getElementById('presuQueda').textContent)),
    'sobre: y la tarjeta invita a ponerlo');
@@ -1830,7 +1832,7 @@ await page.close();
   if(await pg.isVisible('#celebra')) { await pg.click('#celCerrar'); await pg.waitForTimeout(500); }
 
   // meta hasta una fecha: 70.000 hasta fin de mes
-  await pg.click('.g-tab[data-view="metas"]'); await pg.waitForTimeout(300);
+  await pg.click('.g-tab[data-view="home"]'); await pg.waitForTimeout(300);
   await pg.click('#presuBtn'); await pg.waitForTimeout(300);
   await pg.click('#psModo [data-m="hasta"]');
   await pg.fill('#psMonto', '70.000');
@@ -1893,7 +1895,7 @@ await page.close();
   await pg.click('#saveParche'); await pg.waitForTimeout(400);
   let st = await pg.evaluate(()=>window.__guitaState());
   ok(st.billeteras.find(b=>b.nombre==='Lemon').inversion===true, 'reserva: Lemon queda aparte de la plata para gastar');
-  await pg.click('.g-tab[data-view="metas"]'); await pg.waitForTimeout(300);
+  await pg.click('.g-tab[data-view="plata"]'); await pg.waitForTimeout(300);
   ok(/273\.000 de \$\s?500\.000/.test(await pg.textContent('#metasLista')) && /en Lemon/.test(await pg.textContent('#metasLista')), 'meta: toma el saldo de la cuenta enganchada', (await pg.textContent('#metasLista')).replace(/\s+/g,' ').slice(0,120));
   // aportar = pasar plata de una cuenta a la otra
   await pg.click('[data-aporte]'); await pg.waitForTimeout(300);
@@ -1903,6 +1905,68 @@ await page.close();
   st = await pg.evaluate(()=>window.__guitaState());
   ok(st.transf.some(t=>t.de===1 && t.a===2 && t.monto===20000) && !st.movs.some(m=>/Ahorro/.test(m.descripcion||'')), 'meta: guardar es pasar plata a esa cuenta, no un gasto');
   ok(await pg.evaluate(()=>window.__guitaSaldo(2))===293000 && /293\.000/.test(await pg.textContent('#metasLista')), 'meta: y se mueve sola');
+  await pg.close();
+}
+
+/* ══════════ Juli-o 4.5: Plata ordenada (Mes · Pagos · Fijos · Cuentas) ══════════ */
+{
+  const pg = await browser.newPage({viewport:{width:390,height:844}});
+  pg.on('pageerror', e=>{ console.log('PAGE ERROR:', e.message); fail++; });
+  await pg.addInitScript(()=>{ window.__julioInicio = 'plata'; });
+  await pg.goto(BASE+'/');
+  const h = new Date(); h.setHours(12,0,0,0);
+  const iso = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const fin = iso(new Date(h.getFullYear(), h.getMonth()+1, 0));
+  await pg.evaluate(s=>{ localStorage.clear(); localStorage.setItem('guita:v2', s); }, JSON.stringify({
+    movs:[], billeteras:[{id:1,nombre:'Mercado Pago',saldoInicial:3825},{id:4,nombre:'Efectivo',saldoInicial:94000}],
+    tarjetas:[{id:12,nombre:'Mercado Pago',cierre:5,vto:10,resumenes:{}}],
+    fijos:[{id:22,nombre:'Alquiler',monto:650000,dia:10,categoria:'Hogar',billetera:1,activo:true,esencial:true},
+           {id:23,nombre:'HBO Max',monto:8941.9,dia:8,categoria:'Servicios',activo:true,esencial:false}],
+    pagosFijos:{}, transf:[], ajustes:[], metas:[],
+    prestamos:[{id:30,nombre:'Préstamo Mercado Pago',cuota:126875,cuotas:6,pagadasIni:3,pagos:[{fecha:'2026-09-28',monto:126875}],dia:28,proxima:'2026-10-28',billetera:1},
+               {id:31,nombre:'Línea de crédito MP',cuota:126875.46,cuotas:1,pagadasIni:0,pagos:[],dia:2,proxima:'2026-11-02'}],
+    presu:{modo:'hasta', monto:70000, hasta:fin, desde:iso(h), inicio:iso(h), porDia:7000, previstos:[], ajustes:[]},
+    config:{}, seq:100}));
+  await pg.reload(); await pg.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+  await pg.waitForTimeout(400);
+
+  // Mes: la meta arriba y el día a día
+  ok(await pg.evaluate(()=>{ const v=document.getElementById('view-home'); const a=v.querySelector('#presuCard'), b=v.querySelector('.g-summary');
+    return !!a && !!b && (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING); }), 'mes: la meta de gasto va arriba del resumen');
+  // anotar un gasto da feedback: barra, puntos
+  await pg.click('#addBtn'); await pg.waitForTimeout(300);
+  await pg.fill('#fMonto', '5.000'); await pg.fill('#fDesc', 'Pan');
+  await pg.click('#saveMov'); await pg.waitForTimeout(700);
+  ok(await pg.isVisible('#cargaPop') && /Gasto anotado/.test(await pg.textContent('#cpTit')), 'anotar: aparece el festejo');
+  ok(/\+3 pts/.test(await pg.textContent('#cpPts')), 'anotar: el primer gasto del día suma puntos');
+  ok(/Te quedan/.test(await pg.textContent('#cpFoot')) && /65\.000/.test(await pg.textContent('#cpFoot')), 'anotar: dice cuánto te queda de la meta', await pg.textContent('#cpFoot'));
+  ok(/Día a día/.test(await pg.textContent('#totalOutLbl')) && /5\.000/.test(await pg.textContent('#totalOut')), 'mes: el número grande es lo del día a día');
+
+  // Fijos: los de la casa y las suscripciones, separados
+  await pg.click('.g-tab[data-view="fijos"]'); await pg.waitForTimeout(400);
+  const fx = await pg.evaluate(()=>[...document.querySelectorAll('#fijosHub .j-fxcard')].map(c=>c.textContent.replace(/\s+/g,' ')));
+  ok(fx.length===2 && /Alquiler/.test(fx[0]) && !/HBO/.test(fx[0]) && /HBO/.test(fx[1]), 'fijos: la casa por un lado y las suscripciones por otro');
+  ok(/al año/.test(fx[1]), 'fijos: te dice cuánto ahorrás por año si cortás');
+
+  // parche: el préstamo repetido, la última cuota y lo que dice la tarjeta hoy
+  await pg.evaluate(()=>window.__guitaParche({app:'guita', parche:1, id:'mp-1', cambios:[
+    {op:'borrarPrestamo', prestamo:'Línea de crédito MP'},
+    {op:'prestamo', nombre:'Préstamo Mercado Pago', cuotas:6, quedan:1, dia:2, proxima:'2026-11-02'},
+    {op:'tarjeta', nombre:'Mercado Pago', totalHoy:1442896.49, fecha:'2026-10-23'}]}));
+  await pg.waitForTimeout(300);
+  ok(!(await pg.textContent('#parcheErrores')).trim(), 'parche: sin errores', await pg.textContent('#parcheErrores'));
+  await pg.click('#saveParche'); await pg.waitForTimeout(400);
+  const st = await pg.evaluate(()=>window.__guitaState());
+  ok(st.prestamos.length===1, 'parche: «borrarPrestamo» saca el repetido');
+  const pmp = st.prestamos[0];
+  ok(pmp.pagadasIni + pmp.pagos.length === 5 && pmp.proxima==='2026-11-02', 'parche: «quedan 1» deja la última cuota', JSON.stringify(pmp));
+  ok(st.tarjetas[0].totalHoy && st.tarjetas[0].totalHoy.monto===1442896.49, 'parche: la tarjeta guarda lo que te muestra hoy');
+
+  // Pagos: el mes que viene
+  await pg.click('.g-tab[data-view="tarjetas"]'); await pg.waitForTimeout(400);
+  const prox = (await pg.textContent('#proxMes')).replace(/\s+/g,' ');
+  ok(/Alquiler/.test(prox) && /Para no atrasarte/.test(prox) && /Si pagás todo/.test(prox), 'pagos: el mes que viene, con lo que necesitás', prox.slice(0,160));
+  ok(await pg.evaluate(()=>!document.getElementById('detTarjetas').open), 'pagos: el detalle de tarjetas arranca plegado');
   await pg.close();
 }
 

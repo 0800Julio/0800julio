@@ -211,6 +211,17 @@ con `porDia`.
   o la vuelve a contar.
 - `meta` con `billetera`: lo guardado es el saldo de esa cuenta, y guardar plata es una transferencia hacia ella.
 
+### `borrarPrestamo`, `prestamo` con `quedan`, `tarjeta` con `totalHoy` (desde Juli-o 4.5)
+
+```json
+{"op":"borrarPrestamo", "prestamo":"Línea de crédito MP"}
+{"op":"prestamo", "nombre":"Préstamo Mercado Pago", "cuotas":6, "quedan":1, "proxima":"2026-11-02"}
+{"op":"tarjeta", "nombre":"Mercado Pago", "totalHoy":1442896.49, "fecha":"2026-10-23"}
+```
+- `borrarPrestamo` saca un préstamo (por ejemplo, uno cargado dos veces).
+- `quedan` dice cuántas cuotas faltan, sin importar cuántas pagos tengas anotados.
+- `totalHoy` es lo que la app de la tarjeta te muestra del resumen que viene; Pagos lo usa en "El mes que viene".
+
 ## Ejemplo completo
 
 ```json
