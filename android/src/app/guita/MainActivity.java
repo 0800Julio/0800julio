@@ -398,6 +398,12 @@ public class MainActivity extends Activity {
             AvisoReceiver.programar(MainActivity.this, "rec:" + when, when, "Recordatorio", texto);
         }
 
+        /** Lo que muestra el widget del escritorio (la app lo calcula; el widget sólo lo dibuja). */
+        @JavascriptInterface
+        public void widgetActualizar(String json) {
+            JuliWidget.guardar(MainActivity.this, json);
+        }
+
         /** Adónde quería ir el acceso directo o la notificación que abrió la app; se vacía al leerlo. */
         @JavascriptInterface
         public String irPendiente() {

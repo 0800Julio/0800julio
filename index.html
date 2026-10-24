@@ -7296,7 +7296,7 @@
   alClick("verAnalisisBtn", ()=>switchView("analisis", 1));
   alClick("volverMesBtn", ()=>switchView("home", -1));
 
-  function renderAll(){ renderFijosHub(); renderProxMes(); if(julioListo){ if(cerrarPeriodos()) setTimeout(mostrarPendientes, 400); renderHoy(); renderCocina(); renderAgenda(); } renderHome(); renderVencimientos(); renderPagos(); renderPanel(); renderDiario(); renderPresu(); renderAnalisis(); renderTarjetas(); renderPrestamos(); renderBilleteras(); renderPlan(); sincronizarAvisos(); }
+  function renderAll(){ renderFijosHub(); renderProxMes(); if(julioListo){ actualizarWidget(); if(cerrarPeriodos()) setTimeout(mostrarPendientes, 400); renderHoy(); renderCocina(); renderAgenda(); } renderHome(); renderVencimientos(); renderPagos(); renderPanel(); renderDiario(); renderPresu(); renderAnalisis(); renderTarjetas(); renderPrestamos(); renderBilleteras(); renderPlan(); sincronizarAvisos(); }
 
   /* ---------- navegación ---------- */
   const tabs = document.querySelectorAll(".g-tab");
@@ -11357,6 +11357,44 @@
         <div class="j-bar" style="margin-top:8px"><i style="width:${(nv.pct*100).toFixed(1)}%"></i></div></div></div></button>`;
   }
 
+  /* ---------- widget del escritorio: la app calcula, el widget dibuja ---------- */
+  let widgetT = null;
+  function datosWidget(){
+    const P = presupuesto();
+    const col = (COLORES.find(c=>c.id===(logrosState().color||"lima")) || COLORES[0]).c.replace("#","");
+    const o = {fecha: todayISO(), oculto: pinOn(), color: "FF"+col};
+    if(P && !P.terminada){
+      const pasado = P.quedaHoy < 0;
+      o.lbl = pasado ? "HOY TE PASASTE POR" : "HOY PODÉS GASTAR";
+      o.hoy = fmtMoney(Math.round(Math.abs(P.quedaHoy)));
+      o.rojo = pasado || P.queda < 0;
+      o.manana = fmtMoney(Math.round(Math.max(0, P.desdeManana)));
+      o.sub = P.diasQuedan>1 ? `Desde mañana ${o.manana} por día · ${nombrePeriodo(P).en}` : "Último día de tu meta";
+    } else {
+      o.titulo = "Hoy";
+      o.sub = "Poné una meta de gasto y te digo cuánto podés por día";
+    }
+    const ag = [];
+    for(let k=0; k<3; k++){
+      const d = isoMas(todayISO(), k);
+      for(const it of itemsDelDia(d)){
+        if(hechoEn(it, d)) continue;
+        const [hh, mm] = (it.hora || "23:59").split(":").map(Number);
+        const when = new Date(d+"T12:00:00"); when.setHours(hh, mm, 0, 0);
+        ag.push({when: when.getTime(), t: (k===1 ? "mañana " : k===2 ? fechaCorta(d)+" " : "") + (it.hora ? it.hora+" " : "") + it.titulo});
+      }
+    }
+    o.agenda = ag.sort((a,b)=>a.when-b.when).slice(0,8);
+    return o;
+  }
+  function actualizarWidget(){
+    if(!(window.AndroidVoz && window.AndroidVoz.widgetActualizar) || !julioListo) return;
+    clearTimeout(widgetT);
+    widgetT = setTimeout(()=>{ try{ window.AndroidVoz.widgetActualizar(JSON.stringify(datosWidget())); }catch(e){} }, 600);
+  }
+  document.addEventListener("visibilitychange", ()=>{ if(document.hidden) actualizarWidget(); });
+  window.__julioWidget = () => datosWidget();
+
   /* ---------- arranque de Juli-o ---------- */
   cocina();
   procesarAccionesAgenda();
@@ -11373,6 +11411,7 @@
   });
   julioListo = true;
   irMod(window.__julioInicio || "hoy");
+  actualizarWidget();
   window.__julioFotos = Fotos;
   window.__julioCocina = () => ({sugerencias: sugerencias(3).map(x=>({nombre:x.r.nombre, porque:x.porque})),
     favoritas: favoritasAhora().map(x=>x.r.nombre), semana: semanaCocina()});

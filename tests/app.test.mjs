@@ -2094,6 +2094,31 @@ await page.close();
   await pg.close();
 }
 
+/* ══════════ Juli-o 4.8: widgets ══════════ */
+{
+  const pg = await browser.newPage({viewport:{width:390,height:844}});
+  pg.on('pageerror', e=>{ console.log('PAGE ERROR:', e.message); fail++; });
+  await pg.addInitScript(()=>{ window.__wid = [];
+    window.AndroidVoz = { widgetActualizar: j => window.__wid.push(JSON.parse(j)), setReminder: ()=>{}, clearReminder: ()=>{} }; });
+  await pg.goto(BASE+'/');
+  const h = new Date(); h.setHours(12,0,0,0);
+  const iso = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const mas = (d,n)=>{ const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+  await pg.evaluate(s=>{ localStorage.clear(); localStorage.setItem('guita:v2', s); }, JSON.stringify({
+    movs:[{id:1,tipo:'gasto',monto:4000,categoria:'Comida',fecha:iso(h),descripcion:'Pan',billetera:1,origen:'manual'}],
+    billeteras:[{id:1,nombre:'Efectivo',saldoInicial:94000}], tarjetas:[], fijos:[], pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],
+    presu:{modo:'hasta', monto:100000, hasta:iso(mas(h,9)), desde:iso(h), inicio:iso(h), porDia:10000, previstos:[], ajustes:[]},
+    agenda:{items:[{id:9,titulo:'Recital',fecha:iso(mas(h,1)),hora:'21:00',repetir:'',avisos:[0],hechos:{}}]},
+    config:{}, seq:20}));
+  await pg.reload(); await pg.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+  await pg.waitForTimeout(1500);
+  const w = await pg.evaluate(()=>window.__wid[window.__wid.length-1]);
+  ok(w && /^\$\s?6\.000$/.test(w.hoy) && /Desde mañana/.test(w.sub), 'widget: recibe cuánto podés gastar hoy y desde mañana', JSON.stringify(w));
+  ok(w && w.agenda.some(a=>/mañana 21:00 Recital/.test(a.t)), 'widget: y lo próximo de la agenda', JSON.stringify(w && w.agenda));
+  ok(w && w.oculto===false && /^FF[0-9A-F]{6}$/i.test(w.color), 'widget: con tu color y sin ocultar (no hay clave)');
+  await pg.close();
+}
+
 await browser.close();
 server.close();
 console.log(fail ? `\n${fail} FALLARON` : '\nTODO OK');

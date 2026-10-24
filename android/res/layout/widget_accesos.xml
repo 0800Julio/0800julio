@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Juli-o · Accesos: una fila de botones -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/a_root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="horizontal" android:background="@drawable/w_fondo" android:padding="8dp" android:gravity="center_vertical">
+    <TextView android:id="@+id/a_gasto" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+        android:layout_marginEnd="6dp" android:gravity="center" android:text="💸 Gasto" android:textSize="13sp" android:textStyle="bold"
+        android:textColor="#FF0B0C0E" android:background="@drawable/w_btn_main"
+        android:maxLines="1"/>
+    <TextView android:id="@+id/a_agenda" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+        android:layout_marginEnd="6dp" android:gravity="center" android:text="🗓 Agendar" android:textSize="13sp" android:textStyle="bold"
+        android:textColor="#FFF4F5F7" android:background="@drawable/w_btn"
+        android:maxLines="1"/>
+    <TextView android:id="@+id/a_cocina" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+        android:layout_marginEnd="6dp" android:gravity="center" android:text="🍳 Cociné" android:textSize="13sp" android:textStyle="bold"
+        android:textColor="#FFF4F5F7" android:background="@drawable/w_btn"
+        android:maxLines="1"/>
+    <TextView android:id="@+id/a_pagos" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+        android:gravity="center" android:text="💳 Pagos" android:textSize="13sp" android:textStyle="bold"
+        android:textColor="#FFF4F5F7" android:background="@drawable/w_btn" android:maxLines="1"/>
+</LinearLayout>

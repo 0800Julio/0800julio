@@ -66,5 +66,14 @@
         <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
       </intent-filter>
     </receiver>
+    <!-- widgets del escritorio -->
+    <receiver android:name=".JuliWidget" android:exported="false" android:label="@string/w_juli">
+      <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_juli"/>
+    </receiver>
+    <receiver android:name=".JuliAccesos" android:exported="false" android:label="@string/w_accesos">
+      <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_accesos"/>
+    </receiver>
   </application>
 </manifest>

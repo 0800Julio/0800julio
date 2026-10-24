@@ -8,4 +8,8 @@
   <string name="sc_cocina_largo">Anotar lo que cociné o pedí</string>
   <string name="sc_pagos">Pagos</string>
   <string name="sc_pagos_largo">Qué tengo que pagar</string>
+  <string name="w_juli">Juli-o · Hoy</string>
+  <string name="w_juli_desc">Cuánto podés gastar hoy, lo próximo de tu agenda y accesos rápidos</string>
+  <string name="w_accesos">Juli-o · Accesos</string>
+  <string name="w_accesos_desc">Anotar un gasto, agendar, cocina y pagos en un toque</string>
 </resources>
