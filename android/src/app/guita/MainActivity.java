@@ -72,6 +72,19 @@ public class MainActivity extends Activity {
         setContentView(web);
         web.loadUrl("file:///android_asset/index.html");
         tomarCompartido(getIntent());
+        leerIr(getIntent());
+    }
+
+    /** Adónde ir al abrir: guita://ir/anotar (acceso directo del ícono o una notificación). */
+    private String pendingIr = null;
+    private boolean leerIr(Intent intent) {
+        if (intent == null || intent.getData() == null) return false;
+        Uri u = intent.getData();
+        if (!"guita".equals(u.getScheme()) || !"ir".equals(u.getHost())) return false;
+        String p = u.getLastPathSegment();
+        if (p == null || p.isEmpty()) return false;
+        pendingIr = p;
+        return true;
     }
 
     /** La app ya estaba abierta y le compartieron algo. */
@@ -80,6 +93,7 @@ public class MainActivity extends Activity {
         super.onNewIntent(intent);
         setIntent(intent);
         if (tomarCompartido(intent)) js("window.__guitaHayCompartido&&window.__guitaHayCompartido()");
+        if (leerIr(intent)) js("window.__julioIr&&window.__julioIr()");
     }
 
     /**
@@ -382,6 +396,14 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void setReminderAt(long when, String texto) {
             AvisoReceiver.programar(MainActivity.this, "rec:" + when, when, "Recordatorio", texto);
+        }
+
+        /** Adónde quería ir el acceso directo o la notificación que abrió la app; se vacía al leerlo. */
+        @JavascriptInterface
+        public String irPendiente() {
+            String x = pendingIr;
+            pendingIr = null;
+            return x == null ? "" : x;
         }
 
         /** Los "Listo" y "En 1 hora" que tocaste en las notificaciones de la agenda. */

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="sc_anotar">Anotar gasto</string>
+  <string name="sc_anotar_largo">Anotar un gasto</string>
+  <string name="sc_agenda">Agendar</string>
+  <string name="sc_agenda_largo">Agendar algo</string>
+  <string name="sc_cocina">Qué cociné</string>
+  <string name="sc_cocina_largo">Anotar lo que cociné o pedí</string>
+  <string name="sc_pagos">Pagos</string>
+  <string name="sc_pagos_largo">Qué tengo que pagar</string>
+</resources>

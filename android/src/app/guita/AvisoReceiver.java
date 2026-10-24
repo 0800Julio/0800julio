@@ -83,9 +83,12 @@ public class AvisoReceiver extends BroadcastReceiver {
         NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm == null) return;
         canal(ctx);
+        // tocarla te lleva a donde corresponde: el recordatorio, a anotar; la agenda, a la agenda
         Intent open = new Intent(ctx, MainActivity.class);
         open.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pi = PendingIntent.getActivity(ctx, 200, open,
+        open.setAction(Intent.ACTION_VIEW);
+        open.setData(Uri.parse("guita://ir/" + destino(id)));
+        PendingIntent pi = PendingIntent.getActivity(ctx, id.hashCode(), open,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Notification.Builder b = Build.VERSION.SDK_INT >= 26
                 ? new Notification.Builder(ctx, CHANNEL)
@@ -108,6 +111,14 @@ public class AvisoReceiver extends BroadcastReceiver {
                     accionPI(ctx, id, "posponer", titulo, texto, icono)).build());
         }
         nm.notify(id.hashCode(), b.build());
+    }
+
+    static String destino(String id) {
+        if (id.startsWith("rem:")) return "anotar";
+        if (id.startsWith("ag:")) return "agenda";
+        if (id.startsWith("v:") || id.startsWith("r:")) return "pagos";
+        if (id.startsWith("cena:") || id.startsWith("cocina:")) return "cocina";
+        return "hoy";
     }
 
     static void canal(Context ctx) {

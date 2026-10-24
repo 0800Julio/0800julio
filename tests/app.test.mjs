@@ -2018,6 +2018,82 @@ await page.close();
   await pg.close();
 }
 
+/* ══════════ Juli-o 4.7: hoy y mañana, recordatorio, panorama, pedidos, agenda ══════════ */
+{
+  const pg = await browser.newPage({viewport:{width:390,height:844}});
+  pg.on('pageerror', e=>{ console.log('PAGE ERROR:', e.message); fail++; });
+  await pg.addInitScript(()=>{ window.__julioInicio = 'plata'; window.__irDe = 'anotar';
+    window.AndroidVoz = { avisosSincronizar: j => JSON.parse(j).length, avisosEstado: () => JSON.stringify({permiso:true, exactas:true, sdk:34, programados:0}),
+      setReminder: ()=>{}, clearReminder: ()=>{ window.__clearRem = true; }, irPendiente: ()=>{ const x = window.__irDe; window.__irDe = ''; return x; } }; });
+  await pg.goto(BASE+'/');
+  const h = new Date(); h.setHours(12,0,0,0);
+  const iso = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const mas = (d,n)=>{ const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+  const hasta = iso(mas(h, 9));
+  await pg.evaluate(s=>{ localStorage.clear(); localStorage.setItem('guita:v2', s); }, JSON.stringify({
+    movs:[{id:1,tipo:'gasto',monto:20000,categoria:'Comida',fecha:iso(h),descripcion:'Súper',billetera:4,origen:'manual'}],
+    billeteras:[{id:1,nombre:'Mercado Pago',saldoInicial:3825},{id:4,nombre:'Efectivo',saldoInicial:94000}],
+    tarjetas:[{id:10,nombre:'Visa Provincia',cierre:15,vto:26,resumenes:{[iso(h).slice(0,7)]:{monto:2574388,pagoMinimo:381776,pagadoMonto:381776,detalle:[]}}}],
+    fijos:[{id:22,nombre:'Alquiler',monto:650000,dia:17,categoria:'Hogar',billetera:4,activo:true,esencial:true}],
+    pagosFijos:{}, transf:[], ajustes:[], metas:[], prestamos:[],
+    presu:{modo:'hasta', monto:100000, hasta, desde:iso(h), inicio:iso(h), porDia:10000, previstos:[], ajustes:[]},
+    config:{sueldo:3000000, extras:40000, recordatorio:{on:true, hora:'22:15'}}, seq:100}));
+  await pg.reload(); await pg.waitForSelector('#splash',{state:'detached',timeout:5000}).catch(()=>{});
+  await pg.waitForTimeout(1400);
+
+  // hoy y desde mañana: lo que no gastes se reparte
+  const P = await pg.evaluate(()=>window.__guitaPresu());
+  ok(Math.round(P.paraHoy)===10000 && Math.round(P.quedaHoy)===-10000 && Math.round(P.desdeManana)===Math.round(80000/9), 'meta: hoy tu parte, y desde mañana lo que queda repartido', JSON.stringify({h:P.paraHoy, q:P.quedaHoy, m:P.desdeManana}));
+  // la notificación (o el acceso directo) abrió la carga de gastos
+  ok(await pg.evaluate(()=>document.getElementById('sheet').classList.contains('open') && !document.getElementById('phaseReview').hidden), 'abrir: «anotar» desde la notificación abre la carga');
+  await pg.keyboard.press('Escape'); await pg.waitForTimeout(300);
+  // recordatorio de la noche por el sistema de avisos
+  const av = await pg.evaluate(()=>window.__guitaAvisos());
+  const rem = av.find(a=>a.id.startsWith('rem:'));
+  ok(rem && new Date(rem.when).getHours()===22 && new Date(rem.when).getMinutes()===15, 'recordatorio: a las 22:15 por el sistema de avisos', JSON.stringify(rem));
+  ok(await pg.evaluate(()=>window.__clearRem===true), 'recordatorio: el viejo se apaga para que no lleguen dos');
+
+  // panorama
+  await pg.click('.g-tab[data-view="tarjetas"]'); await pg.waitForTimeout(500);
+  const cam = (await pg.textContent('#caminoCard')).replace(/\s+/g,' ');
+  ok(/Tu camino/.test(cam) && /(Terminás de financiar|todavía no alcanza)/.test(cam) && /sólo mínimos/.test(cam), 'panorama: tu camino para salir, contra pagar sólo mínimos', cam.slice(0,140));
+  ok(/Cuando cobrés/.test(await pg.textContent('#planCobro')) && /Para las tarjetas/.test(await pg.textContent('#planCobro')), 'panorama: cómo repartir el sueldo');
+
+  // cocina: pedí comida
+  await pg.click('.j-tab[data-mod="cocina"]'); await pg.waitForTimeout(300);
+  await pg.click('#cocTipo [data-t="pedido"]');
+  await pg.fill('#cocQuick', 'Sushi de Tanoshi'); await pg.fill('#cocPedMonto', '18.000');
+  await pg.press('#cocQuick', 'Enter'); await pg.waitForTimeout(500);
+  let st = await pg.evaluate(()=>window.__guitaState());
+  ok(st.cocina.historial.some(x=>x.tipo==='pedido' && x.nombre==='Sushi de Tanoshi' && x.monto===18000), 'cocina: anota lo que pediste');
+  ok(st.movs.some(m=>m.descripcion==='Pedido: Sushi de Tanoshi' && m.categoria==='Comida' && m.monto===18000), 'cocina: y si ponés cuánto salió, queda como gasto');
+  ok(/pediste/.test(await pg.textContent('#cocSemana')), 'cocina: la semana cuenta lo que pediste');
+
+  // agenda: fechas cortas, rutinas de varios días, calendario
+  const AH = new Date(2026, 9, 24, 15, 0).getTime();
+  const Pa = t => pg.evaluate(([t,a])=>window.__julioAgenda.parse(t, a), [t, AH]);
+  let r = await Pa('recital el 14 de nov a las 21');
+  ok(r.fecha==='2026-11-14' && r.hora==='21:00' && r.titulo==='Recital', 'agenda: «14 de nov» se entiende', JSON.stringify(r));
+  r = await Pa('gimnasio lunes, miércoles y viernes a las 19');
+  ok(r.repetir==='dias' && r.dias.join()==='1,3,5' && r.hora==='19:00' && r.titulo==='Gimnasio', 'agenda: rutina de varios días', JSON.stringify(r));
+  r = await Pa('yoga de lunes a viernes 8:30');
+  ok(r.repetir==='dias' && r.dias.length===5 && r.titulo==='Yoga', 'agenda: «de lunes a viernes»', JSON.stringify(r));
+  ok(await pg.evaluate(()=>window.__julioAgenda.ocurre({fecha:'2026-10-26', repetir:'dias', dias:[1,3,5]}, '2026-10-28')), 'agenda: la rutina cae los días que elegiste');
+  await pg.click('.j-tab[data-mod="agenda"]'); await pg.waitForTimeout(300);
+  await pg.fill('#agQuick', 'gimnasio lunes, miércoles y viernes a las 19'); await pg.press('#agQuick', 'Enter'); await pg.waitForTimeout(300);
+  await pg.click('#agVista [data-v="semana"]'); await pg.waitForTimeout(300);
+  ok(/Tus rutinas/.test(await pg.textContent('#agSemana')) && /Gimnasio/.test(await pg.textContent('#agSemana')), 'agenda: la semana muestra tus rutinas');
+  await pg.click('#agVista [data-v="mes"]'); await pg.waitForTimeout(300);
+  ok(await pg.evaluate(()=>document.querySelectorAll('#agCal .j-cald').length)>=28, 'agenda: calendario del mes');
+  await pg.click('#agCal [data-calmes="1"]'); await pg.waitForTimeout(200);
+  const d14 = await pg.evaluate(()=>{ const b = [...document.querySelectorAll('#agCal [data-cal]')].find(x=>x.dataset.cal.endsWith('-14')); b.click(); return b.dataset.cal; });
+  await pg.waitForTimeout(200);
+  await pg.fill('#agQuick', 'Recital'); await pg.press('#agQuick', 'Enter'); await pg.waitForTimeout(300);
+  st = await pg.evaluate(()=>window.__guitaState());
+  ok(st.agenda.items.some(x=>x.titulo==='Recital' && x.fecha===d14), 'agenda: tocás un día del mes que viene y lo agendás ahí', d14);
+  await pg.close();
+}
+
 await browser.close();
 server.close();
 console.log(fail ? `\n${fail} FALLARON` : '\nTODO OK');

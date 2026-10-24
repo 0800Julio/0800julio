@@ -224,6 +224,17 @@ con `porDia`.
 - `quedan` dice cuántas cuotas faltan, sin importar cuántas pagos tengas anotados.
 - `totalHoy` es lo que la app de la tarjeta te muestra del resumen que viene; Pagos lo usa en "El mes que viene".
 
+### Desde Juli-o 4.7: `pedido`, rutinas con `dias`, `config` con `extras` y `recordatorio`
+
+```json
+{"op":"pedido", "nombre":"Sushi de Tanoshi", "monto":18000, "billetera":"Efectivo"}
+{"op":"agenda", "titulo":"Gimnasio", "dias":[1,3,5], "hora":"19:00"}
+{"op":"config", "sueldo":3000000, "extras":40000, "recordatorio":"22:15"}
+```
+- `pedido` anota que pediste comida (queda en Cocina) y, con `monto`, el gasto en Comida.
+- `agenda` con `dias` (0 domingo … 6 sábado) es una rutina que se repite esos días.
+- `extras` son otros ingresos por mes; `recordatorio` es la hora del aviso para anotar (`"no"` lo apaga).
+
 ## Ejemplo completo
 
 ```json

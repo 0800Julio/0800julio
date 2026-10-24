@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mantené apretado el ícono de Juli-o: accesos directos a lo que más usás -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+  <shortcut android:shortcutId="anotar" android:enabled="true" android:icon="@drawable/ic_sc_anotar"
+      android:shortcutShortLabel="@string/sc_anotar" android:shortcutLongLabel="@string/sc_anotar_largo">
+    <intent android:action="android.intent.action.VIEW" android:data="guita://ir/anotar"
+        android:targetPackage="app.guita" android:targetClass="app.guita.MainActivity"/>
+  </shortcut>
+  <shortcut android:shortcutId="agenda" android:enabled="true" android:icon="@drawable/ic_sc_agenda"
+      android:shortcutShortLabel="@string/sc_agenda" android:shortcutLongLabel="@string/sc_agenda_largo">
+    <intent android:action="android.intent.action.VIEW" android:data="guita://ir/agenda"
+        android:targetPackage="app.guita" android:targetClass="app.guita.MainActivity"/>
+  </shortcut>
+  <shortcut android:shortcutId="cocina" android:enabled="true" android:icon="@drawable/ic_sc_cocina"
+      android:shortcutShortLabel="@string/sc_cocina" android:shortcutLongLabel="@string/sc_cocina_largo">
+    <intent android:action="android.intent.action.VIEW" android:data="guita://ir/cocina"
+        android:targetPackage="app.guita" android:targetClass="app.guita.MainActivity"/>
+  </shortcut>
+  <shortcut android:shortcutId="pagos" android:enabled="true" android:icon="@drawable/ic_sc_pagos"
+      android:shortcutShortLabel="@string/sc_pagos" android:shortcutLongLabel="@string/sc_pagos_largo">
+    <intent android:action="android.intent.action.VIEW" android:data="guita://ir/pagos"
+        android:targetPackage="app.guita" android:targetClass="app.guita.MainActivity"/>
+  </shortcut>
+</shortcuts>

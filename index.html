@@ -1145,6 +1145,68 @@
   .j-tiracap{font-size:12.5px; color:var(--muted); line-height:1.45; margin-top:6px; min-height:18px}
   .j-tiracap strong{color:var(--ink)}
 
+
+  .j-camino{padding:16px; margin-bottom:var(--gap); box-shadow:inset 0 0 0 1px rgba(var(--brand-rgb),.25); position:relative; overflow:hidden}
+  .j-camino::before{content:""; position:absolute; inset:0; pointer-events:none; background:radial-gradient(80% 70% at 100% 0%, rgba(var(--brand-rgb),.12), transparent 60%)}
+  .j-camino > *{position:relative}
+  .j-camtit{font-size:20px; font-weight:600; letter-spacing:-.02em; margin:8px 0 4px; text-wrap:balance}
+  .j-camtit b{color:var(--brand); font-weight:700}
+  .j-camchart{display:flex; align-items:flex-end; gap:5px; height:90px; margin:14px 0 6px}
+  .j-cambar{flex:1; height:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:4px}
+  .j-cambar i{display:block; width:100%; height:var(--h); border-radius:5px 5px 2px 2px; background:linear-gradient(180deg, var(--danger), rgba(var(--brand-rgb),.9));
+    transform-origin:bottom; animation:tdIn .7s var(--spring) both; animation-delay:var(--d)}
+  .j-cambar:last-child i{background:var(--brand)}
+  .j-cambar span{font-size:10px; color:var(--muted); font-weight:600}
+  .j-camcmp{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px}
+  .j-camcmp div{background:var(--chip); border-radius:14px; padding:11px}
+  .j-camcmp small{display:block; font-size:10.5px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--muted)}
+  .j-camcmp b{display:block; font-size:15px; margin-top:4px}
+  .j-camcmp div:first-child b{color:var(--brand)}
+  .j-camcmp span{display:block; font-size:11.5px; color:var(--muted); margin-top:2px}
+  .j-camtips{display:flex; flex-direction:column; gap:6px; margin-top:12px; font-size:13px; line-height:1.45; color:var(--muted)}
+  .j-camtips strong{color:var(--ink)}
+  .j-cobro .j-row .tx span{white-space:normal}
+  .j-lib{cursor:pointer}
+  .j-libdet{display:none; margin-top:8px}
+  .j-lib.open .j-libdet{display:block; animation:itemIn .3s var(--ease)}
+  .j-lib.open .j-libcorto{display:none}
+  .j-libdet .r{display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-top:1px solid var(--line); font-size:13.5px}
+  .j-libdet .r small{display:block; color:var(--muted); font-size:11.5px}
+  .j-libdet .r b{color:var(--income); white-space:nowrap}
+
+
+  .j-cocseg{margin-bottom:10px}
+  .j-cocseg button{background:var(--chip)}
+  .j-pedido{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; animation:itemIn .3s var(--ease)}
+  .j-pedido input, .j-pedido select{font:inherit; font-size:15px; color:var(--ink); background:var(--chip); border:none; border-radius:14px; padding:11px 12px; min-width:0; width:100%}
+
+
+  .j-agseg{margin-top:12px}
+  .j-agseg button{background:var(--chip)}
+  .j-cal{margin-top:12px; background:var(--card); border-radius:22px; box-shadow:var(--shadow); padding:12px 12px 14px; animation:cardIn .4s var(--spring) both}
+  .j-calhead{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:2px 2px 8px}
+  .j-calhead b{font-size:15px; font-weight:650}
+  .j-calgrid{display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px}
+  .j-calgrid small{text-align:center; font-size:10.5px; font-weight:600; color:var(--muted); padding-bottom:4px}
+  .j-cald{aspect-ratio:1; max-width:100%; border:none; border-radius:12px; background:var(--chip); color:var(--ink); font:inherit; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; transition:transform .2s var(--spring), background .15s}
+  .j-cald:active{transform:scale(.88)}
+  .j-cald b{font-family:var(--mono); font-size:14px; font-weight:600}
+  .j-cald span{display:flex; gap:2px; height:5px}
+  .j-cald i{width:5px; height:5px; border-radius:50%; background:var(--brand)}
+  .j-cald i.ok{background:var(--muted)}
+  .j-cald.pas{opacity:.55}
+  .j-cald.hoy{box-shadow:inset 0 0 0 1.5px var(--brand)}
+  .j-cald.sel{background:var(--brand); color:var(--brand-ink)} .j-cald.sel i{background:var(--brand-ink)}
+  .j-sem{margin-top:12px}
+  .j-semd{margin-top:12px}
+  .j-semh{display:flex; justify-content:space-between; align-items:center; padding:0 4px 6px; font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted)}
+  .j-semd.hoy .j-semh b{color:var(--brand)}
+  .j-semh .g-linkbtn{text-decoration:none; font-size:18px}
+  .j-semvacio{padding:4px 8px 0; color:var(--line-2); font-size:13px}
+  .j-rutpro{width:54px; height:6px; border-radius:3px; background:var(--track); overflow:hidden; flex:none}
+  .j-rutpro i{display:block; height:100%; background:var(--brand); border-radius:3px}
+
   /* avisos: ícono y frecuencia */
   .j-icons{display:grid; grid-template-columns:repeat(4,1fr); gap:8px}
   .j-icons button{height:46px; border:none; border-radius:14px; background:var(--chip); color:var(--ink); display:grid; place-items:center;
@@ -1370,6 +1432,7 @@
     <!-- TARJETAS -->
     <section class="view" id="view-tarjetas">
       <div class="g-viewtitle"><h2>Pagos</h2></div>
+      <section class="g-card j-camino" id="caminoCard" aria-label="Tu camino para salir de las deudas" hidden></section>
       <section class="g-card g-hero" id="dueCard" aria-label="Lo que tenés que pagar" hidden>
         <div class="g-hero-top">
           <div style="min-width:0">
@@ -1397,6 +1460,7 @@
       <section class="g-card j-prox" id="proxMesCard" aria-label="El mes que viene" hidden>
         <div class="g-label">🔮 El mes que viene (estimado)</div>
         <div id="proxMes"></div>
+        <div id="planCobro"></div>
       </section>
 
       <details class="j-fold" id="detTarjetas">
@@ -1537,16 +1601,28 @@
         <button type="submit" id="agQuickAdd" aria-label="Agregar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
       </form>
       <div class="j-quickprev" id="agPrev" aria-live="polite"></div>
+      <div class="g-seg j-agseg" id="agVista" role="tablist" aria-label="Cómo ver la agenda">
+        <button data-v="lista" class="on" role="tab">Lista</button><button data-v="semana" role="tab">Semana</button><button data-v="mes" role="tab">Mes</button>
+      </div>
       <div class="j-agdays" id="agDias" role="tablist" aria-label="Días"></div>
+      <div class="j-cal" id="agCal" hidden></div>
+      <div class="j-sem" id="agSemana" hidden></div>
       <div id="agLista" class="j-aglist"></div>
     </section>
 
     <!-- COCINA -->
     <section class="mod" id="mod-cocina" aria-label="Cocina">
+      <div class="g-seg j-cocseg" id="cocTipo" role="tablist" aria-label="Qué anotás">
+        <button class="on" data-t="cocine" role="tab">🍳 Cociné</button><button data-t="pedido" role="tab">🛵 Pedí</button>
+      </div>
       <form class="j-quick" id="cocQuickForm" autocomplete="off">
         <input id="cocQuick" type="text" list="cocineLista" enterkeyhint="done" placeholder="¿Qué cocinaste hoy?" aria-label="Anotar lo que cocinaste hoy">
         <button type="submit" aria-label="Anotar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></button>
       </form>
+      <div class="j-pedido" id="cocPedido" hidden>
+        <input id="cocPedMonto" type="text" inputmode="decimal" data-money placeholder="¿Cuánto salió? (opcional)" aria-label="Cuánto salió">
+        <select id="cocPedBill" aria-label="De dónde lo pagaste"></select>
+      </div>
       <div class="j-week" id="cocSemana" style="margin-top:12px"></div>
       <div id="cocHist"></div>
       <section class="j-sugg" id="cocSugg" aria-label="Para hoy"></section>
@@ -1637,7 +1713,9 @@
             <option value="">No se repite</option><option value="diario">Todos los días</option>
             <option value="semanal">Todas las semanas</option><option value="mensual">Todos los meses</option>
             <option value="anual">Todos los años</option>
+            <option value="dias">Algunos días de la semana</option>
           </select></div>
+        <div class="j-checks" id="agDiasRow" hidden></div>
         <div class="g-field"><span class="g-label">Avisarme</span><div class="j-checks" id="agAvisos"></div></div>
         <label class="g-switch" style="padding:0"><input type="checkbox" id="agInsistir"> Insistirme hasta que lo marque hecho</label>
         <div class="g-field"><label class="g-label" for="agNota">Nota</label>
@@ -2216,6 +2294,8 @@
               <input id="cfgCobro" class="j-in sm" type="number" min="0" max="28" step="1" placeholder="5"></label>
             <label class="j-setrow" for="cfgSueldo"><div class="tx"><b>Cuánto cobrás</b><span>Por mes; vacío si varía</span></div>
               <input id="cfgSueldo" class="j-in" type="text" inputmode="decimal" data-money placeholder="3.000.000"></label>
+            <label class="j-setrow" for="cfgExtras"><div class="tx"><b>Otros ingresos por mes</b><span>Changas, mensualidades (la web)</span></div>
+              <input id="cfgExtras" class="j-in" type="text" inputmode="decimal" data-money placeholder="40.000"></label>
             <label class="j-setrow" for="cfgDolar"><div class="tx"><b>Dólar</b><span>Para los consumos en US$</span></div>
               <input id="cfgDolar" class="j-in" type="text" inputmode="decimal" data-money placeholder="1.450"></label>
             <label class="j-setrow" for="cfgAlerta"><div class="tx"><b>Avisarme si un gasto supera</b><span>Vacío para no avisar</span></div>
@@ -2747,7 +2827,7 @@
      Claude no toca los datos: arma el mismo archivo que te mando yo, y pasa por la
      misma vista previa con Deshacer. Si algo no le queda claro, pregunta. */
   const OPS_ASIS = ["gasto","ingreso","pagoResumen","pagoFijo","pagoPrestamo","transferencia","saldo",
-    "fijo","previsto","presupuesto","borrarMov","cocine","receta","agenda","hecho"];
+    "fijo","previsto","presupuesto","borrarMov","cocine","pedido","receta","agenda","hecho"];
   const SCHEMA_ASIS = {type:"object", additionalProperties:false, required:["respuesta","cambios"], properties:{
     respuesta:{type:"string"},
     pregunta:{type:"string"},
@@ -2761,7 +2841,8 @@
       receta:{type:"string"}, cat:{type:"string"}, minutos:{type:"integer"}, porciones:{type:"integer"},
       ingredientes:{type:"array", items:{type:"string"}}, pasos:{type:"array", items:{type:"string"}}, fav:{type:"boolean"},
       titulo:{type:"string"}, hora:{type:"string"}, repetir:{type:"string", enum:["","diario","semanal","mensual","anual"]},
-      avisos:{type:"array", items:{type:"integer"}}, insistir:{type:"boolean"}, nota:{type:"string"}
+      avisos:{type:"array", items:{type:"integer"}}, insistir:{type:"boolean"}, nota:{type:"string"},
+      dias:{type:"array", items:{type:"integer"}}
     }}}
   }};
   function contextoAsis(){
@@ -2809,8 +2890,10 @@
     "- previsto: aparta plata del sobre para un gasto que viene. desc, monto, fecha.",
     "- presupuesto: su meta de gasto del día a día. modo (semana, mes o hasta) y monto total del período; si es 'hasta', la fecha va en 'hasta' (YYYY-MM-DD). Ej: 'tengo 70 lucas hasta fin de mes' = modo hasta, monto 70000, hasta el último día del mes.",
     "- borrarMov: borra un movimiento cargado mal. desc, monto, fecha (los que sepas).",
+    "- pedido: pidió comida (delivery). nombre (qué y de dónde), monto si lo dice, billetera o tarjeta con la que pagó, fecha. NO lo cargues además como gasto: el pedido ya lo anota.",
     "- cocine: anota que cocinó un plato. nombre (usá el de la receta guardada si coincide), fecha.",
     "- agenda: agenda un plan o quehacer. titulo (corto, sin la fecha), fecha YYYY-MM-DD (vacía si es 'algún día'), hora HH:MM si la dice, repetir (diario, semanal, mensual, anual o vacío), avisos (minutos antes: 0 a la hora, 60 una hora antes, 1440 el día antes), insistir:true si pide que le insistas, nota. Si dice 'recordame' sin día, es para hoy.",
+    "- Para rutinas de varios días (gimnasio lunes, miércoles y viernes) usá agenda con dias: números de día de la semana (0 domingo, 1 lunes … 6 sábado).",
     "- hecho: marca como hecho algo de la agenda. titulo (el del contexto), fecha del día en que tocaba.",
     "- receta: crea o actualiza una receta. nombre, cat (pastas, carnes, pollo, veggie, pescado, tartas, sopas, postres u otras), minutos, porciones, ingredientes (lista, con cantidades), pasos (lista; si un paso lleva tiempo, terminalo con la duración entre paréntesis, ej. (10 min)), fav si dice que es su favorita. Si pide una receta que no sabe, armala vos.",
     "Usá los nombres EXACTOS de billeteras, tarjetas, fijos y préstamos del contexto. Si no dice la fecha, es hoy. Si no dice de qué billetera salió y no se deduce, preguntá.",
@@ -4482,6 +4565,22 @@
           titulo:"¿Qué cocinamos hoy?", texto: sg ? `Te tiro una idea: ${sg.r.nombre}. ${sg.porque}.` : "Abrí Cocina y te sugiero algo según lo que venís haciendo."});
       }
     }
+    // el recordatorio de la noche para anotar lo que gastaste
+    const rem = S.config.recordatorio || {};
+    if(rem.on){
+      const [rh, rm] = String(rem.hora||"21:30").split(":").map(Number);
+      const hoyI = todayISO();
+      const deHoy = S.movs.filter(m=>m.fecha===hoyI && m.tipo==="gasto" && m.origen && !["parche","tarjeta","resumen","fijo"].includes(m.origen));
+      for(let d=0; d<14; d++){
+        const t = a(masDias(new Date(), d), rh, rm);
+        if(!(t>ahora && t<tope)) continue;
+        out.push({id:"rem:"+isoDe(new Date(t)), when:t, icono:"billetera",
+          titulo: d===0 && deHoy.length ? "¿Te faltó anotar algo?" : "¿Anotaste lo que gastaste hoy?",
+          texto: d===0 && deHoy.length
+            ? `Hoy llevás ${deHoy.length} ${deHoy.length===1?"gasto":"gastos"}${conMonto ? " ("+fmtMoney(deHoy.reduce((x,m)=>x+m.monto,0))+")" : ""}. Tocá para sumar lo que falte.`
+            : "Tocá y cargalo en un toque: así tu meta y tu racha siguen al día."});
+      }
+    }
     if(julioListo) out.push(...agendaAvisos(cfg, ahora, tope, icono));
     return out.sort((x,y)=>x.when-y.when).slice(0,150);
   }
@@ -5391,8 +5490,10 @@
           historial.push({desde:ma, hasta:mb, presu, gastado:g, saldo:presu-g});
         }
       }
+      const gastadoHoy = !terminada && hoyISO>=a ? gastoDelSobre(hoyISO, hoyISO) : 0;
       return {modo, porDia: base/diasTotal, desde:a, hasta:b, base, ajuste, arrastre:0, reservado, previstos,
-        gastado, total, queda, diasQuedan, diasPasados, diasTotal, ritmo, terminada,
+        gastado, total, queda, diasQuedan, diasPasados, diasTotal, ritmo, terminada, gastadoHoy,
+        ...hoyYManana(total, gastado, gastadoHoy, reservado, diasQuedan),
         porDiaReal: diasQuedan>0 ? queda/diasQuedan : queda,
         proyectado: total - reservado - ritmo*diasTotal,
         historial: historial.slice(-8), siguientes: siguientesDe(b)};
@@ -5427,14 +5528,30 @@
     const diasQuedan = 7 - ((hoy.getDay()+6)%7);
     const diasPasados = Math.max(1, dias(t.desde, hoyISO));
     const ritmo = gastado / diasPasados;
+    const gastadoHoy = gastoDelSobre(hoyISO, hoyISO);
     return {modo, porDia:P.porDia, desde:t.desde, hasta:b, base, ajuste, arrastre, reservado, previstos,
-      gastado, total, queda, diasQuedan, diasPasados, diasTotal:t.dias, ritmo, terminada:false,
+      gastado, total, queda, diasQuedan, diasPasados, diasTotal:t.dias, ritmo, terminada:false, gastadoHoy,
+      ...hoyYManana(total, gastado, gastadoHoy, reservado, diasQuedan),
       porDiaReal: diasQuedan>0 ? queda/diasQuedan : queda,
       // si seguís a este ritmo, así terminás el domingo
       proyectado: total - reservado - ritmo*t.dias,
       historial: historial.slice(-8),
       // lo que viene más adelante, para que no te agarre desprevenido
       siguientes: siguientesDe(b)};
+  }
+
+  /**
+   * Lo de hoy y lo de mañana: hoy tenés tu parte de lo que queda (contando hoy), y lo
+   * que no gastes se reparte entre los días que siguen. Por eso cada día que gastás
+   * menos, el margen de los próximos crece solo.
+   */
+  function hoyYManana(total, gastado, gastadoHoy, reservado, diasQuedan){
+    if(!(diasQuedan>0)) return {paraHoy:0, quedaHoy:0, desdeManana:0};
+    const antesDeHoy = total - (gastado - gastadoHoy) - reservado;
+    const paraHoy = antesDeHoy / diasQuedan;
+    const queda = antesDeHoy - gastadoHoy;
+    return {paraHoy, quedaHoy: paraHoy - gastadoHoy,
+      desdeManana: diasQuedan>1 ? queda/(diasQuedan-1) : 0};
   }
 
   /** "esta semana", "en octubre", "hasta el 31/10": cómo nombrar el período de la meta. */
@@ -5952,6 +6069,8 @@
           if(c.sueldo!=null) campos.push(`sueldo ${fmtMoney(Number(c.sueldo)||0)}`);
           if(c.diaCobro!=null) campos.push(`cobrás el ${c.diaCobro}`);
           if(c.dolar!=null) campos.push(`dólar a ${fmtMoney(Number(c.dolar)||0)}`);
+          if(c.extras!=null) campos.push(`otros ingresos ${fmtMoney(Number(c.extras)||0)} por mes`);
+          if(c.recordatorio) campos.push(c.recordatorio==="no" ? "sin recordatorio de la noche" : `recordatorio para anotar a las ${c.recordatorio}`);
           if(!campos.length){ out.errores.push("config sin nada que cambiar"); continue; }
           out.ops.push({
             txt: `⚙️ Ajustes: ${campos.join(" · ")}`,
@@ -5959,6 +6078,24 @@
               if(c.sueldo!=null) S.config.sueldo = Math.max(0, Number(c.sueldo)||0);
               if(c.diaCobro!=null) S.config.diaCobro = Math.min(28, Math.max(0, c.diaCobro|0));
               if(c.dolar!=null) S.config.dolar = Math.max(0, Number(c.dolar)||0);
+              if(c.extras!=null) S.config.extras = Math.max(0, Number(c.extras)||0);
+              if(c.recordatorio) S.config.recordatorio = c.recordatorio==="no" ? {on:false, hora:"21:30"}
+                : {on:true, hora: /^\d{1,2}:\d{2}$/.test(c.recordatorio) ? c.recordatorio.padStart(5,"0") : "21:30"};
+            }});
+        }
+        else if(op==="pedido" || op==="pedi"){
+          const nombre = String(c.nombre || c.desc || "").trim();
+          if(!nombre){ out.errores.push("pedido sin qué"); continue; }
+          const fecha = fechaValida(c.fecha), monto = Number(c.monto)||0;
+          const bill = resolver(S.billeteras, c.billetera, "la billetera", out.errores);
+          const tj = resolver(S.tarjetas, c.tarjeta, "la tarjeta", out.errores);
+          out.ops.push({
+            txt: `🛵 Pediste <strong>${esc(nombre)}</strong>` + (monto ? ` · ${fmtMoney(monto)}` : "") + ` · ${fecha.slice(8)}/${fecha.slice(5,7)}`,
+            aplicar(){
+              const h = {id:nid(), fecha, recetaId:null, nombre, tipo:"pedido"};
+              if(monto>0){ const m = {id:nid(), fecha, tipo:"gasto", monto, categoria:"Comida", billetera: bill?bill.id:null,
+                tarjetaId: tj?tj.id:undefined, descripcion:"Pedido: "+nombre, origen:"parche"}; S.movs.push(m); h.mov = m.id; h.monto = monto; }
+              cocina().historial.push(h);
             }});
         }
         else if(op==="cocine" || op==="cocinado"){
@@ -5999,11 +6136,12 @@
           if(!titulo){ out.errores.push("agenda sin título"); continue; }
           const fecha = c.fecha==="" || c.fecha===null ? null : fechaValida(c.fecha);
           const hora = /^\d{1,2}:\d{2}$/.test(c.hora||"") ? c.hora.padStart(5,"0") : null;
-          const repetir = ["diario","semanal","mensual","anual"].includes(c.repetir) ? c.repetir : "";
+          const dias = Array.isArray(c.dias) ? c.dias.map(Number).filter(d=>d>=0 && d<=6) : null;
+          const repetir = dias && dias.length ? "dias" : ["diario","semanal","mensual","anual"].includes(c.repetir) ? c.repetir : "";
           out.ops.push({
             txt: `🗓️ Agendo <strong>${esc(titulo)}</strong>` + (fecha ? ` · ${fecha.slice(8)}/${fecha.slice(5,7)}` : " · sin fecha") +
-                 (hora ? ` · ${hora}` : "") + (repetir ? ` · 🔁 ${REP_TXT[repetir].toLowerCase()}` : ""),
-            aplicar(){ nuevoAg({titulo, fecha, hora, repetir, nota: String(c.nota||""), insistir: !!c.insistir,
+                 (hora ? ` · ${hora}` : "") + (repetir ? ` · 🔁 ${repetir==="dias" ? diasTxt(dias) : REP_TXT[repetir].toLowerCase()}` : ""),
+            aplicar(){ nuevoAg({titulo, fecha, hora, repetir, dias: repetir==="dias" ? dias : null, nota: String(c.nota||""), insistir: !!c.insistir,
               avisos: Array.isArray(c.avisos) ? c.avisos.map(Number).filter(n=>n>=0) : null}); }});
         }
         else if(op==="hecho"){
@@ -6615,6 +6753,17 @@
 
   function renderLiberacion(){
     const libs = liberacionCuotas();
+    // los préstamos que terminan también liberan plata: el mes siguiente a la última cuota
+    for(const p of (S.prestamos||[])){
+      const e = estadoPrestamo(p);
+      if(e.listo || !e.proxima || !(p.cuota>0)) continue;
+      const ult = new Date(e.proxima.getFullYear(), e.proxima.getMonth() + Math.max(0, e.quedan-1), 1);
+      const mk = monthKey(new Date(ult.getFullYear(), ult.getMonth()+1, 1));
+      let l = libs.find(x=>x.mk===mk);
+      if(!l){ l = {mk, libera:0, items:[]}; libs.push(l); }
+      l.libera += p.cuota; l.items.push({desc:p.nombre, monto:p.cuota, tarjeta:"préstamo", cuotas:p.cuotas, prestamo:true});
+    }
+    libs.sort((a,b)=>a.mk<b.mk?-1:1);
     $("liberaCard").hidden = !libs.length;
     const conSaldo = S.tarjetas.filter(t=>{
       const ks = Object.keys(t.resumenes||{}).sort();
@@ -6627,7 +6776,7 @@
     if(!libs.length) return;
     const max = Math.max(...libs.map(l=>l.libera));
     $("liberaList").innerHTML = libs.slice(0,6).map((l,i)=>`
-      <div class="g-tip" style="--d:${Math.min(i,8)*0.04}s">
+      <div class="g-tip j-lib" style="--d:${Math.min(i,8)*0.04}s" role="button" tabindex="0" aria-expanded="false">
         <span class="ic">📅</span>
         <div style="flex:1; min-width:0">
           <div style="display:flex; gap:8px; justify-content:space-between">
@@ -6637,11 +6786,18 @@
           <div class="g-bar" style="grid-template-columns:1fr; margin:5px 0 3px">
             <span class="track"><span class="fill" style="width:100%;transform:scaleX(${(l.libera/max).toFixed(3)});background:var(--income)"></span></span>
           </div>
-          <div class="g-note" style="margin:0">${l.items.slice(0,3).map(it=>esc(it.desc)+" ("+it.cuotas+" cuotas)").join(" · ")}${
-            l.items.length>3?` y ${l.items.length-3} más`:""}</div>
+          <div class="g-note j-libcorto" style="margin:0">${l.items.slice(0,3).map(it=>esc(it.desc)).join(" · ")}${
+            l.items.length>3?` y ${l.items.length-3} más`:""} · <span style="color:var(--brand)">ver ›</span></div>
+          <div class="j-libdet">${l.items.map(it=>`<div class="r"><span>${it.prestamo?"🏦":"💳"} ${esc(it.desc)}<small>${it.prestamo ? "última cuota del préstamo" : esc(it.tarjeta)+" · termina la cuota "+it.cuotas+" de "+it.cuotas}</small></span><b>+${fmtMoney(it.monto)}</b></div>`).join("")}
+            <div class="g-note" style="margin-top:6px">Desde ese mes, eso deja de venir. Lo mejor: sumalo a lo que le ponés a la deuda.</div></div>
         </div>
       </div>`).join("");
   }
+
+  $("liberaList").addEventListener("click", e=>{
+    const t = e.target.closest(".j-lib"); if(!t) return;
+    const abierto = t.classList.toggle("open"); t.setAttribute("aria-expanded", String(abierto));
+  });
 
   function renderBilleteras(){
     $("walletEmpty").hidden = S.billeteras.length>0;
@@ -6714,14 +6870,17 @@
     $("presuStats").innerHTML =
       `<div><small>Tu meta</small><b>${fmtMoney(P.total)}</b></div>` +
       `<div><small>Gastaste</small><b>${fmtMoney(P.gastado)}</b></div>` +
-      `<div><small>${P.terminada ? "Resultado" : "Por día"}</small><b class="${rojo?"neg":"ok"}">${P.terminada ? (rojo?"−":"+")+fmtMoney(Math.abs(P.queda)) : fmtMoney(Math.round(Math.max(0,P.porDiaReal)))}</b></div>`;
+      (P.terminada ? `<div><small>Resultado</small><b class="${rojo?"neg":"ok"}">${(rojo?"−":"+")+fmtMoney(Math.abs(P.queda))}</b></div>`
+        : `<div><small>Hoy te quedan</small><b class="${P.quedaHoy<0?"neg":"ok"}">${fmtMoney(Math.round(P.quedaHoy))}</b></div>`);
 
     const linea = [];
     if(P.terminada){
       linea.push(rojo ? "No llegaste esta vez. Poné una meta nueva y arrancamos de cero." : "🏆 ¡La cumpliste! Poné la próxima y seguí sumando.");
     } else {
       linea.push(rojo ? (P.modo==="semana" && P.arrastre!==undefined && S.presu.arrastrar!==false ? "Se descuenta de la semana que viene." : "Frená un poco: ya pasaste el tope.")
-        : `Podés gastar <strong>${fmtMoney(Math.round(P.porDiaReal))} por día</strong> hasta ${per.fin}.`);
+        : P.diasQuedan>1
+          ? `Hoy podés <strong>${fmtMoney(Math.round(Math.max(0,P.quedaHoy)))}</strong> más. Desde mañana, <strong>${fmtMoney(Math.round(P.desdeManana))} por día</strong> hasta ${per.fin}: lo que no gastes un día se suma a los que quedan.`
+          : `Hoy es el último día: te quedan <strong>${fmtMoney(Math.round(P.queda))}</strong>.`);
       if(P.reservado>0) linea.push(`Tenés ${fmtMoney(P.reservado)} apartados.`);
       if(Math.abs(P.arrastre) > 1)
         linea.push(P.arrastre>0 ? `Incluye ${fmtMoney(P.arrastre)} que te sobraron antes 👏` : `Incluye ${fmtMoney(-P.arrastre)} que te pasaste antes.`);
@@ -6976,7 +7135,7 @@
       bar.style.transition = "none"; bar.style.width = (antes*100)+"%"; void bar.offsetWidth;
       bar.style.transition = ""; setTimeout(()=>{ bar.style.width = (ahora*100)+"%"; }, 60);
       $("cpFoot").innerHTML = P.queda>=0
-        ? `Te quedan <strong>${fmtMoney(P.queda)}</strong> ${nombrePeriodo(P).en} · ${fmtMoney(Math.round(P.porDiaReal))} por día` + (racha>1 ? ` · 🔥 ${racha}` : "")
+        ? `Te quedan <strong>${fmtMoney(P.queda)}</strong> ${nombrePeriodo(P).en} · hoy podés ${fmtMoney(Math.round(Math.max(0,P.quedaHoy)))} más` + (racha>1 ? ` · 🔥 ${racha}` : "")
         : `Te pasaste por <strong>${fmtMoney(-P.queda)}</strong> ${nombrePeriodo(P).en}` + (racha>1 ? ` · 🔥 ${racha}` : "");
     } else {
       barW.hidden = true;
@@ -7017,7 +7176,93 @@
       </section>
       <div class="j-fxsum">Todos los meses: <strong>${fmtMoney(F.total)}</strong>${F.dePlata>0 ? ` · 👛 ${fmtMoney(F.dePlata)} de tu plata` : ""}${F.deTarjeta>0 ? ` · 💳 ${fmtMoney(F.deTarjeta)} en tarjeta` : ""}</div>`;
   }
+  /** Lo que te queda por mes para deudas: sueldo + extras − fijos de tu plata − el día a día. */
+  function flujoMensual(){
+    const sueldo = S.config.sueldo||0, extras = S.config.extras||0;
+    const P = presupuesto();
+    const diario = P && P.porDia>0 ? P.porDia : gastoDiarioProm();
+    const mano = fijosDeMano();
+    return {sueldo, extras, diario, mano, diaADia: diario*30.4, porMes: sueldo + extras - mano - diario*30.4};
+  }
+  function renderCamino(){
+    const card = $("caminoCard"); if(!card) return;
+    const D = deudaTotal();
+    if(!(D.total>0)){ card.hidden = true; return; }
+    card.hidden = false;
+    const F = flujoMensual();
+    if(!(F.sueldo>0)){
+      card.innerHTML = `<div class="g-label">🧭 Tu camino para salir de las deudas</div>
+        <div class="j-sub" style="margin:8px 0 10px">Debés <strong>${fmtMoney(D.total)}</strong>. Decime cuánto cobrás y te muestro en qué mes terminás de pagar intereses y cómo repartir el sueldo.</div>
+        <button class="g-btn primary" data-camino="cfg" style="flex:none">Poner mi sueldo</button>`;
+      return;
+    }
+    const R = planSalida({porMes: F.porMes, ahora: Math.max(0, plataDisponible().enMano)});
+    if(!R){ card.hidden = true; return; }
+    const {plan, min} = R;
+    const filas = plan.filas.slice(0, 14);
+    const max = Math.max(1, R.deuda, ...filas.map(f=>f.deuda));
+    const meses = filas.length;
+    const ahorro = Math.max(0, min.interes - plan.interes);
+    const masCara = R.cards.slice().sort((a,b)=>b.tasa-a.tasa)[0];
+    card.innerHTML = `
+      <div class="g-label">🧭 Tu camino para salir de las deudas</div>
+      <div class="j-camtit">${plan.libreMk
+        ? `Terminás de financiar en <b>${monthKeyLabel(plan.libreMk)}</b>`
+        : `Con lo que entra, <b>todavía no alcanza</b>`}</div>
+      <div class="j-sub">${plan.libreMk ? `En ${meses} ${meses===1?"mes":"meses"}, si seguís el plan.` : "Hay que achicar el día a día o sumar ingresos."} Hoy financiás <strong>${fmtMoney(R.deuda)}</strong> y te cuesta unos <strong>${fmtMoney(Math.round(R.interesMes))}</strong> de intereses por mes.</div>
+      <div class="j-camchart" aria-hidden="true">${filas.map((f,i)=>`<div class="j-cambar" style="--h:${Math.max(2, f.deuda/max*100)}%; --d:${i*0.04}s"><i></i><span>${MESES_LARGOS[Number(f.mk.slice(5))-1].slice(0,1).toUpperCase()}</span></div>`).join("")}</div>
+      <div class="j-camcmp">
+        <div><small>Con el plan</small><b>${plan.libreMk ? monthKeyLabel(plan.libreMk) : "más de 3 años"}</b><span>${fmtMoney(Math.round(plan.interes))} de intereses en total</span></div>
+        <div><small>Pagando sólo mínimos</small><b>${min.libreMk ? monthKeyLabel(min.libreMk) : "más de 3 años"}</b><span>${fmtMoney(Math.round(min.interes))} de intereses</span></div>
+      </div>
+      ${ahorro>1000 ? `<div class="j-sub" style="margin-top:10px">💡 Siguiendo el plan te ahorrás <strong>${fmtMoney(Math.round(ahorro))}</strong> de intereses.</div>` : ""}
+      <div class="j-camtips">
+        <div>✅ Cada mes te quedan <strong>${fmtMoney(Math.round(Math.max(0,F.porMes)))}</strong> para deudas: sueldo${F.extras>0?" + extras":""} − ${fmtMoney(Math.round(F.mano))} de fijos de tu plata − ${fmtMoney(Math.round(F.diaADia))} del día a día.</div>
+        <div>✅ Primero los mínimos de todas; lo que sobre, entero a <strong>${esc(masCara ? masCara.nombre : "la más cara")}</strong>${masCara ? ` (${(masCara.tasa*100).toFixed(1).replace(".",",")}% por mes)` : ""}.</div>
+        <div>✅ Que en las tarjetas entren sólo los fijos: cada compra nueva estira la fecha.</div>
+      </div>
+      <button class="g-linkbtn" data-camino="detalle" style="margin-top:10px; font-size:13.5px">Ver el plan mes a mes ›</button>`;
+  }
+  /** Cuando cobrés: cuánto va a cada cosa, en orden. */
+  function renderPlanCobro(){
+    const el = $("planCobro"); if(!el) return;
+    const F = flujoMensual();
+    if(!(F.sueldo>0)){ el.innerHTML = ""; return; }
+    const pc = proximoCobro();
+    const otros = compromisos(1).filter(o=>(o.cobra==="billetera" || o.avisa) && o.pagable && o.tipo==="prestamo");
+    const cuotas = otros.reduce((s,o)=>s+o.monto, 0);
+    let bolsa = F.sueldo + F.extras - F.mano - F.diaADia - cuotas;
+    const proys = S.tarjetas.map(t=>proyeccionTarjeta(t)).filter(Boolean).map(p=>({p, tasa:(tasaTarjeta(p.t) ?? (deudaTotal().tasa||6.5)), pago:0,
+      total: Math.max(p.total, p.t.totalHoy && p.t.totalHoy.monto>0 ? p.t.totalHoy.monto : 0)}));
+    const inicial = bolsa;
+    for(const x of proys.slice().sort((a,b)=>b.tasa-a.tasa)){ const v = Math.max(0, Math.min(bolsa, x.p.pagoMin)); x.pago += v; bolsa -= v; }
+    for(const x of proys.slice().sort((a,b)=>b.tasa-a.tasa)){ const v = Math.max(0, Math.min(bolsa, x.total - x.pago)); x.pago += v; bolsa -= v; }
+    const fila = (n, sub, m, neg) => `<div class="j-row"><span class="tx"><b>${n}</b>${sub?`<span>${sub}</span>`:""}</span><span class="am ${neg?"late":""}">${m}</span></div>`;
+    el.innerHTML = `<div class="j-cobro">
+      <div class="g-label" style="margin-top:16px">💰 Cuando cobrés${pc ? ` (el ${pc.fecha.getDate()}/${pc.fecha.getMonth()+1})` : ""}</div>
+      ${fila("Entra", (F.extras>0 ? `sueldo + ${fmtMoney(F.extras)} de extras` : "tu sueldo"), fmtMoney(F.sueldo+F.extras))}
+      ${F.mano>0 ? fila("Fijos de tu plata", "alquiler y lo que no va con tarjeta", "−"+fmtMoney(Math.round(F.mano))) : ""}
+      ${fila("Día a día", `${fmtMoney(Math.round(F.diario))} por día, un mes`, "−"+fmtMoney(Math.round(F.diaADia)))}
+      ${cuotas>0 ? fila("Cuotas de préstamos", otros.map(o=>esc(o.nombre.replace(/^Cuota /,""))).join(", "), "−"+fmtMoney(Math.round(cuotas))) : ""}
+      <div class="j-row"><span class="tx"><b>Para las tarjetas</b></span><span class="am">${fmtMoney(Math.round(Math.max(0,inicial)))}</span></div>
+      ${proys.sort((a,b)=>b.tasa-a.tasa).map(x=>fila("💳 "+esc(x.p.t.nombre),
+          x.pago >= x.total-1 ? "el resumen entero ✨" : x.pago >= x.p.pagoMin-1 ? `mínimo + ${fmtMoney(Math.round(x.pago-x.p.pagoMin))} extra` : `no alcanza el mínimo (≈${fmtMoney(Math.round(x.p.pagoMin))})`,
+          fmtMoney(Math.round(x.pago)), x.pago < x.p.pagoMin-1)).join("")}
+      <div class="j-sub" style="margin-top:8px">${bolsa>1 ? `Y te sobran <strong>${fmtMoney(Math.round(bolsa))}</strong>: al fondo de emergencia.` : inicial<0 ? `⚠️ No alcanza ni para los fijos y el día a día: faltan ${fmtMoney(Math.round(-inicial))}.` : "Así no te queda nada suelto: todo va a bajar deuda."}
+        ${!pc ? ` <button class="g-linkbtn" data-camino="cfg">Decime qué día cobrás</button>` : ""}</div>
+    </div>`;
+  }
+  $("caminoCard").addEventListener("click", e=>{
+    const b = e.target.closest("[data-camino]"); if(!b) return;
+    if(b.dataset.camino==="detalle") $("salidaBtn").click();
+    else { $("cfgBtn").click(); setTimeout(()=>{ try{ $("cfgSueldo").focus(); }catch(err){} }, 450); }
+  });
+  $("planCobro").addEventListener("click", e=>{
+    if(e.target.closest("[data-camino]")){ $("cfgBtn").click(); setTimeout(()=>{ try{ $("cfgCobro").focus(); }catch(err){} }, 450); }
+  });
+
   function renderProxMes(){
+    renderCamino(); renderPlanCobro();
     const card = $("proxMesCard"); if(!card) return;
     const proys = S.tarjetas.map(t=>proyeccionTarjeta(t)).filter(Boolean);
     const otros = compromisos(1).filter(o=>(o.cobra==="billetera" || o.avisa) && o.pagable);
@@ -8801,6 +9046,7 @@
     $("cfgCobro").value = S.config.diaCobro ? String(S.config.diaCobro) : "";
     $("cfgSueldo").value = S.config.sueldo ? fmtNum(S.config.sueldo) : "";
     $("cfgDolar").value = S.config.dolar ? fmtNum(S.config.dolar) : "";
+    $("cfgExtras").value = S.config.extras ? fmtNum(S.config.extras) : "";
     $("cfgRemOn").checked = !!(S.config.recordatorio&&S.config.recordatorio.on);
     $("cfgRemHora").value = (S.config.recordatorio&&S.config.recordatorio.hora)||"21:30";
     $("remNote").hidden = !!(window.AndroidVoz && window.AndroidVoz.setReminder);
@@ -8903,6 +9149,13 @@
   $("cfgRemOn").addEventListener("change", ()=>{ $("remHoraRow").hidden = !$("cfgRemOn").checked; });
   function aplicarRecordatorio(){
     const r = S.config.recordatorio||{};
+    // con el sistema de avisos nuevo, el recordatorio va por ahí (exacto, con tu ícono y
+    // abriendo directo la carga); el viejo se apaga para que no lleguen dos
+    if(hayAvisos()){
+      try{ window.AndroidVoz.clearReminder && window.AndroidVoz.clearReminder(); }catch(e){}
+      sincronizarAvisos();
+      return;
+    }
     if(window.AndroidVoz && window.AndroidVoz.setReminder){
       const [h,m] = (r.hora||"21:30").split(":").map(Number);
       try{ r.on ? window.AndroidVoz.setReminder(h||21, m||30) : window.AndroidVoz.clearReminder(); }catch(e){}
@@ -8919,6 +9172,7 @@
     S.config.diaCobro = Math.min(28, Math.max(0, parseInt($("cfgCobro").value)||0));
     S.config.sueldo = Math.max(0, numVal($("cfgSueldo").value)||0);
     S.config.dolar = Math.max(0, numVal($("cfgDolar").value)||0);
+    S.config.extras = Math.max(0, numVal($("cfgExtras").value)||0);
     S.config.notificaciones = notifOn() && $("cfgNotif").checked;
     try{ if(notifOn()) window.AndroidVoz.notifActivar(!!S.config.notificaciones); }catch(e){}
     save(); closeSheet(); renderAll();
@@ -9728,7 +9982,7 @@
     let semilla = 0; for(const c of dia) semilla = (semilla*31 + c.charCodeAt(0)) >>> 0;
     // también lo que anotaste sin receta cargada: si lo cocinás seguido, va
     const sueltos = {};
-    for(const h of cocina().historial) if(h.recetaId==null && !recetaPorNombre(h.nombre)){
+    for(const h of cocina().historial) if(h.tipo!=="pedido" && h.recetaId==null && !recetaPorNombre(h.nombre)){
       const k = norm(h.nombre); const x = sueltos[k] || (sueltos[k] = {id:"n:"+h.nombre, nombre:h.nombre, cat:"otras", virtual:true, fechas:[]});
       x.fechas.push(h.fecha);
     }
@@ -9765,14 +10019,43 @@
     const r = recetaId!=null ? receta(recetaId) : recetaPorNombre(nombre);
     const h = {id:nid(), fecha: fecha || todayISO(), recetaId: r ? r.id : null, nombre: r ? r.nombre : String(nombre).trim()};
     cocina().historial.push(h);
+    return terminarAnotar(h);
+  }
+  /** Pediste comida: queda en el historial (qué y de dónde) y, si ponés cuánto salió, como gasto. */
+  function anotarPedido(nombre, fecha, monto, billetera){
+    const h = {id:nid(), fecha: fecha || todayISO(), recetaId:null, nombre:String(nombre).trim(), tipo:"pedido"};
+    let mov = null;
+    if(monto>0){
+      const diasAntes = diasConCarga();
+      mov = {id:nid(), fecha:h.fecha, tipo:"gasto", monto, categoria:"Comida", billetera: billetera||null,
+        descripcion:"Pedido: "+h.nombre, origen:"manual"};
+      S.movs.push(mov); h.mov = mov.id; h.monto = monto;
+      cocina().historial.push(h);
+      save(); renderAll();
+      feedbackCarga([mov], "Pedido anotado", diasAntes);
+      return h;
+    }
+    cocina().historial.push(h);
+    return terminarAnotar(h);
+  }
+  function terminarAnotar(h){
     save(); renderCocina(); renderHoy();
     vibrar(14);
-    toast(`Anotado: ${h.nombre} ✔`, ()=>{
+    toast(`${h.tipo==="pedido" ? "🛵 Anotado que pediste" : "Anotado"}: ${h.nombre} ✔`, ()=>{
       cocina().historial = cocina().historial.filter(x=>x.id!==h.id);
       save(); renderCocina(); renderHoy(); toast("Lo saqué");
     });
     return h;
   }
+  let cocTipo = "cocine";
+  $("cocTipo").addEventListener("click", e=>{
+    const b = e.target.closest("[data-t]"); if(!b) return;
+    cocTipo = b.dataset.t; vibrar(6);
+    $("cocTipo").querySelectorAll("button").forEach(x=>x.classList.toggle("on", x===b));
+    $("cocPedido").hidden = cocTipo!=="pedido";
+    $("cocQuick").placeholder = cocTipo==="pedido" ? "¿Qué pediste? (y de dónde)" : "¿Qué cocinaste hoy?";
+    if(cocTipo==="pedido"){ fillWalletSelect($("cocPedBill"), true, true); const b2 = S.billeteras.find(x=>!x.inversion); if(b2) $("cocPedBill").value = String(b2.id); }
+  });
 
   /* ---------- Hoy ---------- */
   const DIAS_L = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
@@ -9805,7 +10088,7 @@
         cards.push(`<button class="j-card glow" data-ir="plata" data-vista="home">
           <div class="j-k"><span>Meta de gasto · ${per.en}</span><span>${P.terminada ? "terminó" : `${P.diasQuedan} día${P.diasQuedan===1?"":"s"}`}</span></div>
           <div class="j-big ${P.queda<0?"neg":"ok"}" id="hoySobre">${fmtMoney(P.queda)}</div>
-          <div class="j-sub">${P.terminada ? "Tocá para ver cómo te fue y poner la próxima" : P.queda>=0 ? `Podés gastar <strong>${fmtMoney(Math.round(Math.max(0,P.porDiaReal)))}</strong> por día hasta ${per.fin}` : `Te pasaste: frená un poco`}</div>
+          <div class="j-sub">${P.terminada ? "Tocá para ver cómo te fue y poner la próxima" : P.queda>=0 ? `Hoy podés <strong>${fmtMoney(Math.round(Math.max(0,P.quedaHoy)))}</strong> más${P.diasQuedan>1 ? ` · desde mañana ${fmtMoney(Math.round(P.desdeManana))} por día` : ""}` : `Te pasaste: frená un poco`}</div>
           <div class="j-bar"><i class="${pct>.95?"neg":pct>.8?"warn":""}" style="width:${(pct*100).toFixed(1)}%"></i></div>
         </button>`);
       } else if(S.billeteras.length){
@@ -9858,18 +10141,22 @@
   function renderCocina(){
     if(!$("cocGrid")) return;
     const C = cocina();
-    const sem = semanaCocina(), hechas = sem.reduce((s,d)=>s+d.items.length, 0);
+    const sem = semanaCocina();
+    const hechas = sem.reduce((s,d)=>s+d.items.filter(x=>x.tipo!=="pedido").length, 0);
+    const pedidos = sem.reduce((s,d)=>s+d.items.filter(x=>x.tipo==="pedido").length, 0);
+    const pedidosPlata = sem.reduce((s,d)=>s+d.items.filter(x=>x.tipo==="pedido").reduce((a,x)=>a+(x.monto||0),0), 0);
     $("cocSemana").innerHTML = sem.map((d,i)=>{
       const prim = d.items[0], r = prim && prim.recetaId!=null ? receta(prim.recetaId) : null;
       const f = r && Fotos.get(r.fotoId);
       const letra = ["L","M","M","J","V","S","D"][i];
       return `<button class="j-day ${d.items.length?"hecho":""} ${d.hoy?"hoy":""}" data-dia="${d.iso}" aria-label="${DIAS_L[(i+1)%7]} ${d.iso.slice(8)}: ${d.items.length ? d.items.map(x=>x.nombre).join(", ") : "nada anotado"}">
-        <small>${letra}</small><span class="c" style="--d:${i*0.04}s;${f?`background-image:url('${f}')`:""}">${!d.items.length ? `<span style="font-size:12px; color:var(--muted)">${Number(d.iso.slice(8))}</span>` : f ? "" : (r ? cocCat(r.cat).e : "🍳")}${d.items.length>1?`<b>${d.items.length}</b>`:""}</span></button>`;
-    }).join("") + `<div class="j-weeksum">${hechas ? `Esta semana cocinaste <strong>${hechas} ${hechas===1?"vez":"veces"}</strong>` : "Todavía no anotaste nada esta semana"}</div>`;
+        <small>${letra}</small><span class="c" style="--d:${i*0.04}s;${f?`background-image:url('${f}')`:""}">${!d.items.length ? `<span style="font-size:12px; color:var(--muted)">${Number(d.iso.slice(8))}</span>` : f ? "" : (prim.tipo==="pedido" ? "🛵" : r ? cocCat(r.cat).e : "🍳")}${d.items.length>1?`<b>${d.items.length}</b>`:""}</span></button>`;
+    }).join("") + `<div class="j-weeksum">${hechas||pedidos ? [hechas ? `Cocinaste <strong>${hechas} ${hechas===1?"vez":"veces"}</strong>` : "", pedidos ? `pediste <strong>${pedidos}</strong>${pedidosPlata>0 ? ` (${fmtMoney(pedidosPlata)})` : ""}` : ""].filter(Boolean).join(" · ") + " esta semana" : "Todavía no anotaste nada esta semana"}</div>`;
 
     $("cocineLista").innerHTML = cocina().recetas.map(r=>`<option value="${esc(r.nombre)}">`).join("");
     const ult = cocina().historial.slice().sort((a,b)=>a.fecha<b.fecha?1:a.fecha>b.fecha?-1:b.id-a.id).slice(0,6);
-    $("cocHist").innerHTML = ult.length ? `<div class="j-h2">Lo último que cocinaste</div><div class="j-aggroup">${ult.map(h=>{
+    $("cocHist").innerHTML = ult.length ? `<div class="j-h2">Lo último que comiste</div><div class="j-aggroup">${ult.map(h=>{
+      if(h.tipo==="pedido") return `<div class="j-row" style="cursor:default"><span class="j-thumb art-otras">🛵</span><span class="tx"><b>${esc(h.nombre)}</b><span>${fechaCortaC(h.fecha)} · pediste${h.monto ? " · "+fmtMoney(h.monto) : ""}</span></span></div>`;
       const r = h.recetaId!=null ? receta(h.recetaId) : recetaPorNombre(h.nombre);
       return `<div class="j-row" style="cursor:default">${thumb(r)}<span class="tx"><b>${esc(h.nombre)}</b><span>${fechaCortaC(h.fecha)}</span></span>
         ${r ? `<button class="g-minibtn" data-rec="${esc(r.id)}">Ver</button>` : `<button class="g-minibtn" data-guardar="${esc(h.nombre)}">Guardar receta</button>`}</div>`;
@@ -9933,7 +10220,12 @@
     e.preventDefault();
     const v = $("cocQuick").value.trim();
     if(!v){ $("cocQuick").focus(); return; }
-    anotarCocina(v, todayISO());
+    if(cocTipo==="pedido"){
+      const sel = parseBillSel($("cocPedBill").value);
+      const h = anotarPedido(v, todayISO(), numVal($("cocPedMonto").value)||0, sel.billetera);
+      if(h && h.mov && sel.tarjetaId){ const m = S.movs.find(x=>x.id===h.mov); if(m){ m.tarjetaId = sel.tarjetaId; m.billetera = null; save(); renderAll(); } }
+      $("cocPedMonto").value = "";
+    } else anotarCocina(v, todayISO());
     $("cocQuick").value = "";
   });
   function abrirEditorCon(nombre){
@@ -10359,7 +10651,9 @@
   const DOW_N = ["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
   const DOW_C = ["dom","lun","mar","mié","jue","vie","sáb"];
   const MES_N = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-  const REP_TXT = {diario:"Todos los días", semanal:"Todas las semanas", mensual:"Todos los meses", anual:"Todos los años"};
+  const REP_TXT = {diario:"Todos los días", semanal:"Todas las semanas", mensual:"Todos los meses", anual:"Todos los años", dias:"Algunos días"};
+  const diasTxt = ds => (ds||[]).slice().sort((a,b)=>((a+6)%7)-((b+6)%7)).map(d=>DOW_C[d]).join(", ");
+  const repTxt = it => it.repetir==="dias" ? diasTxt(it.dias) : (REP_TXT[it.repetir]||"").toLowerCase();
 
   /**
    * "mañana 18hs dentista", "todos los lunes a las 9 sacar la basura", "el 25 a la noche
@@ -10387,13 +10681,25 @@
       if(f < hoyISO){ if(mes!=null) y++; else m++; f = arma(y, m); }
       return f;
     };
-    let fecha = null, hora = null, repetir = "", franja = null, m;
+    let fecha = null, hora = null, repetir = "", franja = null, m, dias = null;
+    const DSEM = "(?:lunes|martes|miercoles|jueves|viernes|sabados?|domingos?)";
+    const numDia = w => DOW_N.indexOf(w.replace(/^(sabado|domingo)s$/, "$1"));
+    const proxDeDias = ds => { for(let k=0; k<7; k++){ const f = isoMas(hoyISO, k); if(ds.includes(new Date(f+"T12:00:00").getDay())) return f; } return hoyISO; };
+
+    // rutinas de varios días: "lunes, miércoles y viernes", "de lunes a viernes", "los fines de semana"
+    if(find(/\bde\s+lunes\s+a\s+viernes\b/)) dias = [1,2,3,4,5];
+    else if(find(/\b(?:los\s+)?fines?\s+de\s+semana\b/)) dias = [6,0];
+    else if((m = new RegExp("\\b(?:(?:todos|todas)\\s+los\\s+|cada\\s+|los\\s+)?" + DSEM + "(?:\\s*(?:,|\\by\\b|\\be\\b)\\s*" + DSEM + ")+\\b").exec(low))){
+      const ds = [...new Set((m[0].match(new RegExp(DSEM, "g"))||[]).map(numDia).filter(x=>x>=0))];
+      if(ds.length>=2){ cut(m); dias = ds.sort((a,b)=>((a+6)%7)-((b+6)%7)); }
+    }
+    if(dias){ repetir = "dias"; fecha = proxDeDias(dias); }
 
     // se repite
     if((m = find(/\b(todos los dias|cada dia|diariamente|todas las (mananas|tardes|noches))\b/))){
       repetir = "diario"; if(m[2]) franja = m[2].slice(0,-1);
     }
-    if((m = find(/\b(?:todos los|todas las|cada)\s+(lunes|martes|miercoles|jueves|viernes|sabados?|domingos?)\b/))){
+    if(!dias && (m = find(/\b(?:todos los|todas las|cada)\s+(lunes|martes|miercoles|jueves|viernes|sabados?|domingos?)\b/))){
       repetir = "semanal"; fecha = proxDow(m[1], true);
     } else if(find(/\b(todas las semanas|cada semana|semanalmente|una vez por semana)\b/)) repetir = "semanal";
     if((m = find(/\b(?:todos los|cada)\s+(\d{1,2})(?:\s+de\s+cada\s+mes)?\b/))){ repetir = "mensual"; fecha = proxDiaMes(+m[1]); }
@@ -10421,7 +10727,7 @@
     }
     if((m = find(/\b(?:el|este|esta|el proximo|la proxima|proximo)?\s*(lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b(?:\s+que\s+viene)?/))) fecha = proxDow(m[1], false);
     if((m = find(/\b(?:el\s+)?(\d{1,2})\s*\/\s*(\d{1,2})\b/))) fecha = proxDiaMes(+m[1], +m[2]-1);
-    else if((m = find(new RegExp("\\b(?:el\\s+)?(\\d{1,2})\\s+de\\s+(" + MES_N.join("|") + ")\\b")))) fecha = proxDiaMes(+m[1], MES_N.indexOf(m[2]));
+    else if((m = find(/\b(?:el\s+)?(\d{1,2})\s+(?:de\s+)?(ene(?:ro)?|feb(?:rero)?|mar(?:zo)?|abr(?:il)?|may(?:o)?|jun(?:io)?|jul(?:io)?|ago(?:sto)?|sep(?:t(?:iembre)?)?|oct(?:ubre)?|nov(?:iembre)?|dic(?:iembre)?)\.?(?=\s|$)/))) fecha = proxDiaMes(+m[1], MES_N.findIndex(x=>x.slice(0,3)===m[2].slice(0,3)));
     else if((m = find(/\bel\s+(\d{1,2})\b(?!\s*(?:hs|h|:|horas))/))) fecha = proxDiaMes(+m[1]);
     if(find(/\b(?:a\s+)?fin\s+de\s+mes\b/)){ const d = new Date(ahora.getFullYear(), ahora.getMonth()+1, 0, 12); fecha = isoDe(d); }
 
@@ -10441,6 +10747,7 @@
       const [h, mi] = hora.split(":").map(Number);
       fecha = (h*60+mi > ahora.getHours()*60+ahora.getMinutes()) ? hoyISO : isoMas(hoyISO, 1);
     }
+    const fechaDada = !!fecha;
     if(!fecha) fecha = hoyISO;
 
     let titulo = t.replace(/\s+/g," ").trim()
@@ -10450,7 +10757,7 @@
       .trim();
     if(!titulo) titulo = String(raw||"").trim();
     titulo = titulo.charAt(0).toUpperCase() + titulo.slice(1);
-    return {titulo, fecha, hora, repetir};
+    return {titulo, fecha, hora, repetir, dias, fechaDada};
   }
 
   /** ¿Este ítem cae este día? (contando las repeticiones) */
@@ -10462,6 +10769,7 @@
     if(it.repetir==="semanal") return a.getDay()===b.getDay();
     if(it.repetir==="mensual"){ const ult = new Date(b.getFullYear(), b.getMonth()+1, 0).getDate(); return b.getDate()===Math.min(a.getDate(), ult); }
     if(it.repetir==="anual") return a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+    if(it.repetir==="dias") return (it.dias||[]).includes(b.getDay());
     return false;
   }
   const claveDia = (it, iso) => it.fecha ? iso : "sin";
@@ -10476,7 +10784,7 @@
   const fechaLarga = iso => { const d = new Date(iso+"T12:00:00"), h = todayISO();
     return iso===h ? "hoy" : iso===isoMas(h,1) ? "mañana" : `${DOW_N[d.getDay()].replace("miercoles","miércoles").replace("sabado","sábado")} ${d.getDate()} de ${MES_N[d.getMonth()]}`; };
   function describirAg(p){
-    return [p.fecha ? fechaLarga(p.fecha) : "", p.hora || "", p.repetir ? "🔁 "+REP_TXT[p.repetir].toLowerCase() : ""].filter(Boolean);
+    return [p.fecha && !(p.repetir==="dias") ? fechaLarga(p.fecha) : "", p.hora || "", p.repetir ? "🔁 "+repTxt(p) : ""].filter(Boolean);
   }
   const avisosDefault = (hora, repetir) => repetir==="anual" ? [1440, 0] : hora ? [60, 0] : [0];
 
@@ -10490,6 +10798,8 @@
     texto = String(texto||"").trim();
     if(!texto) return null;
     const p = parseAgenda(texto);
+    if(!p.fechaDada && agSel && !p.repetir) p.fecha = agSel;
+    delete p.fechaDada;
     const it = nuevoAg(p);
     save(); renderAgenda(); renderHoy(); sincronizarAvisos();
     vibrar([10,40,14]);
@@ -10516,7 +10826,7 @@
     const hecho = hechoEn(it, iso);
     const meta = [];
     if(tardio) meta.push(`Era para el ${fechaCorta(it.fecha)}`);
-    if(it.repetir) meta.push("🔁 " + REP_TXT[it.repetir].replace("Todos los ","cada ").replace("Todas las ","cada ").replace(/s$/,"").replace("cada día","todos los días"));
+    if(it.repetir) meta.push("🔁 " + (it.repetir==="dias" ? diasTxt(it.dias) : REP_TXT[it.repetir].replace("Todos los ","cada ").replace("Todas las ","cada ").replace(/s$/,"").replace("cada día","todos los días")));
     if((it.avisos||[]).length) meta.push(it.insistir ? "🔔 insiste" : "🔔");
     if(it.nota) meta.push(esc(it.nota.length>40 ? it.nota.slice(0,40)+"…" : it.nota));
     return `<div class="j-ag ${hecho?"hecho":""} ${tardio?"late":""}" data-ag="${it.id}" data-f="${iso}">
@@ -10524,8 +10834,73 @@
       <div class="tx"><b>${esc(it.titulo)}</b>${meta.length?`<span>${meta.join(" · ")}</span>`:""}</div>
       ${it.hora ? `<span class="hr">${it.hora}</span>` : ""}</div>`;
   }
+  let agVista = "lista", agMesRef = null, agSemOff = 0;
+  function renderAgendaMes(){
+    const h = todayISO();
+    if(!agMesRef){ const d = new Date(); agMesRef = new Date(d.getFullYear(), d.getMonth(), 1, 12); }
+    const y = agMesRef.getFullYear(), m = agMesRef.getMonth(), ult = new Date(y, m+1, 0).getDate();
+    const vacios = (new Date(y, m, 1).getDay()+6)%7;
+    const celdas = [];
+    for(let i=0;i<vacios;i++) celdas.push(`<span class="j-calv"></span>`);
+    for(let d=1; d<=ult; d++){
+      const iso = isoDe(new Date(y, m, d, 12)), its = itemsDelDia(iso);
+      celdas.push(`<button class="j-cald ${iso===h?"hoy":""} ${iso===agSel?"sel":""} ${iso<h?"pas":""}" data-cal="${iso}" aria-label="${fechaLarga(iso)}${its.length?`: ${its.length} ${its.length===1?"cosa":"cosas"}`:""}">
+        <b>${d}</b><span>${its.slice(0,3).map(it=>`<i class="${hechoEn(it,iso)?"ok":""}"></i>`).join("")}</span></button>`);
+    }
+    $("agCal").innerHTML = `<div class="j-calhead"><button class="j-round sm" data-calmes="-1" aria-label="Mes anterior">‹</button>
+      <b>${MES_N[m].charAt(0).toUpperCase()+MES_N[m].slice(1)} ${y}</b><button class="j-round sm" data-calmes="1" aria-label="Mes siguiente">›</button></div>
+      <div class="j-calgrid">${["L","M","M","J","V","S","D"].map(x=>`<small>${x}</small>`).join("")}${celdas.join("")}</div>
+      <div class="j-sub" style="margin-top:8px">${agSel ? `Lo que escribas arriba va al <strong>${fechaLarga(agSel)}</strong>, salvo que digas otro día.` : "Tocá un día para ver qué tenés y agendar ahí."}</div>`;
+  }
+  function renderAgendaSemana(){
+    const lun = masDias(lunesDe(new Date()), agSemOff*7);
+    const dias = [...Array(7)].map((_,k)=>isoDe(masDias(lun, k)));
+    const h = todayISO();
+    // las rutinas (lo que se repite) con cuántas veces lo hiciste esta semana
+    const rutinas = agenda().items.filter(it=>["diario","semanal","dias"].includes(it.repetir))
+      .map(it=>{ const toca = dias.filter(d=>ocurre(it,d)); return {it, toca:toca.length, hechas: toca.filter(d=>hechoEn(it,d)).length}; });
+    $("agSemana").innerHTML = `<div class="j-calhead"><button class="j-round sm" data-sem="-1" aria-label="Semana anterior">‹</button>
+      <b>${agSemOff===0 ? "Esta semana" : agSemOff===1 ? "La semana que viene" : agSemOff===-1 ? "La semana pasada" : `Semana del ${fechaCorta(dias[0])}`}</b><button class="j-round sm" data-sem="1" aria-label="Semana siguiente">›</button></div>
+      ${rutinas.length ? `<div class="j-h2" style="margin-top:12px">Tus rutinas</div><div class="j-aggroup">${rutinas.map(x=>`<div class="j-row" data-agedit="${x.it.id}" style="cursor:pointer">
+        <span class="tx"><b>${esc(x.it.titulo)}</b><span>${x.it.hora ? x.it.hora+" · " : ""}🔁 ${esc(repTxt(x.it))}</span></span>
+        ${x.toca ? `<span class="j-rutpro"><i style="width:${(x.hechas/x.toca*100).toFixed(0)}%"></i></span><span class="am">${x.hechas}/${x.toca}</span>`
+          : `<span class="j-sub" style="margin:0; flex:none">${x.it.fecha > dias[6] ? "empieza el "+fechaCorta(x.it.fecha) : "no toca"}</span>`}</div>`).join("")}</div>` : ""}
+      ${dias.map((d,i)=>{ const its = itemsDelDia(d);
+        return `<div class="j-semd ${d===h?"hoy":""}"><div class="j-semh"><b>${DOW_C[new Date(d+"T12:00:00").getDay()]} ${Number(d.slice(8))}</b><button class="g-linkbtn" data-semadd="${d}">＋</button></div>
+          ${its.length ? `<div class="j-aggroup" style="--d:${i*0.03}s">${its.map(x=>filaAg(x, d)).join("")}</div>` : `<div class="j-semvacio">—</div>`}</div>`; }).join("")}`;
+  }
+  $("agVista").addEventListener("click", e=>{
+    const b = e.target.closest("[data-v]"); if(!b) return;
+    agVista = b.dataset.v; vibrar(6);
+    $("agVista").querySelectorAll("button").forEach(x=>x.classList.toggle("on", x===b));
+    if(agVista==="mes" && !agSel) agSel = todayISO();
+    if(agVista!=="mes" && agVista!=="lista") agSel = null;
+    renderAgenda();
+  });
+  $("agCal").addEventListener("click", e=>{
+    const mv = e.target.closest("[data-calmes]");
+    if(mv){ agMesRef = new Date(agMesRef.getFullYear(), agMesRef.getMonth()+Number(mv.dataset.calmes), 1, 12); vibrar(6); renderAgenda(); return; }
+    const d = e.target.closest("[data-cal]"); if(!d) return;
+    agSel = d.dataset.cal; vibrar(6); renderAgenda();
+  });
+  $("agSemana").addEventListener("click", e=>{
+    const mv = e.target.closest("[data-sem]");
+    if(mv){ agSemOff += Number(mv.dataset.sem); vibrar(6); renderAgenda(); return; }
+    const ad = e.target.closest("[data-semadd]");
+    if(ad){ abrirAgEditor(null, {fecha: ad.dataset.semadd}); return; }
+    const ed = e.target.closest("[data-agedit]");
+    if(ed){ abrirAgEditor(ed.dataset.agedit); return; }
+    clickAg(e);
+  });
+
   function renderAgenda(){
     if(!$("agLista")) return;
+    $("agDias").hidden = agVista!=="lista";
+    $("agCal").hidden = agVista!=="mes";
+    $("agSemana").hidden = agVista!=="semana";
+    $("agLista").hidden = agVista==="semana";
+    if(agVista==="mes") renderAgendaMes();
+    if(agVista==="semana"){ renderAgendaSemana(); return; }
     const h = todayISO();
     const dias = [...Array(14)].map((_,k)=>isoMas(h,k));
     $("agDias").innerHTML = `<button class="j-agd todo ${agSel?"":"sel"}" data-d="" role="tab" aria-selected="${!agSel}"><b>Todo</b></button>` +
@@ -10594,7 +10969,13 @@
   });
 
   /* editor */
-  let agEdId = null, agEdAvisos = [];
+  let agEdId = null, agEdAvisos = [], agEdDias = [];
+  function pintarAgDias(){
+    const on = $("agRepetir").value==="dias";
+    $("agDiasRow").hidden = !on;
+    if(!on) return;
+    $("agDiasRow").innerHTML = [1,2,3,4,5,6,0].map(d=>`<button type="button" class="j-chip ${agEdDias.includes(d)?"on":""}" data-dsem="${d}" aria-pressed="${agEdDias.includes(d)}">${DOW_C[d]}</button>`).join("");
+  }
   function opcionesAvisos(conHora){
     return conHora ? [[0,"A la hora"],[10,"10 min antes"],[60,"1 h antes"],[1440,"1 día antes"]]
                    : [[0,"Ese día"],[1440,"El día antes"]];
@@ -10618,11 +10999,23 @@
     $("agInsistir").checked = !!d.insistir;
     $("agNota").value = d.nota || "";
     agEdAvisos = Array.isArray(d.avisos) ? d.avisos.slice() : avisosDefault(d.hora, d.repetir);
+    agEdDias = Array.isArray(d.dias) ? d.dias.slice() : [];
+    pintarAgDias();
     pintarAgAvisos();
     $("agBorrar").hidden = !it;
     openSheet("agenda");
     if(!it) setTimeout(()=>{ try{ $("agTitulo").focus(); }catch(e){} }, 280);
   }
+  $("agRepetir").addEventListener("change", ()=>{
+    if($("agRepetir").value==="dias" && !agEdDias.length){ const f = $("agFecha").value; agEdDias = [f ? new Date(f+"T12:00:00").getDay() : new Date().getDay()]; }
+    pintarAgDias();
+  });
+  $("agDiasRow").addEventListener("click", e=>{
+    const b = e.target.closest("[data-dsem]"); if(!b) return;
+    const d = Number(b.dataset.dsem);
+    agEdDias = agEdDias.includes(d) ? agEdDias.filter(x=>x!==d) : [...agEdDias, d];
+    vibrar(6); pintarAgDias();
+  });
   $("agAvisos").addEventListener("click", e=>{
     const b = e.target.closest("[data-v]"); if(!b) return;
     const v = Number(b.dataset.v);
@@ -10644,7 +11037,9 @@
     if(!titulo){ toast("¿Qué agendamos?"); $("agTitulo").focus(); return; }
     const sinFecha = $("agSinFecha").checked;
     const datos = {titulo, fecha: sinFecha ? null : ($("agFecha").value || todayISO()), hora: $("agHora").value || null,
-      repetir: sinFecha ? "" : $("agRepetir").value, avisos: sinFecha ? [] : agEdAvisos.slice().sort((a,b)=>b-a),
+      repetir: sinFecha ? "" : ($("agRepetir").value==="dias" && !agEdDias.length ? "" : $("agRepetir").value),
+      dias: $("agRepetir").value==="dias" && agEdDias.length ? agEdDias.slice() : null,
+      avisos: sinFecha ? [] : agEdAvisos.slice().sort((a,b)=>b-a),
       insistir: $("agInsistir").checked, nota: $("agNota").value.trim()};
     let it = agEdId!=null ? agenda().items.find(x=>x.id===agEdId) : null;
     if(it) Object.assign(it, datos); else it = nuevoAg(datos);
@@ -10795,14 +11190,14 @@
     }
     const ptsMetas = per.reduce((s,p)=>s+(p.puntos||0), 0) + bonusRacha;
     const hechos = ((S.agenda && S.agenda.items)||[]).reduce((s,it)=>s+Object.keys(it.hechos||{}).length, 0);
-    const diasCocina = new Set(((S.cocina && S.cocina.historial)||[]).map(h=>h.fecha)).size;
+    const diasCocina = new Set(((S.cocina && S.cocina.historial)||[]).filter(h=>h.tipo!=="pedido").map(h=>h.fecha)).size;
     const metas = S.metas||[];
     const ahorrado = metas.reduce((s,m)=>s+Math.min(guardadoDe(m), m.objetivo||Infinity), 0);
     const completas = metas.filter(m=>m.objetivo>0 && guardadoDe(m)>=m.objetivo-0.5).length;
     const ptsAhorro = Math.floor(ahorrado/10000) + completas*200;
     // la mejor semana cocinando, para la medalla de chef
     const porSemana = {};
-    for(const d of new Set(((S.cocina && S.cocina.historial)||[]).map(h=>h.fecha))){
+    for(const d of new Set(((S.cocina && S.cocina.historial)||[]).filter(h=>h.tipo!=="pedido").map(h=>h.fecha))){
       const k = isoDe(lunesDe(new Date(d+"T12:00:00"))); porSemana[k] = (porSemana[k]||0)+1; }
     const mejorSemanaCocina = Math.max(0, ...Object.values(porSemana));
     const diasAnot = diasConCarga(), rachaAnot = diasAnotando();
@@ -10981,6 +11376,24 @@
   window.__julioFotos = Fotos;
   window.__julioCocina = () => ({sugerencias: sugerencias(3).map(x=>({nombre:x.r.nombre, porque:x.porque})),
     favoritas: favoritasAhora().map(x=>x.r.nombre), semana: semanaCocina()});
+  /** La notificación o el acceso directo que tocaste: "anotar", "agenda", "pagos", "cocina". */
+  function irA(destino){
+    if(!destino) return;
+    if(sheet.classList.contains("open")) closeSheet();
+    paginas.slice().forEach(cerrarPagina);
+    if(destino==="anotar"){ irMod("plata"); conPlata(()=>{ switchView("home"); lastOrigen = "manual"; openReview({}); }); }
+    else if(destino==="pagos"){ irMod("plata"); conPlata(()=>switchView("tarjetas")); }
+    else if(destino==="agenda"){ irMod("agenda"); setTimeout(()=>{ try{ $("agQuick").focus(); }catch(e){} }, 350); }
+    else if(destino==="cocina"){ irMod("cocina"); setTimeout(()=>{ try{ $("cocQuick").focus(); }catch(e){} }, 350); }
+    else if(destino==="hoy") irMod("hoy");
+  }
+  window.__julioIr = () => {
+    let d = null;
+    try{ d = window.AndroidVoz && window.AndroidVoz.irPendiente ? window.AndroidVoz.irPendiente() : null; }catch(e){}
+    if(d) irA(String(d));
+  };
+  window.__julioIrA = irA;
+  setTimeout(()=>window.__julioIr(), 900);
   window.__julioMod = () => modActual;
   window.__julioAgenda = {parse: (t, ahora) => parseAgenda(t, ahora ? new Date(ahora) : undefined), ocurre: (it, iso) => ocurre(it, iso)};
   window.__julioPinHash = pinHash;
